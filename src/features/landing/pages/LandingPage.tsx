@@ -54,6 +54,22 @@ export const LandingPage: React.FC = () => {
       q: 'Where is my data stored? Can anyone else see my invoices?',
       a: 'Your data is stored 100% locally in your browser using IndexedDB. No remote servers, no cloud tracking, and no external telemetry. You can export or delete all data in one tap at any time.',
     },
+    {
+      q: 'When should I use NCH (1915) versus e-Jagriti?',
+      a: 'Start with NCH (National Consumer Helpline at 1915 or consumerhelpline.gov.in) for quick, informal pre-litigation mediation with e-commerce and retail brands. If informal mediation fails after 15 days or the claim is high-value, file a formal complaint under Section 35 of the CPA 2019 via e-Jagriti (e-jagriti.gov.in), which does not require hiring an advocate.',
+    },
+    {
+      q: 'How does the Return Window Countdown work?',
+      a: 'Our Return Vault calculates exact calendar days remaining from the confirmed delivery date using verified retailer policies (e.g. 7 days for electronics, 10 days for fashion). As the deadline approaches, the countdown turns amber and red, ensuring you never forfeit your right to return.',
+    },
+    {
+      q: 'Can I use RESOLVE-ONE completely offline?',
+      a: 'Yes. RESOLVE-ONE is an installable Progressive Web App (PWA) with offline caching and IndexedDB storage. Once loaded, you can draft complaints, check return deadlines, organize proof files, and generate proof packs completely offline.',
+    },
+    {
+      q: 'What happens if I forget my local encryption passphrase?',
+      a: 'Because RESOLVE-ONE has zero remote backend servers or user accounts, there is no master reset key. If you enable client-side AES-256-GCM encryption with a passphrase, only that exact passphrase can decrypt your records. We recommend keeping a downloaded JSON backup in a safe location.',
+    },
   ];
 
   return (
