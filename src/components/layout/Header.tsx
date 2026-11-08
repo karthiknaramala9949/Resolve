@@ -1,11 +1,10 @@
 import React from 'react';
 import { useLocation, Link } from 'react-router-dom';
-import { cn } from '@/lib/utils';
 import { useAppStore } from '@/store/useAppStore';
-import { Search, Sun, Moon, Globe, Shield, Sparkles } from 'lucide-react';
+import { Search, Shield } from 'lucide-react';
 
 export const Header: React.FC = () => {
-  const { theme, toggleTheme, locale, setLocale, openCommandPalette } = useAppStore();
+  const { openCommandPalette } = useAppStore();
   const location = useLocation();
 
   const getPageTitle = () => {
@@ -67,56 +66,6 @@ export const Header: React.FC = () => {
           <Shield className="w-3 h-3 text-emerald-600 dark:text-emerald-400" />
           <span>On-device only</span>
         </div>
-
-        {/* Language selector */}
-        <div className="flex items-center bg-neutral-100 dark:bg-neutral-800 rounded-lg p-0.5 text-xs font-semibold">
-          <button
-            type="button"
-            onClick={() => setLocale('en')}
-            className={cn(
-              'px-2 py-1 rounded-md transition-colors',
-              locale === 'en'
-                ? 'bg-white dark:bg-neutral-700 text-brand-600 dark:text-brand-400 shadow-2xs'
-                : 'text-neutral-500 hover:text-neutral-900 dark:hover:text-neutral-200'
-            )}
-          >
-            EN
-          </button>
-          <button
-            type="button"
-            onClick={() => setLocale('hi')}
-            className={cn(
-              'px-2 py-1 rounded-md transition-colors',
-              locale === 'hi'
-                ? 'bg-white dark:bg-neutral-700 text-brand-600 dark:text-brand-400 shadow-2xs'
-                : 'text-neutral-500 hover:text-neutral-900 dark:hover:text-neutral-200'
-            )}
-          >
-            हिन्दी
-          </button>
-          <button
-            type="button"
-            onClick={() => setLocale('te')}
-            className={cn(
-              'px-2 py-1 rounded-md transition-colors',
-              locale === 'te'
-                ? 'bg-white dark:bg-neutral-700 text-brand-600 dark:text-brand-400 shadow-2xs'
-                : 'text-neutral-500 hover:text-neutral-900 dark:hover:text-neutral-200'
-            )}
-          >
-            తెలుగు
-          </button>
-        </div>
-
-        {/* Theme toggle */}
-        <button
-          type="button"
-          onClick={toggleTheme}
-          className="p-2 text-neutral-500 hover:text-neutral-800 dark:hover:text-neutral-200 rounded-lg hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-colors"
-          aria-label={theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'}
-        >
-          {theme === 'dark' ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
-        </button>
       </div>
     </header>
   );

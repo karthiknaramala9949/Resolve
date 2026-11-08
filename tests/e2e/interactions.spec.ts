@@ -56,14 +56,10 @@ async function runInteractionsSuite() {
   console.log('Flow 1: Verifying Landing Page interactions...');
   await page.goto('http://127.0.0.1:5173/', { waitUntil: 'networkidle' });
 
-  // 1.1 Header Navigation & Theme Toggle
+  // 1.1 Header Navigation
   await page.click('button:has-text("Open App")');
   await page.waitForFunction(() => window.location.pathname === '/app/overview');
-  const htmlBefore = await page.evaluate(() => document.documentElement.className);
-  await page.click('button[aria-label*="Switch to"]');
-  const htmlAfter = await page.evaluate(() => document.documentElement.className);
-  if (htmlBefore === htmlAfter) throw new Error('Theme toggle did not update document class');
-  console.log('   ✓ Header Open App and Theme toggle functional (dark/light toggled)');
+  console.log('   ✓ Header "Open App" navigates to /app/overview');
   await page.goto('http://127.0.0.1:5173/', { waitUntil: 'networkidle' });
 
   // 1.2 FAQ Accordion
@@ -238,6 +234,15 @@ async function runInteractionsSuite() {
   const isChecked = await page.locator('button[role="switch"]').first().getAttribute('aria-checked');
   if (isChecked === checkedBefore) throw new Error('Simple mode setting failed to persist across reload');
   console.log('   ✓ Simple language mode persists across page reload');
+
+  // Theme selection in Settings
+  await page.click('button:has-text("Dark Theme")');
+  let isDark = await page.evaluate(() => document.documentElement.classList.contains('dark'));
+  if (!isDark) throw new Error('Dark theme was not applied');
+  await page.click('button:has-text("Light Theme")');
+  isDark = await page.evaluate(() => document.documentElement.classList.contains('dark'));
+  if (isDark) throw new Error('Light theme was not applied');
+  console.log('   ✓ Theme selection in Settings functional (light & dark applied)');
 
   // FLOW 11: Command Palette Keyboard Navigation
   console.log('\nFlow 11: Verifying Command Palette (⌘K) keyboard search...');
