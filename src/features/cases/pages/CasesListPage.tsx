@@ -90,6 +90,7 @@ export const CasesListPage: React.FC = () => {
 
         <div className="w-full sm:w-56">
           <Select
+            aria-label="Filter cases by status"
             value={filter}
             onChange={(e) => setFilter(e.target.value)}
             options={[

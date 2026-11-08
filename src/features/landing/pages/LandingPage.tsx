@@ -82,7 +82,7 @@ export const LandingPage: React.FC = () => {
               R
             </div>
             <span className="font-serif font-bold text-xl tracking-tight">RESOLVE-ONE</span>
-            <span className="hidden sm:inline-block text-[11px] font-mono px-2 py-0.5 rounded-full bg-neutral-100 dark:bg-neutral-800 text-neutral-500 border border-neutral-200 dark:border-neutral-700">
+            <span className="hidden sm:inline-block text-[11px] font-mono px-2 py-0.5 rounded-full bg-neutral-100 dark:bg-neutral-800 text-neutral-700 dark:text-neutral-300 font-medium border border-neutral-200 dark:border-neutral-700">
               India Consumer Rights
             </span>
           </div>
@@ -148,7 +148,7 @@ export const LandingPage: React.FC = () => {
                 <Sparkles className="w-3.5 h-3.5" />
                 <span>Interactive Live Demo — Try Typing or Editing</span>
               </span>
-              <span className="text-[11px] text-neutral-400">Rule-based parsing</span>
+              <span className="text-[11px] text-neutral-600 dark:text-neutral-400 font-medium">Rule-based parsing</span>
             </div>
 
             <textarea
@@ -161,13 +161,13 @@ export const LandingPage: React.FC = () => {
 
             {/* Live extracted chips */}
             <div className="space-y-2">
-              <span className="text-[11px] font-semibold uppercase text-neutral-400 block">
+              <span className="text-[11px] font-semibold uppercase text-neutral-600 dark:text-neutral-400 block">
                 Extracted Facts (Instant Browser Heuristics)
               </span>
               <div className="flex flex-wrap gap-2 text-xs">
                 {parsedDemo.company && (
                   <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-md bg-white dark:bg-surface-dark border text-neutral-900 dark:text-neutral-100 font-medium shadow-2xs">
-                    <Building2 className="w-3 h-3 text-neutral-400" />
+                    <Building2 className="w-3 h-3 text-neutral-600 dark:text-neutral-400" />
                     <span>Company: {parsedDemo.company}</span>
                   </span>
                 )}
@@ -185,7 +185,7 @@ export const LandingPage: React.FC = () => {
                 )}
                 {parsedDemo.orderRef && (
                   <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-md bg-white dark:bg-surface-dark border text-neutral-800 dark:text-neutral-200 font-mono shadow-2xs">
-                    <Hash className="w-3 h-3 text-neutral-400" />
+                    <Hash className="w-3 h-3 text-neutral-600 dark:text-neutral-400" />
                     <span>Ref: {parsedDemo.orderRef}</span>
                   </span>
                 )}
@@ -193,7 +193,7 @@ export const LandingPage: React.FC = () => {
             </div>
 
             <div className="pt-2 flex items-center justify-between border-t border-neutral-100 dark:border-neutral-800">
-              <span className="text-xs text-neutral-500">
+              <span className="text-xs text-neutral-600 dark:text-neutral-400">
                 Notice: All parsing runs client-side. Zero cloud transmission.
               </span>
               <Button
@@ -215,7 +215,7 @@ export const LandingPage: React.FC = () => {
         </div>
 
         {/* Trust Badges */}
-        <div className="pt-6 flex flex-wrap items-center justify-center gap-6 text-xs text-neutral-500 dark:text-neutral-400">
+        <div className="pt-6 flex flex-wrap items-center justify-center gap-6 text-xs text-neutral-700 dark:text-neutral-300 font-medium">
           <div className="flex items-center gap-1.5">
             <Lock className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
             <span>100% On-Device IndexedDB</span>
@@ -319,19 +319,19 @@ export const LandingPage: React.FC = () => {
         <div className="max-w-6xl mx-auto space-y-8">
           <div className="text-center space-y-2">
             <h2 className="text-3xl font-bold font-serif">India-Specific Escalation Channels</h2>
-            <p className="text-sm text-neutral-500">Direct connections to official government and regulatory helplines.</p>
+            <p className="text-sm text-neutral-600 dark:text-neutral-400">Direct connections to official government and regulatory helplines.</p>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
             <Card variant="default" className="p-5 flex flex-col justify-between space-y-3">
               <div className="space-y-2">
                 <div className="flex items-center justify-between text-xs">
-                  <span className="font-mono text-neutral-400">Toll Free 1915 / WhatsApp 8800001915</span>
+                  <span className="font-mono text-neutral-600 dark:text-neutral-400 font-medium">Toll Free 1915 / WhatsApp 8800001915</span>
                   <span className="px-1.5 py-0.5 rounded text-[10px] font-semibold bg-amber-100 dark:bg-amber-950 text-amber-800 dark:text-amber-300 border border-amber-300 dark:border-amber-800">
                     Verify before launch
                   </span>
                 </div>
-                <div className="text-[11px] text-amber-600 dark:text-amber-400 font-medium">
+                <div className="text-[11px] text-amber-800 dark:text-amber-300 font-semibold">
                   Not yet verified: open the official site to confirm
                 </div>
                 <h3 className="text-base font-bold text-neutral-900 dark:text-neutral-100">National Consumer Helpline (NCH)</h3>
@@ -353,12 +353,12 @@ export const LandingPage: React.FC = () => {
             <Card variant="default" className="p-5 flex flex-col justify-between space-y-3">
               <div className="space-y-2">
                 <div className="flex items-center justify-between text-xs">
-                  <span className="font-mono text-neutral-400">e-jagriti.gov.in</span>
+                  <span className="font-mono text-neutral-600 dark:text-neutral-400 font-medium">e-jagriti.gov.in</span>
                   <span className="px-1.5 py-0.5 rounded text-[10px] font-semibold bg-amber-100 dark:bg-amber-950 text-amber-800 dark:text-amber-300 border border-amber-300 dark:border-amber-800">
                     Verify before launch
                   </span>
                 </div>
-                <div className="text-[11px] text-amber-600 dark:text-amber-400 font-medium">
+                <div className="text-[11px] text-amber-800 dark:text-amber-300 font-semibold">
                   Not yet verified: open the official site to confirm
                 </div>
                 <h3 className="text-base font-bold text-neutral-900 dark:text-neutral-100">e-Jagriti (Consumer Commission)</h3>
@@ -380,12 +380,12 @@ export const LandingPage: React.FC = () => {
             <Card variant="default" className="p-5 flex flex-col justify-between space-y-3">
               <div className="space-y-2">
                 <div className="flex items-center justify-between text-xs">
-                  <span className="font-mono text-neutral-400">Toll Free 14448 / SMS 14448</span>
+                  <span className="font-mono text-neutral-600 dark:text-neutral-400 font-medium">Toll Free 14448 / SMS 14448</span>
                   <span className="px-1.5 py-0.5 rounded text-[10px] font-semibold bg-amber-100 dark:bg-amber-950 text-amber-800 dark:text-amber-300 border border-amber-300 dark:border-amber-800">
                     Verify before launch
                   </span>
                 </div>
-                <div className="text-[11px] text-amber-600 dark:text-amber-400 font-medium">
+                <div className="text-[11px] text-amber-800 dark:text-amber-300 font-semibold">
                   Not yet verified: open the official site to confirm
                 </div>
                 <h3 className="text-base font-bold text-neutral-900 dark:text-neutral-100">RBI Integrated Ombudsman</h3>
@@ -411,7 +411,7 @@ export const LandingPage: React.FC = () => {
       <section className="px-4 md:px-8 py-16 max-w-4xl mx-auto space-y-8">
         <div className="text-center space-y-2">
           <h2 className="text-3xl font-bold font-serif">Frequently Asked Questions</h2>
-          <p className="text-sm text-neutral-500">Everything you need to know about RESOLVE-ONE.</p>
+          <p className="text-sm text-neutral-700 dark:text-neutral-300 font-medium">Everything you need to know about RESOLVE-ONE.</p>
         </div>
 
         <div className="space-y-3">
@@ -442,14 +442,14 @@ export const LandingPage: React.FC = () => {
       </section>
 
       {/* Footer */}
-      <footer className="border-t border-neutral-200 dark:border-neutral-800 py-10 px-4 text-center text-xs text-neutral-500 dark:text-neutral-400 space-y-3">
-        <p className="font-semibold text-neutral-800 dark:text-neutral-200">
+      <footer className="border-t border-neutral-200 dark:border-neutral-800 py-10 px-4 text-center text-xs text-neutral-700 dark:text-neutral-300 font-medium space-y-3">
+        <p className="font-semibold text-neutral-900 dark:text-neutral-100">
           RESOLVE-ONE · Award-Grade Consumer Dispute Resolution for India · Offline-First PWA
         </p>
         <p className="max-w-xl mx-auto">
           General informational guidance only. Not legal advice. Direct all formal legal disputes through official Consumer Commissions under the Consumer Protection Act, 2019.
         </p>
-        <div className="pt-2 flex items-center justify-center gap-4 text-[11px]">
+        <div className="pt-2 flex items-center justify-center gap-4 text-[11px] text-neutral-700 dark:text-neutral-300 font-semibold">
           <button type="button" onClick={() => navigate('/app/overview')} className="hover:underline">
             Consumer Workspace
           </button>

@@ -24,6 +24,7 @@ export const Select = React.forwardRef<HTMLSelectElement, SelectProps>(
           <select
             id={selectId}
             ref={ref}
+            aria-label={props['aria-label'] || label || 'Select option'}
             className={cn(
               'w-full appearance-none px-3.5 py-2.5 pr-10 rounded-lg border bg-white dark:bg-surface-dark text-base text-neutral-900 dark:text-neutral-100 transition-colors cursor-pointer',
               'border-neutral-300 dark:border-neutral-700 focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-500/20',

@@ -258,7 +258,7 @@ export const DocumentsPage: React.FC = () => {
                 onDownload={() => handleDownloadBlob(item.id, item.name)}
                 onDelete={() => handleDeleteEvidence(caseId, item.id)}
               />
-              <div className="mt-1 text-[11px] text-neutral-400 font-mono px-1 truncate">
+              <div className="mt-1 text-[11px] text-neutral-700 dark:text-neutral-300 font-mono px-1 truncate font-medium">
                 Case: {caseId} · {caseTitle}
               </div>
             </div>

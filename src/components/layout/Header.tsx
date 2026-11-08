@@ -39,11 +39,11 @@ export const Header: React.FC = () => {
         <button
           type="button"
           onClick={openCommandPalette}
-          className="flex items-center gap-2 px-3.5 py-1.5 rounded-full border border-neutral-200 dark:border-neutral-700 bg-surface-light-subtle dark:bg-surface-dark-subtle text-xs text-neutral-500 dark:text-neutral-400 hover:border-neutral-300 dark:hover:border-neutral-600 transition-colors shadow-2xs"
+          className="flex items-center gap-2 px-3.5 py-1.5 rounded-full border border-neutral-300 dark:border-neutral-700 bg-surface-light-subtle dark:bg-surface-dark-subtle text-xs text-neutral-700 dark:text-neutral-300 hover:border-neutral-400 dark:hover:border-neutral-600 transition-colors shadow-2xs"
         >
-          <Search className="w-3.5 h-3.5 text-neutral-400" />
+          <Search className="w-3.5 h-3.5 text-neutral-600 dark:text-neutral-400" />
           <span>Search or jump to...</span>
-          <kbd className="ml-2 font-mono text-[10px] px-1.5 py-0.5 rounded bg-white dark:bg-neutral-800 border text-neutral-400">
+          <kbd className="ml-2 font-mono text-[10px] px-1.5 py-0.5 rounded bg-white dark:bg-neutral-800 border text-neutral-600 dark:text-neutral-300 font-semibold">
             ⌘K
           </kbd>
         </button>

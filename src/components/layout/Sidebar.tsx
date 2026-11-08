@@ -52,7 +52,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ className }) => {
             <span className="font-serif font-bold text-lg tracking-tight text-neutral-900 dark:text-neutral-100 group-hover:text-brand-600 dark:group-hover:text-brand-400 transition-colors">
               RESOLVE-ONE
             </span>
-            <span className="block text-[10px] uppercase tracking-wider text-neutral-400 font-medium">
+            <span className="block text-[10px] uppercase tracking-wider text-neutral-600 dark:text-neutral-400 font-semibold">
               India Consumer Care
             </span>
           </div>
@@ -71,7 +71,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ className }) => {
 
         {/* Primary Navigation */}
         <div className="space-y-1">
-          <span className="px-3 text-[11px] font-semibold uppercase tracking-wider text-neutral-400 dark:text-neutral-500">
+          <span className="px-3 text-[11px] font-semibold uppercase tracking-wider text-neutral-600 dark:text-neutral-400">
             Core Workspace
           </span>
           <nav className="mt-2 space-y-1">
@@ -107,7 +107,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ className }) => {
 
         {/* Secondary Navigation */}
         <div className="mt-6 pt-4 border-t border-neutral-100 dark:border-neutral-800/80 space-y-1">
-          <span className="px-3 text-[11px] font-semibold uppercase tracking-wider text-neutral-400 dark:text-neutral-500">
+          <span className="px-3 text-[11px] font-semibold uppercase tracking-wider text-neutral-600 dark:text-neutral-400">
             Tools & Controls
           </span>
           <nav className="mt-2 space-y-1">

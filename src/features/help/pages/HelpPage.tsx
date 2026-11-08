@@ -246,7 +246,7 @@ export const HelpPage: React.FC = () => {
                     Verified {new Date(r.lastVerifiedAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}
                   </span>
                 ) : (
-                  <span className="text-amber-600 dark:text-amber-400 font-medium">
+                  <span className="text-amber-800 dark:text-amber-300 font-medium">
                     Not yet verified: open the official site to confirm
                   </span>
                 )}

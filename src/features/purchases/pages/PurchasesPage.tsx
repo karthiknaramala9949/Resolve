@@ -269,7 +269,7 @@ export const PurchasesPage: React.FC = () => {
                       {p.store}
                     </span>
                     <div className="flex items-center gap-2">
-                      <span className="font-mono text-xs text-neutral-400">{p.orderRef || p.id}</span>
+                      <span className="font-mono text-xs text-neutral-600 dark:text-neutral-400 font-medium">{p.orderRef || p.id}</span>
                       <button
                         type="button"
                         onClick={() => setEditingPurchase(p)}
@@ -296,7 +296,7 @@ export const PurchasesPage: React.FC = () => {
                   <div className="mt-2 flex items-center justify-between">
                     <MoneyDisplay amount={p.amount} size="md" />
                     {p.deliveryDate && (
-                      <span className="text-xs text-neutral-500">
+                      <span className="text-xs text-neutral-600 dark:text-neutral-300 font-medium">
                         Delivered {new Date(p.deliveryDate).toLocaleDateString('en-IN')}
                       </span>
                     )}
@@ -311,14 +311,14 @@ export const PurchasesPage: React.FC = () => {
                         className={`w-4 h-4 ${
                           retWindow.status === 'active' || retWindow.status === 'last_day'
                             ? 'text-amber-600'
-                            : 'text-neutral-400'
+                            : 'text-neutral-500'
                         }`}
                       />
                       <span
                         className={`font-semibold ${
                           retWindow.status === 'active' || retWindow.status === 'last_day'
                             ? 'text-amber-700 dark:text-amber-400'
-                            : 'text-neutral-500'
+                            : 'text-neutral-700 dark:text-neutral-300'
                         }`}
                       >
                         {retWindow.label}

@@ -229,7 +229,7 @@ export const PrivacyPage: React.FC = () => {
           </div>
 
           <div className="p-4 rounded-xl bg-surface-light-subtle dark:bg-surface-dark-subtle border border-neutral-200/80 dark:border-neutral-800 space-y-2">
-            <div className="flex items-center gap-2 text-blue-600 dark:text-blue-400 font-semibold text-sm">
+            <div className="flex items-center gap-2 text-blue-700 dark:text-blue-400 font-semibold text-sm">
               <EyeOff className="w-4 h-4" />
               <span>Local UI Preferences</span>
             </div>
@@ -239,7 +239,7 @@ export const PrivacyPage: React.FC = () => {
           </div>
 
           <div className="p-4 rounded-xl bg-surface-light-subtle dark:bg-surface-dark-subtle border border-neutral-200/80 dark:border-neutral-800 space-y-2">
-            <div className="flex items-center gap-2 text-emerald-600 dark:text-emerald-400 font-semibold text-sm">
+            <div className="flex items-center gap-2 text-emerald-700 dark:text-emerald-400 font-semibold text-sm">
               <ShieldCheck className="w-4 h-4" />
               <span>Remote Cloud Servers</span>
             </div>
