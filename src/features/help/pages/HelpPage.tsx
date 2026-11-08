@@ -23,21 +23,25 @@ export const HelpPage: React.FC = () => {
       tagline: 'First-line national consumer dispute resolution & convergence',
       description:
         'Administered by the Department of Consumer Affairs, Government of India. Over 800+ top companies and e-commerce platforms have partnered for pre-litigation grievance settlement.',
-      contact: 'Call 1915 or 1800-11-4000 (Toll Free, 8 AM - 8 PM all days)',
+      contact: 'Call 1915 or 1800-11-4000 (Toll Free, 8 AM - 8 PM all days) / WhatsApp 8800001915',
       webUrl: 'https://consumerhelpline.gov.in',
-      checkedDate: 'November 2026',
+      sourceUrl: 'https://consumerhelpline.gov.in',
+      lastVerifiedAt: '', // empty to trigger "Not yet verified: open the official site to confirm"
       legalStatus: 'Pre-litigation conciliation',
+      verifyBeforeLaunch: true,
     },
     {
       id: 'ejagriti',
-      title: 'e-Jagriti / e-Daakhil Portal',
-      tagline: 'Formal statutory filing before Consumer Commissions',
+      title: 'e-Jagriti (Consumer Commission)',
+      tagline: 'Formal consumer commission filing before District, State, and National benches',
       description:
         'Digital portal under Consumer Protection Act, 2019 for filing cases before District, State, and National Consumer Disputes Redressal Commissions without needing a lawyer.',
       contact: 'Digital e-filing across 650+ District Commissions',
-      webUrl: 'https://edaakhil.nic.in',
-      checkedDate: 'November 2026',
-      legalStatus: 'Statutory Consumer Court Filing',
+      webUrl: 'https://e-jagriti.gov.in/',
+      sourceUrl: 'https://e-jagriti.gov.in/',
+      lastVerifiedAt: '', // empty to trigger "Not yet verified: open the official site to confirm"
+      legalStatus: 'Consumer Commission Filing',
+      verifyBeforeLaunch: true,
     },
     {
       id: 'rbi',
@@ -45,10 +49,12 @@ export const HelpPage: React.FC = () => {
       tagline: 'Failed UPI, Net Banking, or Debit Card reversals',
       description:
         'Applicable when an e-commerce platform provides a UTR/RRN payment reference claiming refund was sent, but the recipient bank account shows no credit after T+1 to T+5 turnaround days.',
-      contact: 'Toll-free 14448 (9:30 AM to 5:15 PM) or CMS Portal',
+      contact: 'Toll-free 14448 (9:30 AM to 5:15 PM) or CMS Portal / SMS 14448',
       webUrl: 'https://cms.rbi.org.in',
-      checkedDate: 'November 2026',
+      sourceUrl: 'https://cms.rbi.org.in',
+      lastVerifiedAt: '', // empty to trigger "Not yet verified: open the official site to confirm"
       legalStatus: 'Banking Regulatory Ombudsman',
+      verifyBeforeLaunch: true,
     },
   ];
 
@@ -195,14 +201,14 @@ export const HelpPage: React.FC = () => {
           <div className="p-5 rounded-xl bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-900 space-y-3 animate-in fade-in">
             <div className="flex items-center gap-2 text-emerald-900 dark:text-emerald-200 font-bold text-sm">
               <FileCheck className="w-4 h-4 text-emerald-600" />
-              <span>Best Route: e-Jagriti / e-Daakhil (District Consumer Commission)</span>
+              <span>Best Route: e-Jagriti (District Consumer Commission)</span>
             </div>
             <p className="text-xs text-emerald-800 dark:text-emerald-300 leading-relaxed">
-              When informal mediation via NCH fails, file a formal complaint under Section 35 of the Consumer Protection Act, 2019 via the e-Daakhil portal. Consumers can file in their own district without hiring an advocate.
+              When informal mediation via NCH fails, file a formal complaint under Section 35 of the Consumer Protection Act, 2019 via the official e-Jagriti portal. Consumers can file in their own district without hiring an advocate.
             </p>
             <div className="flex items-center gap-3 pt-1">
               <a
-                href="https://edaakhil.nic.in"
+                href="https://e-jagriti.gov.in/"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg bg-emerald-600 text-white text-xs font-semibold hover:bg-emerald-700 transition-colors"
@@ -223,11 +229,27 @@ export const HelpPage: React.FC = () => {
         {officialRoutes.map((r) => (
           <Card key={r.id} variant="default" className="p-6 flex flex-col justify-between space-y-4">
             <div>
-              <div className="flex items-center justify-between text-xs text-neutral-400 mb-2">
+              <div className="flex items-center justify-between text-xs mb-2">
                 <span className="font-semibold text-neutral-600 dark:text-neutral-300 uppercase tracking-wider text-[10px]">
                   {r.legalStatus}
                 </span>
-                <span>Verified {r.checkedDate}</span>
+                {r.verifyBeforeLaunch && (
+                  <span className="px-1.5 py-0.5 rounded text-[10px] font-semibold bg-amber-100 dark:bg-amber-950 text-amber-800 dark:text-amber-300 border border-amber-300 dark:border-amber-800">
+                    Verify before launch
+                  </span>
+                )}
+              </div>
+
+              <div className="text-[11px] mb-2">
+                {r.lastVerifiedAt ? (
+                  <span className="text-neutral-500">
+                    Verified {new Date(r.lastVerifiedAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}
+                  </span>
+                ) : (
+                  <span className="text-amber-600 dark:text-amber-400 font-medium">
+                    Not yet verified: open the official site to confirm
+                  </span>
+                )}
               </div>
 
               <h3 className="text-lg font-bold text-neutral-900 dark:text-neutral-100">
@@ -249,7 +271,7 @@ export const HelpPage: React.FC = () => {
               </div>
 
               <a
-                href={r.webUrl}
+                href={r.sourceUrl || r.webUrl}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="inline-flex items-center justify-center gap-1.5 w-full py-2.5 px-3 rounded-lg border border-neutral-300 dark:border-neutral-700 text-xs font-semibold text-neutral-800 dark:text-neutral-200 hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-colors"

@@ -2,6 +2,7 @@ import React from 'react';
 import ReactDOM from 'react-dom/client';
 import { App } from './App';
 import './index.css';
+import { ErrorBoundary } from './components/common/ErrorBoundary';
 import { detectV1Data, migrateV1Data, initializeDatabaseWithSampleData } from './lib/migrate/v1Migrator';
 
 async function bootstrap() {
@@ -20,7 +21,9 @@ async function bootstrap() {
 
   ReactDOM.createRoot(document.getElementById('root') as HTMLElement).render(
     <React.StrictMode>
-      <App />
+      <ErrorBoundary>
+        <App />
+      </ErrorBoundary>
     </React.StrictMode>
   );
 }

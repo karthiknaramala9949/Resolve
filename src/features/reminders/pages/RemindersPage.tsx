@@ -125,7 +125,7 @@ export const RemindersPage: React.FC = () => {
             Reminders & Follow-Ups
           </h2>
           <p className="text-sm text-neutral-600 dark:text-neutral-400 mt-1">
-            Track company response windows and statutory turnarounds. Stored on-device.
+            Track company response windows and suggested follow-ups. Stored on-device.
           </p>
         </div>
 
@@ -155,7 +155,7 @@ export const RemindersPage: React.FC = () => {
       {/* Honest notice on suggested reminders */}
       <div className="p-4 rounded-xl bg-surface-light-subtle dark:bg-surface-dark-subtle border border-neutral-200/80 dark:border-neutral-800 text-xs text-neutral-600 dark:text-neutral-400">
         <span className="font-semibold text-neutral-900 dark:text-neutral-100">Notice: </span>
-        Suggested follow-up intervals (+7 days) reflect standard customer care resolution cycles. They are reminders for your convenience and not legal limitation periods under the Consumer Protection Act.
+        Follow-up dates are suggested follow-ups for your convenience, not legal deadlines. They are not attributed to any law, regulation, or official guideline.
       </div>
 
       {/* Reminders List */}

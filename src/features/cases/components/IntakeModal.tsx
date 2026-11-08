@@ -28,6 +28,9 @@ export const IntakeModal: React.FC<IntakeModalProps> = ({
   const [story, setStory] = useState(prefill?.story || '');
   const [isRecording, setIsRecording] = useState(false);
   const [speechSupported, setSpeechSupported] = useState(false);
+  const [voiceConsentGiven, setVoiceConsentGiven] = useState(false);
+  const [showVoiceNotice, setShowVoiceNotice] = useState(false);
+  const recognitionRef = React.useRef<any>(null);
 
   // Parsed facts state
   const [company, setCompany] = useState(prefill?.store || '');
@@ -79,20 +82,11 @@ export const IntakeModal: React.FC<IntakeModalProps> = ({
     }
   }, [story]);
 
-  // Voice note capture via Web Speech API
-  const toggleVoice = () => {
-    if (!speechSupported) {
-      toast('Speech recognition is not supported in this browser.', 'warning');
-      return;
-    }
-
-    if (isRecording) {
-      setIsRecording(false);
-      return;
-    }
-
+  const startListening = () => {
     const SpeechRecognition =
       (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+    if (!SpeechRecognition) return;
+
     const recognition = new SpeechRecognition();
     recognition.lang = 'en-IN';
     recognition.continuous = false;
@@ -107,14 +101,42 @@ export const IntakeModal: React.FC<IntakeModalProps> = ({
     recognition.onresult = (event: any) => {
       const transcript = event.results[0][0].transcript;
       setStory((prev) => (prev ? `${prev} ${transcript}` : transcript));
-      toast('Voice transcribed in-browser via Web Speech API.', 'info');
+      toast('Voice transcribed via browser speech service.', 'info');
     };
 
+    recognitionRef.current = recognition;
     try {
       recognition.start();
     } catch {
       setIsRecording(false);
     }
+  };
+
+  // Voice note capture via Web Speech API with explicit user opt-in
+  const toggleVoice = () => {
+    if (!speechSupported) {
+      toast('Speech recognition is not supported in this browser.', 'warning');
+      return;
+    }
+
+    if (isRecording) {
+      if (recognitionRef.current) {
+        try {
+          recognitionRef.current.stop();
+        } catch {
+          // ignore
+        }
+      }
+      setIsRecording(false);
+      return;
+    }
+
+    if (!voiceConsentGiven) {
+      setShowVoiceNotice(true);
+      return;
+    }
+
+    startListening();
   };
 
   const handleSample = (sampleText: string) => {
@@ -224,9 +246,45 @@ export const IntakeModal: React.FC<IntakeModalProps> = ({
           )}
         </div>
 
+        {/* Explicit Voice Transcription Opt-In Notice */}
+        {showVoiceNotice && (
+          <div className="p-4 rounded-xl bg-amber-50 dark:bg-amber-950/60 border border-amber-300 dark:border-amber-800 text-xs text-amber-900 dark:text-amber-200 space-y-3 animate-in fade-in">
+            <div className="flex items-start gap-2.5">
+              <Mic className="w-4 h-4 text-amber-600 dark:text-amber-400 mt-0.5 shrink-0" />
+              <div>
+                <p className="font-semibold text-sm">Microphone Transcription Notice</p>
+                <p className="mt-1 leading-relaxed text-xs">
+                  Your browser may send audio to its speech provider (for example Google in Chrome) to transcribe it. Use typing if you prefer.
+                </p>
+              </div>
+            </div>
+            <div className="flex items-center justify-end gap-2 pt-1">
+              <button
+                type="button"
+                onClick={() => setShowVoiceNotice(false)}
+                className="px-3 py-1.5 rounded-lg border border-amber-300 dark:border-amber-700 bg-white dark:bg-neutral-900 text-neutral-700 dark:text-neutral-300 hover:bg-neutral-100 dark:hover:bg-neutral-800"
+              >
+                Cancel, I will type
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setVoiceConsentGiven(true);
+                  setShowVoiceNotice(false);
+                  startListening();
+                }}
+                className="px-3 py-1.5 rounded-lg bg-brand-600 text-white font-medium hover:bg-brand-700 transition-colors"
+              >
+                I understand, start microphone
+              </button>
+            </div>
+          </div>
+        )}
+
         {isRecording && (
-          <p className="text-xs text-red-600 dark:text-red-400 font-medium animate-pulse">
-            Listening... Speak clearly. Audio stays in-browser; nothing is recorded or sent.
+          <p className="text-xs text-red-600 dark:text-red-400 font-medium animate-pulse flex items-center gap-1.5">
+            <span className="w-2 h-2 rounded-full bg-red-600 inline-block animate-ping" />
+            <span>Listening... Speak clearly into your microphone. Tap microphone icon to stop.</span>
           </p>
         )}
 

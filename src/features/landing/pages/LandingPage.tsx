@@ -330,28 +330,85 @@ export const LandingPage: React.FC = () => {
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
-            <Card variant="default" className="p-5 space-y-2">
-              <div className="text-xs font-mono text-neutral-400">Toll Free 1915 / 1800 11 4000</div>
-              <h3 className="text-base font-bold text-neutral-900 dark:text-neutral-100">National Consumer Helpline (NCH)</h3>
-              <p className="text-xs text-neutral-600 dark:text-neutral-400">
-                Department of Consumer Affairs convergence channel resolving e-commerce and retail disputes in days.
-              </p>
+            <Card variant="default" className="p-5 flex flex-col justify-between space-y-3">
+              <div className="space-y-2">
+                <div className="flex items-center justify-between text-xs">
+                  <span className="font-mono text-neutral-400">Toll Free 1915 / WhatsApp 8800001915</span>
+                  <span className="px-1.5 py-0.5 rounded text-[10px] font-semibold bg-amber-100 dark:bg-amber-950 text-amber-800 dark:text-amber-300 border border-amber-300 dark:border-amber-800">
+                    Verify before launch
+                  </span>
+                </div>
+                <div className="text-[11px] text-amber-600 dark:text-amber-400 font-medium">
+                  Not yet verified: open the official site to confirm
+                </div>
+                <h3 className="text-base font-bold text-neutral-900 dark:text-neutral-100">National Consumer Helpline (NCH)</h3>
+                <p className="text-xs text-neutral-600 dark:text-neutral-400">
+                  Department of Consumer Affairs convergence channel resolving e-commerce and retail disputes in days.
+                </p>
+              </div>
+              <a
+                href="https://consumerhelpline.gov.in"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-1.5 text-xs font-semibold text-brand-600 dark:text-brand-400 hover:underline pt-2 border-t border-neutral-100 dark:border-neutral-800"
+              >
+                <span>Visit official site</span>
+                <ExternalLink className="w-3.5 h-3.5" />
+              </a>
             </Card>
 
-            <Card variant="default" className="p-5 space-y-2">
-              <div className="text-xs font-mono text-neutral-400">edaakhil.nic.in</div>
-              <h3 className="text-base font-bold text-neutral-900 dark:text-neutral-100">e-Jagriti / e-Daakhil</h3>
-              <p className="text-xs text-neutral-600 dark:text-neutral-400">
-                Statutory online consumer forum filing before 650+ District Commissions under CPA 2019 without advocates.
-              </p>
+            <Card variant="default" className="p-5 flex flex-col justify-between space-y-3">
+              <div className="space-y-2">
+                <div className="flex items-center justify-between text-xs">
+                  <span className="font-mono text-neutral-400">e-jagriti.gov.in</span>
+                  <span className="px-1.5 py-0.5 rounded text-[10px] font-semibold bg-amber-100 dark:bg-amber-950 text-amber-800 dark:text-amber-300 border border-amber-300 dark:border-amber-800">
+                    Verify before launch
+                  </span>
+                </div>
+                <div className="text-[11px] text-amber-600 dark:text-amber-400 font-medium">
+                  Not yet verified: open the official site to confirm
+                </div>
+                <h3 className="text-base font-bold text-neutral-900 dark:text-neutral-100">e-Jagriti (Consumer Commission)</h3>
+                <p className="text-xs text-neutral-600 dark:text-neutral-400">
+                  Online consumer commission filing before District, State, and National Commissions under CPA 2019 without advocates.
+                </p>
+              </div>
+              <a
+                href="https://e-jagriti.gov.in/"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-1.5 text-xs font-semibold text-brand-600 dark:text-brand-400 hover:underline pt-2 border-t border-neutral-100 dark:border-neutral-800"
+              >
+                <span>Visit official site</span>
+                <ExternalLink className="w-3.5 h-3.5" />
+              </a>
             </Card>
 
-            <Card variant="default" className="p-5 space-y-2">
-              <div className="text-xs font-mono text-neutral-400">Toll Free 14448</div>
-              <h3 className="text-base font-bold text-neutral-900 dark:text-neutral-100">RBI Integrated Ombudsman</h3>
-              <p className="text-xs text-neutral-600 dark:text-neutral-400">
-                Mandatory turnaround resolution for failed UPI refunds, net banking, or debit card reversal discrepancies.
-              </p>
+            <Card variant="default" className="p-5 flex flex-col justify-between space-y-3">
+              <div className="space-y-2">
+                <div className="flex items-center justify-between text-xs">
+                  <span className="font-mono text-neutral-400">Toll Free 14448 / SMS 14448</span>
+                  <span className="px-1.5 py-0.5 rounded text-[10px] font-semibold bg-amber-100 dark:bg-amber-950 text-amber-800 dark:text-amber-300 border border-amber-300 dark:border-amber-800">
+                    Verify before launch
+                  </span>
+                </div>
+                <div className="text-[11px] text-amber-600 dark:text-amber-400 font-medium">
+                  Not yet verified: open the official site to confirm
+                </div>
+                <h3 className="text-base font-bold text-neutral-900 dark:text-neutral-100">RBI Integrated Ombudsman</h3>
+                <p className="text-xs text-neutral-600 dark:text-neutral-400">
+                  Mandatory turnaround resolution for failed UPI refunds, net banking, or debit card reversal discrepancies.
+                </p>
+              </div>
+              <a
+                href="https://cms.rbi.org.in"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-1.5 text-xs font-semibold text-brand-600 dark:text-brand-400 hover:underline pt-2 border-t border-neutral-100 dark:border-neutral-800"
+              >
+                <span>Visit official site</span>
+                <ExternalLink className="w-3.5 h-3.5" />
+              </a>
             </Card>
           </div>
         </div>

@@ -4,6 +4,7 @@ import { Sidebar } from './Sidebar';
 import { Header } from './Header';
 import { MobileNav } from './MobileNav';
 import { OfflineBanner } from './OfflineBanner';
+import { StoragePersistenceBanner } from './StoragePersistenceBanner';
 import { CommandPalette } from '@/design-system/components/CommandPalette';
 import { useAppStore } from '@/store/useAppStore';
 import { caseRepository } from '@/lib/db/repositories';
@@ -47,7 +48,10 @@ export const AppShell: React.FC = () => {
 
   return (
     <div className="flex min-h-screen bg-surface-light-ground dark:bg-surface-dark-ground text-neutral-900 dark:text-neutral-100 selection:bg-brand-100 selection:text-brand-900">
-      <OfflineBanner />
+      <div className="fixed top-0 left-0 right-0 z-50 flex flex-col">
+        <OfflineBanner />
+        <StoragePersistenceBanner />
+      </div>
 
       {/* Desktop Sidebar (hidden on mobile) */}
       <Sidebar className="hidden md:flex" />

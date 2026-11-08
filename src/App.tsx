@@ -2,6 +2,7 @@ import React, { Suspense } from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { ToastProvider } from '@/design-system';
 import { AppShell } from '@/components/layout/AppShell';
+import { NotFoundPage } from '@/components/common/NotFoundPage';
 
 // Route-level code-splitting for high-performance sub-120KB initial JS budget
 const LandingPage = React.lazy(() =>
@@ -34,9 +35,11 @@ const PrivacyPage = React.lazy(() =>
 const SettingsPage = React.lazy(() =>
   import('@/features/settings/pages/SettingsPage').then((m) => ({ default: m.SettingsPage }))
 );
-const InternalPage = React.lazy(() =>
-  import('@/internal/pages/InternalPage').then((m) => ({ default: m.InternalPage }))
-);
+
+// Quarantined internal engineering register: strictly excluded from production build
+const InternalPage = import.meta.env.DEV
+  ? React.lazy(() => import('@/internal/pages/InternalPage').then((m) => ({ default: m.InternalPage })))
+  : null;
 
 const PageLoader: React.FC = () => (
   <div className="flex flex-col items-center justify-center min-h-[60vh] py-16 gap-3" aria-busy="true" aria-label="Loading page...">
@@ -68,11 +71,13 @@ export const App: React.FC = () => {
               <Route path="settings" element={<SettingsPage />} />
             </Route>
 
-            {/* Isolated Internal Engineering Lab */}
-            <Route path="/internal" element={<InternalPage />} />
+            {/* Isolated Internal Engineering Lab - ONLY available during DEV mode */}
+            {import.meta.env.DEV && InternalPage && (
+              <Route path="/internal" element={<InternalPage />} />
+            )}
 
             {/* Catch-all fallback */}
-            <Route path="*" element={<Navigate to="/" replace />} />
+            <Route path="*" element={<NotFoundPage />} />
           </Routes>
         </Suspense>
       </BrowserRouter>

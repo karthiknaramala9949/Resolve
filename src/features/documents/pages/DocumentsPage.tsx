@@ -22,6 +22,7 @@ import { caseRepository, evidenceRepository } from '@/lib/db/repositories';
 import { Case, EvidenceMeta } from '@/lib/db/types';
 import { formatComplaintLetter } from '@/lib/pdf/complaintLetter';
 import { detectSensitiveInfo } from '@/lib/rules/redactionChecker';
+import { validateUploadedFile, ALLOWED_EXTENSIONS } from '@/lib/rules/fileValidator';
 
 export const DocumentsPage: React.FC = () => {
   const { toast } = useToast();
@@ -64,6 +65,13 @@ export const DocumentsPage: React.FC = () => {
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
       const file = e.target.files[0];
+      const validation = validateUploadedFile(file);
+      if (!validation.valid) {
+        toast(validation.error || 'Invalid file', 'error');
+        e.target.value = '';
+        setUploadFile(null);
+        return;
+      }
       setUploadFile(file);
 
       // Check filename for sensitive patterns
@@ -75,6 +83,12 @@ export const DocumentsPage: React.FC = () => {
   const handleUploadSubmit = async () => {
     if (!uploadFile || !targetCaseId) {
       toast('Please select a file and target case.', 'warning');
+      return;
+    }
+
+    const validation = validateUploadedFile(uploadFile);
+    if (!validation.valid) {
+      toast(validation.error || 'Invalid file', 'error');
       return;
     }
 
@@ -277,9 +291,13 @@ export const DocumentsPage: React.FC = () => {
             </div>
             <input
               type="file"
+              accept=".pdf,.png,.jpg,.jpeg,.webp,.heic,.mp4,.txt,.eml,.csv,.json"
               onChange={handleFileChange}
               className="text-xs text-neutral-500 file:mr-3 file:py-1.5 file:px-3 file:rounded-md file:border file:border-neutral-300 file:bg-surface-light-subtle file:text-xs file:font-semibold"
             />
+            <p className="text-[11px] text-neutral-400">
+              Max file size: 15 MB. Allowed: PDF, PNG, JPG, WEBP, HEIC, MP4, TXT, EML, CSV, JSON.
+            </p>
           </div>
 
           {redactionNotices.length > 0 && (
@@ -386,12 +404,12 @@ export const DocumentsPage: React.FC = () => {
                 </a>
 
                 <a
-                  href="https://edaakhil.nic.in"
+                  href="https://e-jagriti.gov.in/"
                   target="_blank"
                   rel="noopener noreferrer"
                   className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-neutral-300 dark:border-neutral-700 hover:bg-neutral-100 dark:hover:bg-neutral-800 text-neutral-900 dark:text-neutral-100 font-medium"
                 >
-                  <span>e-Jagriti / e-Daakhil Portal</span>
+                  <span>e-Jagriti Portal</span>
                   <ExternalLink className="w-3.5 h-3.5" />
                 </a>
               </div>
