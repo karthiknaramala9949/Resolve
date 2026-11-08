@@ -12,7 +12,6 @@ import {
   ShieldCheck,
   Settings,
   Plus,
-  Terminal,
 } from 'lucide-react';
 
 interface SidebarProps {
@@ -136,7 +135,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ className }) => {
         </div>
       </div>
 
-      {/* Footer: Storage Status & Internal Lab Link */}
+      {/* Footer: Storage Status */}
       <div className="pt-4 border-t border-neutral-100 dark:border-neutral-800/80 space-y-3">
         <div className="flex items-center justify-between px-2 text-xs text-neutral-500 dark:text-neutral-400">
           <div className="flex items-center gap-2">
@@ -145,15 +144,6 @@ export const Sidebar: React.FC<SidebarProps> = ({ className }) => {
           </div>
           <span className="text-[11px]">v2.0</span>
         </div>
-
-        {/* Feature-flagged Internal Lab Shortcut */}
-        <Link
-          to="/internal"
-          className="flex items-center gap-2 px-2 py-1.5 rounded-md text-xs text-neutral-400 hover:text-neutral-700 dark:hover:text-neutral-200 hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-colors"
-        >
-          <Terminal className="w-3.5 h-3.5" />
-          <span>Internal Lab & Register</span>
-        </Link>
       </div>
     </aside>
   );

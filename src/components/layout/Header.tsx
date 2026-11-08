@@ -18,7 +18,6 @@ export const Header: React.FC = () => {
     if (path.includes('/app/reminders')) return 'Reminders';
     if (path.includes('/app/privacy')) return 'Privacy & Data Trust';
     if (path.includes('/app/settings')) return 'Settings';
-    if (path.includes('/internal')) return 'Internal Capabilities';
     return 'RESOLVE-ONE';
   };
 

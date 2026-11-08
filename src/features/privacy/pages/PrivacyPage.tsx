@@ -15,6 +15,7 @@ import {
 import { db } from '@/lib/db/db';
 import { caseRepository, purchaseRepository, reminderRepository } from '@/lib/db/repositories';
 import { encryptBuffer, decryptBuffer } from '@/lib/crypto/encryption';
+import { createZipArchive } from '@/lib/utils/zipGenerator';
 
 export const PrivacyPage: React.FC = () => {
   const { toast } = useToast();
@@ -57,6 +58,55 @@ export const PrivacyPage: React.FC = () => {
       toast('Full JSON data package exported successfully.', 'success');
     } catch (err: any) {
       toast(`Export failed: ${err.message}`, 'error');
+    }
+  };
+
+  const handleExportZip = async () => {
+    try {
+      const [cases, purchases, reminders, blobs] = await Promise.all([
+        caseRepository.getAll(),
+        purchaseRepository.getAll(),
+        reminderRepository.getAll(),
+        db.evidenceBlobs.toArray(),
+      ]);
+
+      const exportBundle = {
+        app: 'RESOLVE-ONE',
+        version: '2.0.0',
+        exportedAt: new Date().toISOString(),
+        disclaimer: 'Unencrypted client-side export of local dispute records.',
+        data: { cases, purchases, reminders },
+      };
+
+      const entries: { filename: string; data: Uint8Array }[] = [
+        {
+          filename: 'resolve-one-records.json',
+          data: new TextEncoder().encode(JSON.stringify(exportBundle, null, 2)),
+        },
+      ];
+
+      for (const b of blobs) {
+        if (b.blob) {
+          const buf = await b.blob.arrayBuffer();
+          entries.push({
+            filename: `evidence/${b.id}_${b.name}`,
+            data: new Uint8Array(buf),
+          });
+        }
+      }
+
+      const zipBlob = createZipArchive(entries);
+      const url = URL.createObjectURL(zipBlob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `RESOLVE-ONE-Archive-${new Date().toISOString().slice(0, 10)}.zip`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+      toast('Complete ZIP archive (records + evidence) exported successfully.', 'success');
+    } catch (err: any) {
+      toast(`ZIP export failed: ${err.message}`, 'error');
     }
   };
 
@@ -276,9 +326,16 @@ export const PrivacyPage: React.FC = () => {
           <p className="text-xs text-neutral-600 dark:text-neutral-400">
             Download a portable, unencrypted JSON backup of all your cases, timeline logs, and evidence records.
           </p>
-          <Button variant="secondary" size="md" onClick={handleExportAll}>
-            <span>Download JSON Backup</span>
-          </Button>
+          <div className="flex flex-wrap gap-2 pt-1">
+            <Button variant="secondary" size="md" onClick={handleExportAll}>
+              <Download className="w-4 h-4 mr-1.5" />
+              <span>Download JSON Backup</span>
+            </Button>
+            <Button variant="outline" size="md" onClick={handleExportZip}>
+              <Download className="w-4 h-4 mr-1.5" />
+              <span>Export ZIP Archive (JSON + Evidence)</span>
+            </Button>
+          </div>
         </Card>
 
         <Card variant="default" className="p-6 space-y-3 border-red-200 dark:border-red-950/60">

@@ -20,11 +20,9 @@ import {
   Hash,
 } from 'lucide-react';
 import { parseComplaintText } from '@/lib/rules/intakeParser';
-import { useAppStore } from '@/store/useAppStore';
 
 export const LandingPage: React.FC = () => {
   const navigate = useNavigate();
-  const { locale, setLocale } = useAppStore();
 
   // Interactive Live Demo in Hero
   const [demoText, setDemoText] = useState(
@@ -73,44 +71,23 @@ export const LandingPage: React.FC = () => {
             </span>
           </div>
 
-          <div className="flex items-center gap-3">
-            {/* Language Switcher */}
-            <div className="flex items-center bg-neutral-100 dark:bg-neutral-800 rounded-lg p-0.5 text-xs font-semibold">
-              <button
-                type="button"
-                onClick={() => setLocale('en')}
-                className={`px-2 py-1 rounded-md transition-colors ${
-                  locale === 'en'
-                    ? 'bg-white dark:bg-neutral-700 text-brand-600 dark:text-brand-400 shadow-2xs'
-                    : 'text-neutral-500 hover:text-neutral-900 dark:hover:text-neutral-200'
-                }`}
-              >
-                EN
-              </button>
-              <button
-                type="button"
-                onClick={() => setLocale('hi')}
-                className={`px-2 py-1 rounded-md transition-colors ${
-                  locale === 'hi'
-                    ? 'bg-white dark:bg-neutral-700 text-brand-600 dark:text-brand-400 shadow-2xs'
-                    : 'text-neutral-500 hover:text-neutral-900 dark:hover:text-neutral-200'
-                }`}
-              >
-                हिन्दी
-              </button>
-              <button
-                type="button"
-                onClick={() => setLocale('te')}
-                className={`px-2 py-1 rounded-md transition-colors ${
-                  locale === 'te'
-                    ? 'bg-white dark:bg-neutral-700 text-brand-600 dark:text-brand-400 shadow-2xs'
-                    : 'text-neutral-500 hover:text-neutral-900 dark:hover:text-neutral-200'
-                }`}
-              >
-                తెలుగు
-              </button>
-            </div>
+          {/* Center Navigation Links */}
+          <nav className="hidden md:flex items-center gap-6 text-xs font-semibold text-neutral-600 dark:text-neutral-400">
+            <a href="#how-it-works" className="hover:text-brand-600 dark:hover:text-brand-400 transition-colors">
+              How it Works
+            </a>
+            <a href="#rights" className="hover:text-brand-600 dark:hover:text-brand-400 transition-colors">
+              Your Rights
+            </a>
+            <a href="#privacy" className="hover:text-brand-600 dark:hover:text-brand-400 transition-colors">
+              Privacy & Trust
+            </a>
+            <a href="#faq" className="hover:text-brand-600 dark:hover:text-brand-400 transition-colors">
+              FAQ
+            </a>
+          </nav>
 
+          <div className="flex items-center gap-2.5">
             <Button
               variant="outline"
               size="sm"
@@ -124,7 +101,7 @@ export const LandingPage: React.FC = () => {
               size="sm"
               onClick={() => navigate('/app/cases?new=true')}
             >
-              <span>Tell Us What Happened</span>
+              <span>Start in 60s</span>
               <ArrowRight className="w-3.5 h-3.5 ml-1" />
             </Button>
           </div>
@@ -463,10 +440,6 @@ export const LandingPage: React.FC = () => {
           <span>•</span>
           <button type="button" onClick={() => navigate('/app/privacy')} className="hover:underline">
             Privacy & Trust
-          </button>
-          <span>•</span>
-          <button type="button" onClick={() => navigate('/internal')} className="hover:underline">
-            Internal 150-Feature Catalog
           </button>
         </div>
       </footer>

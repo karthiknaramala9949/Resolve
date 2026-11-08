@@ -47,21 +47,22 @@ export const AppShell: React.FC = () => {
   }, [isCommandPaletteOpen, openCommandPalette, closeCommandPalette]);
 
   return (
-    <div className="flex min-h-screen bg-surface-light-ground dark:bg-surface-dark-ground text-neutral-900 dark:text-neutral-100 selection:bg-brand-100 selection:text-brand-900">
-      <div className="fixed top-0 left-0 right-0 z-50 flex flex-col">
-        <OfflineBanner />
-        <StoragePersistenceBanner />
-      </div>
+    <div className="flex flex-col min-h-screen bg-surface-light-ground dark:bg-surface-dark-ground text-neutral-900 dark:text-neutral-100 selection:bg-brand-100 selection:text-brand-900">
+      {/* Top Notification Banners in document flow */}
+      <OfflineBanner />
+      <StoragePersistenceBanner />
 
-      {/* Desktop Sidebar (hidden on mobile) */}
-      <Sidebar className="hidden md:flex" />
+      <div className="flex flex-1 min-h-0">
+        {/* Desktop Sidebar (hidden on mobile) */}
+        <Sidebar className="hidden md:flex" />
 
-      {/* Main Content Area */}
-      <div className="flex-1 flex flex-col min-w-0 pb-20 md:pb-6">
-        <Header />
-        <main className="flex-1 p-4 md:p-8 max-w-7xl w-full mx-auto">
-          <Outlet />
-        </main>
+        {/* Main Content Area */}
+        <div className="flex-1 flex flex-col min-w-0 pb-20 md:pb-6">
+          <Header />
+          <main className="flex-1 p-4 md:p-8 max-w-7xl w-full mx-auto">
+            <Outlet />
+          </main>
+        </div>
       </div>
 
       {/* Mobile Bottom Navigation (hidden on desktop) */}

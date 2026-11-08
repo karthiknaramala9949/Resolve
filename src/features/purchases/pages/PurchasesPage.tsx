@@ -20,6 +20,8 @@ import {
   AlertCircle,
   CheckCircle2,
   Trash2,
+  Edit2,
+  FileText,
 } from 'lucide-react';
 import { purchaseRepository } from '@/lib/db/repositories';
 import { Purchase } from '@/lib/db/types';
@@ -36,6 +38,7 @@ export const PurchasesPage: React.FC = () => {
   const [purchases, setPurchases] = useState<Purchase[]>([]);
   const [isImportModalOpen, setIsImportModalOpen] = useState(false);
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+  const [editingPurchase, setEditingPurchase] = useState<Purchase | null>(null);
 
   // Import state
   const [importText, setImportText] = useState('');
@@ -67,6 +70,71 @@ export const PurchasesPage: React.FC = () => {
     }
     const draft = parsePastedPurchaseText(importText);
     setImportDraft(draft);
+  };
+
+  const handleFileImport = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (!e.target.files || !e.target.files[0]) return;
+    const file = e.target.files[0];
+    const reader = new FileReader();
+
+    reader.onload = (event) => {
+      const content = String(event.target?.result || '');
+      if (file.name.endsWith('.json')) {
+        try {
+          const parsed = JSON.parse(content);
+          const raw = Array.isArray(parsed) ? parsed[0] : (parsed.data?.purchases?.[0] || parsed);
+          setImportDraft({
+            store: raw.store || 'Imported Store',
+            product: raw.product || 'Imported Product',
+            orderRef: raw.orderRef || '',
+            amount: raw.amount ? Number(raw.amount) : null,
+            purchaseDate: raw.purchaseDate || new Date().toISOString().slice(0, 10),
+            deliveryDate: raw.deliveryDate || '',
+            returnWindowDays: raw.returnWindowDays || 7,
+            warrantyMonths: raw.warrantyMonths || 12,
+          });
+          toast('Parsed JSON purchase record successfully.', 'info');
+        } catch {
+          toast('Invalid JSON format.', 'error');
+        }
+      } else if (file.name.endsWith('.csv')) {
+        const lines = content.split('\n').filter((l) => l.trim().length > 0);
+        if (lines.length > 1) {
+          const cols = lines[1].split(',').map((c) => c.trim().replace(/^["']|["']$/g, ''));
+          setImportDraft({
+            store: cols[0] || 'CSV Store',
+            product: cols[1] || 'CSV Item',
+            orderRef: cols[2] || '',
+            amount: cols[3] ? parseFloat(cols[3]) : null,
+            purchaseDate: cols[4] || new Date().toISOString().slice(0, 10),
+            deliveryDate: cols[5] || '',
+            returnWindowDays: 7,
+            warrantyMonths: 12,
+          });
+          toast('Parsed CSV purchase record successfully.', 'info');
+        } else {
+          toast('CSV file empty or missing headers.', 'warning');
+        }
+      } else {
+        const draft = parsePastedPurchaseText(content);
+        setImportDraft(draft);
+        toast('Parsed text/EML purchase details successfully.', 'info');
+      }
+    };
+
+    reader.readAsText(file);
+  };
+
+  const handleUpdatePurchase = async () => {
+    if (!editingPurchase) return;
+    try {
+      await purchaseRepository.save(editingPurchase);
+      toast('Purchase record updated successfully.', 'success');
+      setEditingPurchase(null);
+      loadPurchases();
+    } catch (err: any) {
+      toast(`Update error: ${err.message}`, 'error');
+    }
   };
 
   const handleSaveImport = async () => {
@@ -204,6 +272,14 @@ export const PurchasesPage: React.FC = () => {
                       <span className="font-mono text-xs text-neutral-400">{p.orderRef || p.id}</span>
                       <button
                         type="button"
+                        onClick={() => setEditingPurchase(p)}
+                        className="p-1 text-neutral-400 hover:text-neutral-700 dark:hover:text-neutral-200 rounded transition-colors"
+                        title="Edit purchase record"
+                      >
+                        <Edit2 className="w-3.5 h-3.5" />
+                      </button>
+                      <button
+                        type="button"
                         onClick={() => handleDelete(p.id)}
                         className="p-1 text-neutral-400 hover:text-red-600 rounded transition-colors"
                         title="Delete record"
@@ -296,6 +372,25 @@ export const PurchasesPage: React.FC = () => {
           <Button variant="secondary" size="sm" onClick={handlePreviewImport}>
             Preview Extracted Fields
           </Button>
+
+          <div className="relative flex py-1 items-center">
+            <div className="flex-grow border-t border-neutral-200 dark:border-neutral-800"></div>
+            <span className="flex-shrink mx-3 text-xs text-neutral-400 font-medium">OR UPLOAD FILE</span>
+            <div className="flex-grow border-t border-neutral-200 dark:border-neutral-800"></div>
+          </div>
+
+          <div className="flex items-center gap-3">
+            <label className="flex items-center justify-center gap-2 px-3 py-2 rounded-lg border border-neutral-300 dark:border-neutral-700 bg-surface-light-subtle dark:bg-surface-dark-subtle text-xs font-semibold cursor-pointer hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-colors">
+              <Upload className="w-4 h-4 text-neutral-500" />
+              <span>Import CSV / JSON / EML file</span>
+              <input
+                type="file"
+                accept=".json,.csv,.eml,.txt"
+                onChange={handleFileImport}
+                className="hidden"
+              />
+            </label>
+          </div>
 
           {importDraft && (
             <div className="p-4 rounded-xl bg-surface-light-subtle dark:bg-surface-dark-subtle border border-neutral-200/80 dark:border-neutral-800 space-y-2 text-xs animate-in fade-in">
@@ -407,6 +502,78 @@ export const PurchasesPage: React.FC = () => {
           </div>
         </div>
       </BottomSheet>
+
+      {/* Edit Purchase Modal */}
+      {editingPurchase && (
+        <BottomSheet
+          isOpen={true}
+          onClose={() => setEditingPurchase(null)}
+          title="Edit Purchase Record"
+          description="Update store, dates, warranty or return period."
+        >
+          <div className="space-y-3">
+            <Input
+              label="Store or Merchant"
+              value={editingPurchase.store}
+              onChange={(e) => setEditingPurchase({ ...editingPurchase, store: e.target.value })}
+            />
+            <Input
+              label="Product Name"
+              value={editingPurchase.product}
+              onChange={(e) => setEditingPurchase({ ...editingPurchase, product: e.target.value })}
+            />
+            <div className="grid grid-cols-2 gap-3">
+              <Input
+                label="Order Reference #"
+                value={editingPurchase.orderRef || ''}
+                onChange={(e) => setEditingPurchase({ ...editingPurchase, orderRef: e.target.value })}
+              />
+              <Input
+                label="Amount Paid (₹)"
+                type="number"
+                value={editingPurchase.amount ? String(editingPurchase.amount) : ''}
+                onChange={(e) => setEditingPurchase({ ...editingPurchase, amount: parseFloat(e.target.value) || null })}
+              />
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              <Input
+                label="Purchase Date"
+                type="date"
+                value={editingPurchase.purchaseDate || ''}
+                onChange={(e) => setEditingPurchase({ ...editingPurchase, purchaseDate: e.target.value })}
+              />
+              <Input
+                label="Delivery Date"
+                type="date"
+                value={editingPurchase.deliveryDate || ''}
+                onChange={(e) => setEditingPurchase({ ...editingPurchase, deliveryDate: e.target.value })}
+              />
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              <Input
+                label="Return Window (Days)"
+                type="number"
+                value={String(editingPurchase.returnWindowDays || 7)}
+                onChange={(e) => setEditingPurchase({ ...editingPurchase, returnWindowDays: parseInt(e.target.value, 10) || 7 })}
+              />
+              <Input
+                label="Warranty (Months)"
+                type="number"
+                value={String(editingPurchase.warrantyMonths || 12)}
+                onChange={(e) => setEditingPurchase({ ...editingPurchase, warrantyMonths: parseInt(e.target.value, 10) || 12 })}
+              />
+            </div>
+            <div className="flex justify-end gap-3 pt-2">
+              <Button variant="outline" onClick={() => setEditingPurchase(null)}>
+                Cancel
+              </Button>
+              <Button variant="primary" onClick={handleUpdatePurchase}>
+                Save Changes
+              </Button>
+            </div>
+          </div>
+        </BottomSheet>
+      )}
     </div>
   );
 };

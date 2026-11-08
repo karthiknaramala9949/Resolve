@@ -79,6 +79,7 @@ export const SettingsPage: React.FC = () => {
           <button
             type="button"
             role="switch"
+            aria-label="Toggle Simple Language Mode"
             aria-checked={simpleLanguageMode}
             onClick={() => setSimpleLanguageMode(!simpleLanguageMode)}
             className={`w-12 h-6 rounded-full transition-colors relative flex items-center px-0.5 ${

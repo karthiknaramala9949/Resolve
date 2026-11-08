@@ -85,13 +85,15 @@ describe('Proof Pack PDF & Complaint Generator', () => {
 describe('Purchases & Return Window Math (Signature Feature #7)', () => {
   it('calculates return window accurately for active and closed windows', () => {
     // Delivered today
-    const todayStr = new Date().toISOString().slice(0, 10);
+    const now = new Date();
+    const todayStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
     const active = calculateReturnWindow(todayStr, 7);
     expect(active.status).toBe('active');
     expect(active.daysLeft).toBe(7);
 
     // Delivered 10 days ago with 7 day window
-    const tenDaysAgo = new Date(Date.now() - 10 * 86400000).toISOString().slice(0, 10);
+    const past = new Date(now.getTime() - 10 * 86400000);
+    const tenDaysAgo = `${past.getFullYear()}-${String(past.getMonth() + 1).padStart(2, '0')}-${String(past.getDate()).padStart(2, '0')}`;
     const expired = calculateReturnWindow(tenDaysAgo, 7);
     expect(expired.status).toBe('closed');
     expect(expired.daysLeft).toBeLessThan(0);

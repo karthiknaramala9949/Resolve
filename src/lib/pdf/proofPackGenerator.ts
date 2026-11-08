@@ -103,19 +103,24 @@ export function generateProofPackPDF(caseData: Case): jsPDF {
 
       doc.setFont('helvetica', 'bold');
       doc.setTextColor(40, 40, 40);
-      const dateStr = new Date(ev.at).toLocaleDateString('en-IN', {
+      const dateStr = new Date(ev.at || Date.now()).toLocaleDateString('en-IN', {
         day: '2-digit',
         month: 'short',
         year: 'numeric',
       });
-      doc.text(`• ${dateStr} - ${ev.title} (${ev.source})`, 48, y);
+      doc.text(`• ${dateStr} - ${ev.title || 'Event'} (${ev.source || 'Local'})`, 48, y);
       y += 12;
 
       doc.setFont('helvetica', 'normal');
       doc.setTextColor(90, 90, 90);
-      const splitDetail = doc.splitTextToSize(ev.detail, pageWidth - 100);
-      doc.text(splitDetail, 58, y);
-      y += splitDetail.length * 11 + 6;
+      const detailText = ev.detail || '';
+      const splitDetail = doc.splitTextToSize(detailText, pageWidth - 100);
+      if (splitDetail && splitDetail.length > 0) {
+        doc.text(splitDetail, 58, y);
+        y += splitDetail.length * 11 + 6;
+      } else {
+        y += 6;
+      }
     }
   }
 
@@ -163,7 +168,7 @@ export function generateProofPackPDF(caseData: Case): jsPDF {
       doc.setFont('helvetica', 'bold');
       doc.setFontSize(9);
       doc.setTextColor(30, 30, 30);
-      doc.text(`${ev.name} (${(ev.size / 1024).toFixed(1)} KB, ${ev.mime})`, 50, y + 14);
+      doc.text(`${ev.name || 'Unnamed file'} (${((ev.size || 0) / 1024).toFixed(1)} KB, ${ev.mime || 'application/octet-stream'})`, 50, y + 14);
 
       doc.setFont('courier', 'normal');
       doc.setFontSize(7.5);

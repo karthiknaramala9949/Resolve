@@ -36,11 +36,6 @@ const SettingsPage = React.lazy(() =>
   import('@/features/settings/pages/SettingsPage').then((m) => ({ default: m.SettingsPage }))
 );
 
-// Quarantined internal engineering register: strictly excluded from production build
-const InternalPage = import.meta.env.DEV
-  ? React.lazy(() => import('@/internal/pages/InternalPage').then((m) => ({ default: m.InternalPage })))
-  : null;
-
 const PageLoader: React.FC = () => (
   <div className="flex flex-col items-center justify-center min-h-[60vh] py-16 gap-3" aria-busy="true" aria-label="Loading page...">
     <div className="w-8 h-8 rounded-full border-2 border-brand-500 border-t-transparent animate-spin" />
@@ -70,11 +65,6 @@ export const App: React.FC = () => {
               <Route path="privacy" element={<PrivacyPage />} />
               <Route path="settings" element={<SettingsPage />} />
             </Route>
-
-            {/* Isolated Internal Engineering Lab - ONLY available during DEV mode */}
-            {import.meta.env.DEV && InternalPage && (
-              <Route path="/internal" element={<InternalPage />} />
-            )}
 
             {/* Catch-all fallback */}
             <Route path="*" element={<NotFoundPage />} />

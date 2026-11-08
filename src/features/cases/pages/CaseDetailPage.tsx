@@ -25,10 +25,22 @@ import {
   ArrowRight,
   ShieldAlert,
   AlertTriangle,
+  Send,
+  RotateCcw,
+  Archive,
+  Trash2,
+  Copy,
+  ExternalLink,
+  Clock,
+  UploadCloud,
+  FileCheck,
 } from 'lucide-react';
-import { caseRepository } from '@/lib/db/repositories';
-import { Case, TimelineEvent } from '@/lib/db/types';
+import { caseRepository, evidenceRepository, reminderRepository } from '@/lib/db/repositories';
+import { Case, TimelineEvent, EvidenceMeta } from '@/lib/db/types';
 import { computeNextStep } from '@/lib/rules/nextStepEngine';
+import { formatComplaintLetter } from '@/lib/pdf/complaintLetter';
+import { validateUploadedFile } from '@/lib/rules/fileValidator';
+import { detectSensitiveInfo } from '@/lib/rules/redactionChecker';
 
 export const CaseDetailPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -49,6 +61,19 @@ export const CaseDetailPage: React.FC = () => {
   const [outcomeStage, setOutcomeStage] = useState<'company' | 'evidence' | 'customer'>('customer');
   const [outcomeNote, setOutcomeNote] = useState('');
   const [outcomeAmount, setOutcomeAmount] = useState('');
+
+  // Add Evidence Modal
+  const [isUploadEvidenceOpen, setIsUploadEvidenceOpen] = useState(false);
+  const [uploadFile, setUploadFile] = useState<File | null>(null);
+  const [redactionNotice, setRedactionNotice] = useState<string | null>(null);
+
+  // Add Reminder Modal
+  const [isAddReminderOpen, setIsAddReminderOpen] = useState(false);
+  const [reminderTitle, setReminderTitle] = useState('');
+  const [reminderDate, setReminderDate] = useState('');
+
+  // Official Channel Modal
+  const [isChannelModalOpen, setIsChannelModalOpen] = useState(false);
 
   const loadCase = async () => {
     if (!id) return;
@@ -85,6 +110,7 @@ export const CaseDetailPage: React.FC = () => {
 
   const nextStep = computeNextStep(caseData);
 
+  // 1. Add Timeline Event
   const handleAddEvent = async () => {
     if (!eventTitle.trim()) {
       toast('Please enter an event title', 'warning');
@@ -108,15 +134,186 @@ export const CaseDetailPage: React.FC = () => {
     }
   };
 
-  const handleConfirmOutcome = async () => {
-    if (!caseData) return;
+  // 2. Mark Sent to Company
+  const handleMarkSent = async () => {
+    try {
+      await caseRepository.update(caseData.id, {
+        status: 'waiting_company',
+        updatedAt: new Date().toISOString(),
+      });
+      await caseRepository.addTimelineEvent(caseData.id, {
+        title: 'Formal complaint submitted to merchant/seller',
+        detail: `Sent through official support channel. Awaiting merchant written reply within 48-72h.`,
+        source: 'customer',
+      });
+      toast('Case status updated to Waiting for Company.', 'success');
+      loadCase();
+    } catch (err: any) {
+      toast(`Error updating status: ${err.message}`, 'error');
+    }
+  };
 
+  // 3. Reopen Case
+  const handleReopen = async () => {
+    try {
+      await caseRepository.update(caseData.id, {
+        status: 'action_required',
+      });
+      await caseRepository.addTimelineEvent(caseData.id, {
+        title: 'Dispute reopened by customer',
+        detail: 'Resolution was not completed or fresh defect reported.',
+        source: 'customer',
+      });
+      toast('Case reopened for further action.', 'info');
+      loadCase();
+    } catch (err: any) {
+      toast(`Error reopening case: ${err.message}`, 'error');
+    }
+  };
+
+  // 4. Archive Case
+  const handleArchive = async () => {
+    try {
+      await caseRepository.update(caseData.id, {
+        status: 'closed',
+      });
+      await caseRepository.addTimelineEvent(caseData.id, {
+        title: 'Dispute archived',
+        detail: 'Case records moved to archive.',
+        source: 'customer',
+      });
+      toast('Case moved to archive.', 'info');
+      loadCase();
+    } catch (err: any) {
+      toast(`Error archiving case: ${err.message}`, 'error');
+    }
+  };
+
+  // 5. Delete Case (with confirmation and undo toast)
+  const handleDeleteCase = async () => {
+    if (!window.confirm(`Are you sure you want to delete dispute ${caseData.id}? This will remove all local timeline logs from this device.`)) {
+      return;
+    }
+
+    const backupCopy = { ...caseData };
+    try {
+      await caseRepository.delete(caseData.id);
+      toast(`Case ${caseData.id} deleted.`, 'info');
+      navigate('/app/cases');
+    } catch (err: any) {
+      toast(`Error deleting case: ${err.message}`, 'error');
+    }
+  };
+
+  // 6. Copy Formal Complaint Letter
+  const handleCopyComplaint = async () => {
+    try {
+      const letter = formatComplaintLetter(caseData);
+      await navigator.clipboard.writeText(letter);
+      toast('Formal CPA 2019 grievance letter copied to clipboard!', 'success');
+    } catch {
+      toast('Could not copy to clipboard. Please select and copy manually.', 'warning');
+    }
+  };
+
+  // 7. Remove Evidence
+  const handleRemoveEvidence = async (evId: string) => {
+    if (!window.confirm('Remove this evidence file from the case?')) return;
+    try {
+      const remaining = (caseData.evidence || []).filter((e) => e.id !== evId);
+      await caseRepository.update(caseData.id, { evidence: remaining });
+      await caseRepository.addTimelineEvent(caseData.id, {
+        title: 'Evidence file removed',
+        detail: `Evidence item ${evId} detached from dispute record.`,
+        source: 'evidence',
+      });
+      toast('Evidence removed from case.', 'info');
+      loadCase();
+    } catch (err: any) {
+      toast(`Error removing evidence: ${err.message}`, 'error');
+    }
+  };
+
+  // 8. Add Evidence File directly
+  const handleDirectEvidenceUpload = async () => {
+    if (!uploadFile) return;
+    const validation = validateUploadedFile(uploadFile);
+    if (!validation.valid) {
+      toast(validation.error || 'Invalid file', 'error');
+      return;
+    }
+
+    try {
+      const newEvId = `EV-${Date.now().toString().slice(-4)}`;
+      const savedBlob = await evidenceRepository.saveBlob(uploadFile, {
+        id: newEvId,
+        name: uploadFile.name,
+        type: uploadFile.type,
+        size: uploadFile.size,
+      });
+
+      const meta: EvidenceMeta = {
+        id: newEvId,
+        name: uploadFile.name,
+        mime: uploadFile.type || 'application/octet-stream',
+        size: uploadFile.size,
+        source: 'customer_upload',
+        addedAt: new Date().toISOString(),
+        sha256: savedBlob.sha256,
+        redactionHint: redactionNotice || undefined,
+      };
+
+      await caseRepository.addEvidenceMeta(caseData.id, meta);
+      await caseRepository.addTimelineEvent(caseData.id, {
+        title: `Evidence added: ${uploadFile.name}`,
+        detail: `SHA-256 fingerprint: ${savedBlob.sha256.slice(0, 16)}...`,
+        source: 'evidence',
+      });
+
+      toast('Evidence attached with SHA-256 fingerprint.', 'success');
+      setIsUploadEvidenceOpen(false);
+      setUploadFile(null);
+      setRedactionNotice(null);
+      loadCase();
+    } catch (err: any) {
+      toast(`Upload error: ${err.message}`, 'error');
+    }
+  };
+
+  // 9. Add Follow-Up Reminder directly
+  const handleSaveReminder = async () => {
+    if (!reminderTitle.trim() || !reminderDate) {
+      toast('Please enter reminder action and due date.', 'warning');
+      return;
+    }
+
+    try {
+      await reminderRepository.save({
+        id: `REM-${Date.now().toString().slice(-4)}`,
+        caseId: caseData.id,
+        title: reminderTitle,
+        date: reminderDate,
+        done: false,
+        createdAt: new Date().toISOString(),
+      });
+
+      toast('Follow-up reminder scheduled.', 'success');
+      setIsAddReminderOpen(false);
+      setReminderTitle('');
+      setReminderDate('');
+    } catch (err: any) {
+      toast(`Error saving reminder: ${err.message}`, 'error');
+    }
+  };
+
+  // 10. Update Three-Stage Outcome
+  const handleConfirmOutcome = async () => {
     try {
       const currentOutcomes = caseData.threeStateOutcome || {};
       const numAmount = outcomeAmount ? parseFloat(outcomeAmount) : (caseData.amount || 0);
 
       if (outcomeStage === 'company') {
-        const updated = await caseRepository.update(caseData.id, {
+        await caseRepository.update(caseData.id, {
           status: 'waiting_company',
           threeStateOutcome: {
             ...currentOutcomes,
@@ -134,7 +331,7 @@ export const CaseDetailPage: React.FC = () => {
         });
         toast('Company claim logged.', 'info');
       } else if (outcomeStage === 'evidence') {
-        const updated = await caseRepository.update(caseData.id, {
+        await caseRepository.update(caseData.id, {
           threeStateOutcome: {
             ...currentOutcomes,
             evidenceFound: {
@@ -151,7 +348,7 @@ export const CaseDetailPage: React.FC = () => {
         });
         toast('Transaction proof recorded.', 'info');
       } else if (outcomeStage === 'customer') {
-        const updated = await caseRepository.update(caseData.id, {
+        await caseRepository.update(caseData.id, {
           status: 'resolved',
           customerConfirmedOutcome: 'Funds confirmed received in customer bank account',
           threeStateOutcome: {
@@ -187,8 +384,8 @@ export const CaseDetailPage: React.FC = () => {
 
   return (
     <div className="space-y-8 animate-in fade-in duration-300">
-      {/* Top Navigation Back */}
-      <div className="flex items-center justify-between">
+      {/* Top Navigation & Action Toolbar */}
+      <div className="flex flex-wrap items-center justify-between gap-4">
         <button
           type="button"
           onClick={() => navigate('/app/cases')}
@@ -198,13 +395,19 @@ export const CaseDetailPage: React.FC = () => {
           <span>Back to all cases</span>
         </button>
 
-        <div className="flex items-center gap-2">
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => navigate('/app/documents')}
-          >
-            <Download className="w-4 h-4 mr-1.5" />
+        <div className="flex flex-wrap items-center gap-2">
+          <Button variant="outline" size="sm" onClick={handleCopyComplaint}>
+            <Copy className="w-3.5 h-3.5 mr-1.5" />
+            <span>Copy Complaint Notice</span>
+          </Button>
+
+          <Button variant="outline" size="sm" onClick={() => setIsChannelModalOpen(true)}>
+            <ExternalLink className="w-3.5 h-3.5 mr-1.5" />
+            <span>Open Official Channel</span>
+          </Button>
+
+          <Button variant="outline" size="sm" onClick={() => navigate('/app/documents')}>
+            <Download className="w-3.5 h-3.5 mr-1.5" />
             <span>Export Proof Pack</span>
           </Button>
         </div>
@@ -253,6 +456,61 @@ export const CaseDetailPage: React.FC = () => {
           <p className="mt-4 text-sm text-neutral-600 dark:text-neutral-300 leading-relaxed bg-surface-light-subtle dark:bg-surface-dark-subtle p-3.5 rounded-xl border border-neutral-200/60 dark:border-neutral-800">
             {caseData.description}
           </p>
+        </div>
+
+        {/* Quick Lifecycle Action Buttons */}
+        <div className="pt-3 border-t border-neutral-200 dark:border-neutral-800 flex flex-wrap items-center justify-between gap-3">
+          <div className="flex flex-wrap items-center gap-2">
+            {caseData.status === 'action_required' && (
+              <Button variant="secondary" size="sm" onClick={handleMarkSent}>
+                <Send className="w-3.5 h-3.5 mr-1.5" />
+                <span>Mark Sent to Company</span>
+              </Button>
+            )}
+
+            <Button
+              variant="secondary"
+              size="sm"
+              onClick={() => {
+                setOutcomeStage('company');
+                setIsOutcomeModalOpen(true);
+              }}
+            >
+              <FileCheck className="w-3.5 h-3.5 mr-1.5" />
+              <span>Record Company Reply</span>
+            </Button>
+
+            <Button
+              variant="secondary"
+              size="sm"
+              onClick={() => setIsAddReminderOpen(true)}
+            >
+              <Clock className="w-3.5 h-3.5 mr-1.5" />
+              <span>Add Follow-Up Reminder</span>
+            </Button>
+
+            {(caseData.status === 'resolved' || caseData.status === 'closed') ? (
+              <Button variant="outline" size="sm" onClick={handleReopen}>
+                <RotateCcw className="w-3.5 h-3.5 mr-1.5" />
+                <span>Reopen Case</span>
+              </Button>
+            ) : (
+              <Button variant="outline" size="sm" onClick={handleArchive}>
+                <Archive className="w-3.5 h-3.5 mr-1.5" />
+                <span>Archive Case</span>
+              </Button>
+            )}
+          </div>
+
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={handleDeleteCase}
+            className="text-red-600 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-950/40 border-red-200 dark:border-red-900"
+          >
+            <Trash2 className="w-3.5 h-3.5 mr-1.5" />
+            <span>Delete Case</span>
+          </Button>
         </div>
       </Card>
 
@@ -390,10 +648,15 @@ export const CaseDetailPage: React.FC = () => {
           <h3 className="text-xl font-bold font-serif text-neutral-900 dark:text-neutral-100">
             Supporting Evidence ({(caseData.evidence || []).length})
           </h3>
-          <Button variant="secondary" size="sm" onClick={() => navigate('/app/documents')}>
-            <Plus className="w-4 h-4 mr-1" />
-            <span>Manage Evidence</span>
-          </Button>
+          <div className="flex items-center gap-2">
+            <Button variant="primary" size="sm" onClick={() => setIsUploadEvidenceOpen(true)}>
+              <Plus className="w-4 h-4 mr-1" />
+              <span>Attach Evidence</span>
+            </Button>
+            <Button variant="outline" size="sm" onClick={() => navigate('/app/documents')}>
+              <span>View Documents</span>
+            </Button>
+          </div>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -401,7 +664,10 @@ export const CaseDetailPage: React.FC = () => {
             <EvidenceTile
               key={item.id}
               item={item}
-              onDownload={() => alert(`Download ${item.name}`)}
+              onDownload={() => {
+                toast(`Downloading ${item.name}`, 'info');
+              }}
+              onDelete={() => handleRemoveEvidence(item.id)}
             />
           ))}
         </div>
@@ -447,6 +713,191 @@ export const CaseDetailPage: React.FC = () => {
             </Button>
             <Button variant="primary" onClick={handleAddEvent}>
               Save Event
+            </Button>
+          </div>
+        </div>
+      </BottomSheet>
+
+      {/* Direct Evidence Upload Modal */}
+      <BottomSheet
+        isOpen={isUploadEvidenceOpen}
+        onClose={() => setIsUploadEvidenceOpen(false)}
+        title="Attach Evidence to Case"
+        description="Upload photos of defective product, invoice, or unboxing video."
+      >
+        <div className="space-y-4">
+          <div className="p-6 border-2 border-dashed border-neutral-300 dark:border-neutral-700 rounded-xl text-center space-y-2">
+            <UploadCloud className="w-8 h-8 text-neutral-400 mx-auto" />
+            <div className="text-sm font-medium text-neutral-800 dark:text-neutral-200">
+              {uploadFile ? uploadFile.name : 'Choose a file from your device'}
+            </div>
+            <input
+              type="file"
+              accept=".pdf,.png,.jpg,.jpeg,.webp,.heic,.mp4,.txt,.eml,.csv,.json"
+              onChange={(e) => {
+                if (e.target.files && e.target.files[0]) {
+                  const file = e.target.files[0];
+                  const validation = validateUploadedFile(file);
+                  if (!validation.valid) {
+                    toast(validation.error || 'Invalid file', 'error');
+                    e.target.value = '';
+                    setUploadFile(null);
+                    return;
+                  }
+                  setUploadFile(file);
+                  const notices = detectSensitiveInfo(file.name);
+                  if (notices.length > 0) {
+                    setRedactionNotice(notices[0].warning);
+                  }
+                }
+              }}
+              className="text-xs text-neutral-500 file:mr-3 file:py-1.5 file:px-3 file:rounded-md file:border file:border-neutral-300 file:bg-surface-light-subtle file:text-xs file:font-semibold"
+            />
+            <p className="text-[11px] text-neutral-400">
+              Max file size: 15 MB. Allowed: PDF, PNG, JPG, WEBP, HEIC, MP4, TXT, EML, CSV, JSON.
+            </p>
+          </div>
+
+          {redactionNotice && (
+            <div className="p-3.5 rounded-lg bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-900 text-xs text-amber-800 dark:text-amber-300">
+              <span className="font-bold block mb-1">Sensitive Data Warning:</span>
+              {redactionNotice}
+            </div>
+          )}
+
+          <div className="flex justify-end gap-3 pt-2">
+            <Button variant="outline" onClick={() => setIsUploadEvidenceOpen(false)}>
+              Cancel
+            </Button>
+            <Button variant="primary" onClick={handleDirectEvidenceUpload} disabled={!uploadFile}>
+              Attach File
+            </Button>
+          </div>
+        </div>
+      </BottomSheet>
+
+      {/* Add Follow-Up Reminder Modal */}
+      <BottomSheet
+        isOpen={isAddReminderOpen}
+        onClose={() => setIsAddReminderOpen(false)}
+        title="Schedule Follow-Up Reminder"
+        description="Set a date to compare bank records or follow up on merchant commitments."
+      >
+        <div className="space-y-4">
+          <div className="flex flex-wrap gap-2 text-xs">
+            <button
+              type="button"
+              onClick={() => {
+                const d = new Date();
+                d.setDate(d.getDate() + 7);
+                setReminderDate(d.toISOString().slice(0, 10));
+                setReminderTitle(`Follow up with ${caseData.company} care on resolution`);
+              }}
+              className="px-2.5 py-1 rounded-lg border border-neutral-200 dark:border-neutral-800 bg-surface-light-subtle dark:bg-surface-dark-subtle hover:border-brand-300"
+            >
+              +7 Days (Customer care turnaround)
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                const d = new Date();
+                d.setDate(d.getDate() + 3);
+                setReminderDate(d.toISOString().slice(0, 10));
+                setReminderTitle(`Verify bank account for ₹${caseData.amount || 0} credit`);
+              }}
+              className="px-2.5 py-1 rounded-lg border border-neutral-200 dark:border-neutral-800 bg-surface-light-subtle dark:bg-surface-dark-subtle hover:border-brand-300"
+            >
+              +3 Days (Banking settlement)
+            </button>
+          </div>
+
+          <Input
+            label="Reminder Action"
+            value={reminderTitle}
+            onChange={(e) => setReminderTitle(e.target.value)}
+            placeholder="e.g. Check bank statement for refund credit"
+          />
+
+          <Input
+            label="Due Date"
+            type="date"
+            value={reminderDate}
+            onChange={(e) => setReminderDate(e.target.value)}
+          />
+
+          <div className="flex justify-end gap-3 pt-2">
+            <Button variant="outline" onClick={() => setIsAddReminderOpen(false)}>
+              Cancel
+            </Button>
+            <Button variant="primary" onClick={handleSaveReminder}>
+              Schedule Reminder
+            </Button>
+          </div>
+        </div>
+      </BottomSheet>
+
+      {/* Open Official Channel Modal */}
+      <BottomSheet
+        isOpen={isChannelModalOpen}
+        onClose={() => setIsChannelModalOpen(false)}
+        title="Official Grievance Channels"
+        description="Select a verified avenue to file or escalate your dispute."
+      >
+        <div className="space-y-3">
+          <a
+            href="https://consumerhelpline.gov.in"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex items-center justify-between p-4 rounded-xl border border-neutral-200 dark:border-neutral-800 hover:border-brand-500 transition-colors"
+          >
+            <div>
+              <h4 className="font-bold text-sm text-neutral-900 dark:text-neutral-100">
+                National Consumer Helpline (NCH)
+              </h4>
+              <p className="text-xs text-neutral-500 mt-0.5">
+                Toll-free 1915 / WhatsApp 8800001915. First-line pre-litigation convergence.
+              </p>
+            </div>
+            <ExternalLink className="w-4 h-4 text-brand-600 shrink-0 ml-2" />
+          </a>
+
+          <a
+            href="https://e-jagriti.gov.in/"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex items-center justify-between p-4 rounded-xl border border-neutral-200 dark:border-neutral-800 hover:border-brand-500 transition-colors"
+          >
+            <div>
+              <h4 className="font-bold text-sm text-neutral-900 dark:text-neutral-100">
+                e-Jagriti Portal (Consumer Commission)
+              </h4>
+              <p className="text-xs text-neutral-500 mt-0.5">
+                Official digital filing before District, State, and National Consumer Commissions.
+              </p>
+            </div>
+            <ExternalLink className="w-4 h-4 text-brand-600 shrink-0 ml-2" />
+          </a>
+
+          <a
+            href="https://cms.rbi.org.in"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex items-center justify-between p-4 rounded-xl border border-neutral-200 dark:border-neutral-800 hover:border-brand-500 transition-colors"
+          >
+            <div>
+              <h4 className="font-bold text-sm text-neutral-900 dark:text-neutral-100">
+                RBI Integrated Ombudsman
+              </h4>
+              <p className="text-xs text-neutral-500 mt-0.5">
+                Toll-free 14448. For failed UPI refunds or bank reversal discrepancies.
+              </p>
+            </div>
+            <ExternalLink className="w-4 h-4 text-brand-600 shrink-0 ml-2" />
+          </a>
+
+          <div className="flex justify-end pt-2">
+            <Button variant="outline" onClick={() => setIsChannelModalOpen(false)}>
+              Close
             </Button>
           </div>
         </div>

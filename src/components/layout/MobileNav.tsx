@@ -13,7 +13,6 @@ import {
   Clock,
   ShieldCheck,
   Settings,
-  Terminal,
 } from 'lucide-react';
 import { BottomSheet } from '@/design-system/components/BottomSheet';
 
@@ -163,16 +162,6 @@ export const MobileNav: React.FC = () => {
             <Settings className="w-6 h-6 text-neutral-500 mb-2" />
             <span className="font-semibold text-sm text-neutral-900 dark:text-neutral-100">Settings</span>
             <span className="text-xs text-neutral-500 dark:text-neutral-400 mt-0.5">Language & appearance</span>
-          </button>
-
-          <button
-            type="button"
-            onClick={() => handleMoreNavigation('/internal')}
-            className="flex flex-col items-start p-4 rounded-xl border border-dashed border-neutral-300 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-900/40 text-left transition-colors"
-          >
-            <Terminal className="w-6 h-6 text-neutral-400 mb-2" />
-            <span className="font-semibold text-sm text-neutral-800 dark:text-neutral-200">Internal Lab</span>
-            <span className="text-xs text-neutral-400 mt-0.5">Features & engines</span>
           </button>
         </div>
       </BottomSheet>
