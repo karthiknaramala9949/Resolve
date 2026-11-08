@@ -57,6 +57,30 @@ async function runInteractionsSuite() {
   await page.goto('http://127.0.0.1:5173/', { waitUntil: 'networkidle' });
 
   // 1.1 Header Navigation
+  await page.click('a:has-text("How it Works")');
+  await page.waitForTimeout(200);
+  let hash = await page.evaluate(() => window.location.hash);
+  if (hash !== '#how-it-works') throw new Error(`Expected #how-it-works, got ${hash}`);
+  console.log('   ✓ Header navbar link "How it Works" smoothly scrolled to #how-it-works');
+
+  await page.click('a:has-text("Your Rights")');
+  await page.waitForTimeout(200);
+  hash = await page.evaluate(() => window.location.hash);
+  if (hash !== '#rights') throw new Error(`Expected #rights, got ${hash}`);
+  console.log('   ✓ Header navbar link "Your Rights" smoothly scrolled to #rights');
+
+  await page.click('a:has-text("Privacy & Trust")');
+  await page.waitForTimeout(200);
+  hash = await page.evaluate(() => window.location.hash);
+  if (hash !== '#privacy') throw new Error(`Expected #privacy, got ${hash}`);
+  console.log('   ✓ Header navbar link "Privacy & Trust" smoothly scrolled to #privacy');
+
+  await page.click('a:has-text("FAQ")');
+  await page.waitForTimeout(200);
+  hash = await page.evaluate(() => window.location.hash);
+  if (hash !== '#faq') throw new Error(`Expected #faq, got ${hash}`);
+  console.log('   ✓ Header navbar link "FAQ" smoothly scrolled to #faq');
+
   await page.click('button:has-text("Open App")');
   await page.waitForFunction(() => window.location.pathname === '/app/overview');
   console.log('   ✓ Header "Open App" navigates to /app/overview');
@@ -223,29 +247,21 @@ async function runInteractionsSuite() {
   await page.waitForSelector('text=Passphrase verified. Encryption disabled.');
   console.log('   ✓ WebCrypto encryption unlocked and disabled');
 
-  // FLOW 10: Settings Persistence
-  console.log('\nFlow 10: Verifying Settings persistence...');
-  await page.goto('http://127.0.0.1:5173/app/settings', { waitUntil: 'networkidle' });
-  // Toggle simple language mode
-  const simpleToggle = page.locator('button[role="switch"]').first();
-  const checkedBefore = await simpleToggle.getAttribute('aria-checked');
-  await simpleToggle.click();
-  await page.reload({ waitUntil: 'networkidle' });
-  const isChecked = await page.locator('button[role="switch"]').first().getAttribute('aria-checked');
-  if (isChecked === checkedBefore) throw new Error('Simple mode setting failed to persist across reload');
-  console.log('   ✓ Simple language mode persists across page reload');
+  // FLOW 10: Settings Removal Verification
+  console.log('\nFlow 10: Verifying complete removal of Settings page and navigation...');
+  await page.goto('http://127.0.0.1:5173/app/overview', { waitUntil: 'networkidle' });
+  const hasSettingsSidebar = await page.locator('aside a:has-text("Settings")').count();
+  if (hasSettingsSidebar > 0) throw new Error('Settings link should not exist in Sidebar');
+  console.log('   ✓ Verified Settings navigation link is removed from Sidebar');
 
-  // Theme selection in Settings
-  await page.click('button:has-text("Dark Theme")');
-  let isDark = await page.evaluate(() => document.documentElement.classList.contains('dark'));
-  if (!isDark) throw new Error('Dark theme was not applied');
-  await page.click('button:has-text("Light Theme")');
-  isDark = await page.evaluate(() => document.documentElement.classList.contains('dark'));
-  if (isDark) throw new Error('Light theme was not applied');
-  console.log('   ✓ Theme selection in Settings functional (light & dark applied)');
+  await page.goto('http://127.0.0.1:5173/app/settings', { waitUntil: 'networkidle' });
+  const is404 = await page.evaluate(() => document.body.innerText.includes('404') || document.body.innerText.includes('Page Not Found'));
+  if (!is404) throw new Error('Navigating to /app/settings should yield 404 Page Not Found');
+  console.log('   ✓ Direct navigation to /app/settings correctly yields 404 (Removed)');
 
   // FLOW 11: Command Palette Keyboard Navigation
   console.log('\nFlow 11: Verifying Command Palette (⌘K) keyboard search...');
+  await page.goto('http://127.0.0.1:5173/app/overview', { waitUntil: 'networkidle' });
   await page.keyboard.press(process.platform === 'darwin' ? 'Meta+K' : 'Control+K');
   await page.waitForSelector('input[placeholder*="Search cases, companies"]');
   await page.fill('input[placeholder*="Search cases, companies"]', 'Reminders');

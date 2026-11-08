@@ -32,7 +32,6 @@ export const Sidebar: React.FC<SidebarProps> = ({ className }) => {
   const secondaryNav = [
     { to: '/app/reminders', label: 'Reminders', icon: Clock },
     { to: '/app/privacy', label: 'Privacy & Data', icon: ShieldCheck },
-    { to: '/app/settings', label: 'Settings', icon: Settings },
   ];
 
   return (

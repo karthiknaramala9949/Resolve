@@ -32,7 +32,6 @@ async function runPhase4Audit() {
     { name: 'Rights & Help', url: 'http://127.0.0.1:5173/app/help' },
     { name: 'Reminders', url: 'http://127.0.0.1:5173/app/reminders' },
     { name: 'Privacy & Data', url: 'http://127.0.0.1:5173/app/privacy' },
-    { name: 'Settings', url: 'http://127.0.0.1:5173/app/settings' },
   ];
 
   for (const r of auditRoutes) {
@@ -148,11 +147,6 @@ async function runPhase4Audit() {
   await dPage.goto('http://127.0.0.1:5173/app/privacy', { waitUntil: 'networkidle' });
   await dPage.screenshot({ path: path.join(artifactDir, 'phase4-desktop-privacy.png'), fullPage: false });
   console.log('   ✓ Saved phase4-desktop-privacy.png');
-
-  // Desktop Settings (1440px)
-  await dPage.goto('http://127.0.0.1:5173/app/settings', { waitUntil: 'networkidle' });
-  await dPage.screenshot({ path: path.join(artifactDir, 'phase4-desktop-settings.png'), fullPage: false });
-  console.log('   ✓ Saved phase4-desktop-settings.png');
 
   // Mobile Context (390px x 844px - iPhone 14 / modern Android dimension)
   const mobileContext = await browser.newContext({ viewport: { width: 390, height: 844 } });

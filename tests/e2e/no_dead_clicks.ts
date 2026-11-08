@@ -25,7 +25,6 @@ async function runNoDeadClickSweep() {
     '/app/help',
     '/app/reminders',
     '/app/privacy',
-    '/app/settings',
   ];
 
   let totalElementsAudited = 0;

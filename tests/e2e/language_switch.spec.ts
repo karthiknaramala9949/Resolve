@@ -17,7 +17,6 @@ async function runMultilingualSuite() {
     '/app/help',
     '/app/reminders',
     '/app/privacy',
-    '/app/settings',
   ];
 
   // Whitelisted brand names, abbreviations, and crypto identifiers
@@ -54,8 +53,11 @@ async function runMultilingualSuite() {
 
   // 1. Audit Hindi Language Switching
   console.log('--- Testing Hindi (hi) Locale Parity Across Workspace ---');
-  await page.goto('http://127.0.0.1:5173/app/settings', { waitUntil: 'networkidle' });
-  await page.click('button:has-text("हिन्दी")');
+  await page.goto('http://127.0.0.1:5173/app/overview', { waitUntil: 'networkidle' });
+  await page.evaluate(() => {
+    localStorage.setItem('resolve-one-locale', 'hi');
+  });
+  await page.reload({ waitUntil: 'networkidle' });
   await page.waitForTimeout(300);
 
   // Verify Hindi selection persists in localStorage
@@ -75,8 +77,10 @@ async function runMultilingualSuite() {
 
   // 2. Audit Telugu Language Switching
   console.log('\n--- Testing Telugu (te) Locale Parity Across Workspace ---');
-  await page.goto('http://127.0.0.1:5173/app/settings', { waitUntil: 'networkidle' });
-  await page.click('button:has-text("తెలుగు")');
+  await page.evaluate(() => {
+    localStorage.setItem('resolve-one-locale', 'te');
+  });
+  await page.reload({ waitUntil: 'networkidle' });
   await page.waitForTimeout(300);
 
   const savedLocaleTe = await page.evaluate(() => localStorage.getItem('resolve-one-locale'));
@@ -93,9 +97,9 @@ async function runMultilingualSuite() {
   }
 
   // Restore English default
-  await page.goto('http://127.0.0.1:5173/app/settings', { waitUntil: 'networkidle' });
-  await page.click('button:has-text("English")');
-  await page.waitForTimeout(200);
+  await page.evaluate(() => {
+    localStorage.setItem('resolve-one-locale', 'en');
+  });
 
   await browser.close();
 

@@ -32,9 +32,6 @@ const RemindersPage = React.lazy(() =>
 const PrivacyPage = React.lazy(() =>
   import('@/features/privacy/pages/PrivacyPage').then((m) => ({ default: m.PrivacyPage }))
 );
-const SettingsPage = React.lazy(() =>
-  import('@/features/settings/pages/SettingsPage').then((m) => ({ default: m.SettingsPage }))
-);
 
 const PageLoader: React.FC = () => (
   <div className="flex flex-col items-center justify-center min-h-[60vh] py-16 gap-3" aria-busy="true" aria-label="Loading page...">
@@ -63,7 +60,6 @@ export const App: React.FC = () => {
               <Route path="help" element={<HelpPage />} />
               <Route path="reminders" element={<RemindersPage />} />
               <Route path="privacy" element={<PrivacyPage />} />
-              <Route path="settings" element={<SettingsPage />} />
             </Route>
 
             {/* Catch-all fallback */}

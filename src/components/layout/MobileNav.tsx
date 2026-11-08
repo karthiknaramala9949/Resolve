@@ -153,16 +153,6 @@ export const MobileNav: React.FC = () => {
             <span className="font-semibold text-sm text-neutral-900 dark:text-neutral-100">Privacy & Data</span>
             <span className="text-xs text-neutral-500 dark:text-neutral-400 mt-0.5">Export & zero-telemetry</span>
           </button>
-
-          <button
-            type="button"
-            onClick={() => handleMoreNavigation('/app/settings')}
-            className="flex flex-col items-start p-4 rounded-xl border border-neutral-200 dark:border-neutral-800 bg-surface-light-subtle dark:bg-surface-dark-subtle hover:border-brand-300 text-left transition-colors"
-          >
-            <Settings className="w-6 h-6 text-neutral-500 mb-2" />
-            <span className="font-semibold text-sm text-neutral-900 dark:text-neutral-100">Settings</span>
-            <span className="text-xs text-neutral-500 dark:text-neutral-400 mt-0.5">Language & appearance</span>
-          </button>
         </div>
       </BottomSheet>
     </>

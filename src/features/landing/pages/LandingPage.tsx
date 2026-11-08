@@ -37,6 +37,15 @@ export const LandingPage: React.FC = () => {
     setOpenFaq(openFaq === index ? null : index);
   };
 
+  const scrollToSection = (e: React.MouseEvent<HTMLAnchorElement>, id: string) => {
+    e.preventDefault();
+    const el = document.getElementById(id);
+    if (el) {
+      el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      window.history.pushState(null, '', `#${id}`);
+    }
+  };
+
   const faqs = [
     {
       q: 'Does RESOLVE-ONE contact the company or send emails on my behalf?',
@@ -89,16 +98,32 @@ export const LandingPage: React.FC = () => {
 
           {/* Center Navigation Links */}
           <nav className="hidden md:flex items-center gap-6 text-xs font-semibold text-neutral-600 dark:text-neutral-400">
-            <a href="#how-it-works" className="hover:text-brand-600 dark:hover:text-brand-400 transition-colors">
+            <a
+              href="#how-it-works"
+              onClick={(e) => scrollToSection(e, 'how-it-works')}
+              className="hover:text-brand-600 dark:hover:text-brand-400 transition-colors"
+            >
               How it Works
             </a>
-            <a href="#rights" className="hover:text-brand-600 dark:hover:text-brand-400 transition-colors">
+            <a
+              href="#rights"
+              onClick={(e) => scrollToSection(e, 'rights')}
+              className="hover:text-brand-600 dark:hover:text-brand-400 transition-colors"
+            >
               Your Rights
             </a>
-            <a href="#privacy" className="hover:text-brand-600 dark:hover:text-brand-400 transition-colors">
+            <a
+              href="#privacy"
+              onClick={(e) => scrollToSection(e, 'privacy')}
+              className="hover:text-brand-600 dark:hover:text-brand-400 transition-colors"
+            >
               Privacy & Trust
             </a>
-            <a href="#faq" className="hover:text-brand-600 dark:hover:text-brand-400 transition-colors">
+            <a
+              href="#faq"
+              onClick={(e) => scrollToSection(e, 'faq')}
+              className="hover:text-brand-600 dark:hover:text-brand-400 transition-colors"
+            >
               FAQ
             </a>
           </nav>
@@ -232,7 +257,7 @@ export const LandingPage: React.FC = () => {
       </section>
 
       {/* How it Works: 3 Steps */}
-      <section className="px-4 md:px-8 py-16 bg-white dark:bg-surface-dark border-y border-neutral-200/80 dark:border-neutral-800">
+      <section id="how-it-works" className="scroll-mt-20 px-4 md:px-8 py-16 bg-white dark:bg-surface-dark border-y border-neutral-200/80 dark:border-neutral-800">
         <div className="max-w-6xl mx-auto space-y-12">
           <div className="text-center space-y-2">
             <h2 className="text-3xl font-bold font-serif">How RESOLVE-ONE Works</h2>
@@ -274,7 +299,7 @@ export const LandingPage: React.FC = () => {
       </section>
 
       {/* Honesty Boundaries Manifesto */}
-      <section className="px-4 md:px-8 py-16 max-w-4xl mx-auto space-y-8">
+      <section id="privacy" className="scroll-mt-20 px-4 md:px-8 py-16 max-w-4xl mx-auto space-y-8">
         <div className="text-center space-y-2">
           <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-neutral-100 dark:bg-neutral-800 text-neutral-600 dark:text-neutral-300 text-xs font-semibold">
             <Scale className="w-3.5 h-3.5" />
@@ -315,7 +340,7 @@ export const LandingPage: React.FC = () => {
       </section>
 
       {/* India Routes Teaser */}
-      <section className="px-4 md:px-8 py-16 bg-surface-light-subtle dark:bg-surface-dark-subtle border-t border-neutral-200/80 dark:border-neutral-800">
+      <section id="rights" className="scroll-mt-20 px-4 md:px-8 py-16 bg-surface-light-subtle dark:bg-surface-dark-subtle border-t border-neutral-200/80 dark:border-neutral-800">
         <div className="max-w-6xl mx-auto space-y-8">
           <div className="text-center space-y-2">
             <h2 className="text-3xl font-bold font-serif">India-Specific Escalation Channels</h2>
@@ -408,7 +433,7 @@ export const LandingPage: React.FC = () => {
       </section>
 
       {/* FAQ Accordion */}
-      <section className="px-4 md:px-8 py-16 max-w-4xl mx-auto space-y-8">
+      <section id="faq" className="scroll-mt-20 px-4 md:px-8 py-16 max-w-4xl mx-auto space-y-8">
         <div className="text-center space-y-2">
           <h2 className="text-3xl font-bold font-serif">Frequently Asked Questions</h2>
           <p className="text-sm text-neutral-700 dark:text-neutral-300 font-medium">Everything you need to know about RESOLVE-ONE.</p>

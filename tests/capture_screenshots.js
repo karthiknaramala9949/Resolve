@@ -31,9 +31,9 @@ async function capture() {
   await desktopPage.waitForTimeout(400);
   await desktopPage.screenshot({ path: path.join(outDir, 'milestone6-desktop-telugu.png') });
 
-  console.log('Navigating to Settings with Simple Language toggle (desktop)...');
-  await desktopPage.goto('http://127.0.0.1:5173/app/settings', { waitUntil: 'networkidle' });
-  await desktopPage.screenshot({ path: path.join(outDir, 'milestone6-desktop-settings-simple-mode.png') });
+  console.log('Navigating to Privacy (desktop)...');
+  await desktopPage.goto('http://127.0.0.1:5173/app/privacy', { waitUntil: 'networkidle' });
+  await desktopPage.screenshot({ path: path.join(outDir, 'milestone6-desktop-privacy.png') });
 
   // Mobile (390x844)
   const mobileContext = await browser.newContext({
@@ -42,9 +42,9 @@ async function capture() {
   });
   const mobilePage = await mobileContext.newPage();
 
-  console.log('Navigating to Settings in Telugu (mobile)...');
-  await mobilePage.goto('http://127.0.0.1:5173/app/settings', { waitUntil: 'networkidle' });
-  await mobilePage.screenshot({ path: path.join(outDir, 'milestone6-mobile-settings.png') });
+  console.log('Navigating to Privacy in Telugu (mobile)...');
+  await mobilePage.goto('http://127.0.0.1:5173/app/privacy', { waitUntil: 'networkidle' });
+  await mobilePage.screenshot({ path: path.join(outDir, 'milestone6-mobile-privacy.png') });
 
   await browser.close();
   console.log('Milestone 6 screenshots captured successfully.');
