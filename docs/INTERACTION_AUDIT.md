@@ -38,10 +38,7 @@
 | **App Shell** | Sidebar Nav Link: "Rights & Helplines" | Navigates to `/app/help` | Yes | `tests/e2e/interactions.spec.ts` |
 | **App Shell** | Sidebar Nav Link: "Reminders" | Navigates to `/app/reminders` | Yes | `tests/e2e/interactions.spec.ts` |
 | **App Shell** | Sidebar Nav Link: "Privacy & Data Trust" | Navigates to `/app/privacy` | Yes | `tests/e2e/interactions.spec.ts` |
-| **App Shell** | Sidebar Nav Link: "Settings" | Navigates to `/app/settings` | Yes | `tests/e2e/interactions.spec.ts` |
 | **App Shell** | Header Quick Search Button (`⌘K`) | Opens global Command Palette modal | Yes | `tests/e2e/interactions.spec.ts` |
-| **App Shell** | Header Language Switcher Buttons | Switches app language with instant re-render | Yes | `tests/e2e/interactions.spec.ts` |
-| **App Shell** | Header Theme Toggle | Toggles dark / light theme | Yes | `tests/e2e/interactions.spec.ts` |
 | **App Shell** | Storage Persistence Banner "Export Backup" | Triggers instant client-side JSON backup download | Yes | `tests/e2e/interactions.spec.ts` |
 | **App Shell** | Storage Persistence Banner "Dismiss" | Dismisses banner notification | Yes | `tests/e2e/interactions.spec.ts` |
 | **/app/overview** | Dominant Next Step Button | Opens update resolution / verify receipt modal | Yes | `tests/e2e/interactions.spec.ts` |
@@ -103,10 +100,6 @@
 | **/app/privacy** | "Wipe All Records" Button | Prompts `DELETE` confirmation and purges all data | Yes | `tests/e2e/interactions.spec.ts` |
 | **/app/privacy** | "Enable Encryption" Button | Derives PBKDF2/AES-GCM key and verifies passphrase | Yes | `tests/e2e/interactions.spec.ts` |
 | **/app/privacy** | "Disable Encryption" Button | Verifies passphrase and disables device encryption | Yes | `tests/e2e/interactions.spec.ts` |
-| **/app/settings** | Language Buttons (English, हिन्दी, తెలుగు) | Sets active locale and updates `<html lang>` | Yes | `tests/e2e/interactions.spec.ts` |
-| **/app/settings** | Theme Buttons (Light, Dark, System) | Updates active theme and document classes | Yes | `tests/e2e/interactions.spec.ts` |
-| **/app/settings** | Simple Language Mode Toggle | Toggles simplified plain-spoken copy | Yes | `tests/e2e/interactions.spec.ts` |
-| **/app/settings** | "Reset / Reload Sample Disputes" Button | Clears and re-seeds verified test disputes | Yes | `tests/e2e/interactions.spec.ts` |
 | **Command Palette** | Search Input | Filters navigation targets and cases in real-time | Yes | `tests/e2e/interactions.spec.ts` |
 | **Command Palette** | Item Click / Enter Key | Executes navigation action or opens dispute detail | Yes | `tests/e2e/interactions.spec.ts` |
 | **Command Palette** | Escape Key | Dismisses palette | Yes | `tests/e2e/interactions.spec.ts` |
