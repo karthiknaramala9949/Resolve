@@ -10,7 +10,7 @@ export interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElemen
 export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
   ({ className, variant = 'primary', size = 'md', isLoading, disabled, children, ...props }, ref) => {
     const baseStyles =
-      'inline-flex items-center justify-center font-medium transition-all duration-150 rounded-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500 focus-visible:ring-offset-2 active:scale-[0.98] disabled:opacity-50 disabled:pointer-events-none select-none';
+      'inline-flex items-center justify-center font-medium transition-all duration-150 rounded-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500 focus-visible:ring-offset-2 active:scale-[0.98] disabled:opacity-50 disabled:pointer-events-none select-none whitespace-nowrap leading-none';
 
     const variants = {
       primary:
@@ -26,9 +26,9 @@ export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
     };
 
     const sizes = {
-      sm: 'text-sm px-3 py-1.5 h-8 gap-1.5',
-      md: 'text-base px-4 py-2.5 h-11 gap-2', // Large touch target: 44px
-      lg: 'text-lg px-6 py-3.5 h-13 gap-2.5',
+      sm: 'text-xs sm:text-sm px-3 py-1.5 min-h-[36px] gap-1.5 leading-none',
+      md: 'text-sm sm:text-base px-4 py-2.5 min-h-[44px] gap-2 leading-none', // Large touch target: 44px
+      lg: 'text-base sm:text-lg px-6 py-3.5 min-h-[48px] gap-2.5 leading-none',
     };
 
     return (
@@ -40,7 +40,7 @@ export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
       >
         {isLoading && (
           <svg
-            className="animate-spin -ml-1 mr-2 h-4 w-4 text-current"
+            className="animate-spin h-4 w-4 shrink-0 text-current"
             xmlns="http://www.w3.org/2000/svg"
             fill="none"
             viewBox="0 0 24 24"

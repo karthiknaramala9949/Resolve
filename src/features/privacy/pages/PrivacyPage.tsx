@@ -266,7 +266,7 @@ export const PrivacyPage: React.FC = () => {
           </div>
 
           <span
-            className={`px-3 py-1 rounded-full text-xs font-semibold ${
+            className={`shrink-0 inline-flex items-center justify-center px-3 py-1 rounded-full text-xs font-semibold whitespace-nowrap leading-none ${
               isEncrypted
                 ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950/60 dark:text-emerald-300'
                 : 'bg-neutral-100 text-neutral-600 dark:bg-neutral-800 dark:text-neutral-400'
@@ -294,8 +294,8 @@ export const PrivacyPage: React.FC = () => {
               onChange={(e) => setPassphrase(e.target.value)}
               className="max-w-md"
             />
-            <Button variant="primary" onClick={handleEnableEncryption}>
-              <Lock className="w-4 h-4 mr-1.5" />
+            <Button variant="primary" className="w-full sm:w-auto shrink-0" onClick={handleEnableEncryption}>
+              <Lock className="w-4 h-4" />
               <span>Enable Encryption</span>
             </Button>
           </div>
@@ -308,8 +308,8 @@ export const PrivacyPage: React.FC = () => {
               onChange={(e) => setPassphraseInput(e.target.value)}
               className="max-w-md"
             />
-            <Button variant="outline" onClick={handleDisableEncryption}>
-              <Unlock className="w-4 h-4 mr-1.5" />
+            <Button variant="outline" className="w-full sm:w-auto shrink-0" onClick={handleDisableEncryption}>
+              <Unlock className="w-4 h-4" />
               <span>Disable Encryption</span>
             </Button>
           </div>
@@ -320,19 +320,19 @@ export const PrivacyPage: React.FC = () => {
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <Card variant="default" className="p-6 space-y-3">
           <h3 className="text-base font-semibold text-neutral-900 dark:text-neutral-100 flex items-center gap-2">
-            <Download className="w-4 h-4 text-neutral-500" />
+            <Download className="w-4 h-4 text-neutral-500 shrink-0" />
             <span>Export Full Data Package</span>
           </h3>
           <p className="text-xs text-neutral-600 dark:text-neutral-400">
             Download a portable, unencrypted JSON backup of all your cases, timeline logs, and evidence records.
           </p>
-          <div className="flex flex-wrap gap-2 pt-1">
-            <Button variant="secondary" size="md" onClick={handleExportAll}>
-              <Download className="w-4 h-4 mr-1.5" />
+          <div className="flex flex-col sm:flex-row flex-wrap gap-2.5 pt-1">
+            <Button variant="secondary" size="md" className="w-full sm:w-auto" onClick={handleExportAll}>
+              <Download className="w-4 h-4" />
               <span>Download JSON Backup</span>
             </Button>
-            <Button variant="outline" size="md" onClick={handleExportZip}>
-              <Download className="w-4 h-4 mr-1.5" />
+            <Button variant="outline" size="md" className="w-full sm:w-auto" onClick={handleExportZip}>
+              <Download className="w-4 h-4" />
               <span>Export ZIP Archive (JSON + Evidence)</span>
             </Button>
           </div>

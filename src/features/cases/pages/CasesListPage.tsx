@@ -69,9 +69,10 @@ export const CasesListPage: React.FC = () => {
         <Button
           variant="primary"
           size="md"
+          className="w-full sm:w-auto shrink-0 shadow-sm"
           onClick={() => setIsIntakeOpen(true)}
         >
-          <Plus className="w-4 h-4 mr-1.5" />
+          <Plus className="w-4 h-4" />
           <span>Tell Us What Happened</span>
         </Button>
       </div>
@@ -85,7 +86,7 @@ export const CasesListPage: React.FC = () => {
             onChange={(e) => setSearch(e.target.value)}
             className="pl-9"
           />
-          <Search className="w-4 h-4 text-neutral-400 absolute left-3 top-3.5 pointer-events-none" />
+          <Search className="w-4 h-4 text-neutral-400 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
         </div>
 
         <div className="w-full sm:w-56">

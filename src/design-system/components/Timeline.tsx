@@ -146,14 +146,14 @@ export const Timeline: React.FC<TimelineProps> = ({ events, className, threeStat
                   <div className="flex items-center gap-2">
                     <span
                       className={cn(
-                        'inline-flex items-center gap-1 text-[11px] font-medium px-2 py-0.5 rounded-md border',
+                        'inline-flex items-center gap-1 text-[11px] font-medium px-2 py-0.5 rounded-md border leading-none shrink-0',
                         badge.color
                       )}
                     >
-                      <Icon className="w-3 h-3" />
+                      <Icon className="w-3 h-3 shrink-0" />
                       <span>{badge.label}</span>
                     </span>
-                    <time className="text-xs text-neutral-500 dark:text-neutral-400 tabular-nums">
+                    <time className="text-xs text-neutral-500 dark:text-neutral-400 tabular-nums leading-none">
                       {formatDateTime(event.at)}
                     </time>
                   </div>

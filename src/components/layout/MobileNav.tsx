@@ -63,7 +63,7 @@ export const MobileNav: React.FC = () => {
           <FolderKanban className="w-5 h-5 mb-0.5" />
           <span>Cases</span>
           {activeCaseCount > 0 && (
-            <span className="absolute top-1 right-2 w-4 h-4 rounded-full bg-brand-500 text-white text-[10px] font-bold flex items-center justify-center">
+            <span className="absolute top-1 right-2 w-4 h-4 rounded-full bg-brand-500 text-white text-[10px] font-bold inline-flex items-center justify-center leading-none select-none">
               {activeCaseCount}
             </span>
           )}
@@ -73,7 +73,7 @@ export const MobileNav: React.FC = () => {
         <button
           type="button"
           onClick={() => navigate('/app/cases?new=true')}
-          className="flex flex-col items-center justify-center -mt-4 w-12 h-12 rounded-full bg-brand-500 text-white shadow-elevated hover:bg-brand-600 active:scale-95 transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500"
+          className="flex flex-col items-center justify-center -mt-4 w-12 h-12 rounded-full bg-brand-500 text-white shadow-elevated hover:bg-brand-600 active:scale-95 transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500 shrink-0"
           aria-label="Create new dispute case"
         >
           <Plus className="w-6 h-6 stroke-[2.5]" />

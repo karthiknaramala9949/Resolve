@@ -221,13 +221,13 @@ export const PurchasesPage: React.FC = () => {
           </p>
         </div>
 
-        <div className="flex items-center gap-3">
+        <div className="flex flex-wrap items-center gap-2.5">
           <Button
             variant="outline"
             size="md"
             onClick={() => setIsImportModalOpen(true)}
           >
-            <Upload className="w-4 h-4 mr-1.5" />
+            <Upload className="w-4 h-4 shrink-0" />
             <span>Import Orders</span>
           </Button>
 
@@ -236,7 +236,7 @@ export const PurchasesPage: React.FC = () => {
             size="md"
             onClick={() => setIsAddModalOpen(true)}
           >
-            <Plus className="w-4 h-4 mr-1.5" />
+            <Plus className="w-4 h-4 shrink-0" />
             <span>Add Purchase</span>
           </Button>
         </div>
@@ -305,17 +305,17 @@ export const PurchasesPage: React.FC = () => {
 
                 {/* Return window & warranty countdown badges */}
                 <div className="space-y-2">
-                  <div className="p-3 rounded-lg bg-surface-light-subtle dark:bg-surface-dark-subtle border border-neutral-200/80 dark:border-neutral-800 flex items-center justify-between text-xs">
-                    <div className="flex items-center gap-2">
+                  <div className="p-3 rounded-lg bg-surface-light-subtle dark:bg-surface-dark-subtle border border-neutral-200/80 dark:border-neutral-800 flex flex-wrap items-center justify-between gap-2 text-xs">
+                    <div className="inline-flex items-center gap-2 leading-none">
                       <Clock
-                        className={`w-4 h-4 ${
+                        className={`w-4 h-4 shrink-0 ${
                           retWindow.status === 'active' || retWindow.status === 'last_day'
                             ? 'text-amber-600'
                             : 'text-neutral-500'
                         }`}
                       />
                       <span
-                        className={`font-semibold ${
+                        className={`font-semibold leading-none ${
                           retWindow.status === 'active' || retWindow.status === 'last_day'
                             ? 'text-amber-700 dark:text-amber-400'
                             : 'text-neutral-700 dark:text-neutral-300'
@@ -324,7 +324,7 @@ export const PurchasesPage: React.FC = () => {
                         {retWindow.label}
                       </span>
                     </div>
-                    <span className="text-neutral-600 dark:text-neutral-300 font-medium">
+                    <span className="text-neutral-600 dark:text-neutral-300 font-medium shrink-0 whitespace-nowrap leading-none">
                       {warranty.label}
                     </span>
                   </div>
@@ -344,7 +344,7 @@ export const PurchasesPage: React.FC = () => {
                   className="w-full text-brand-600 dark:text-brand-400"
                 >
                   <span>Start a case from this purchase</span>
-                  <ArrowRight className="w-3.5 h-3.5 ml-1" />
+                  <ArrowRight className="w-3.5 h-3.5 shrink-0" />
                 </Button>
               </Card>
             );

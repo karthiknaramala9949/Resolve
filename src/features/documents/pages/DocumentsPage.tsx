@@ -198,7 +198,7 @@ export const DocumentsPage: React.FC = () => {
             onClick={() => setIsPackModalOpen(true)}
             disabled={cases.length === 0}
           >
-            <Download className="w-4 h-4 mr-1.5" />
+            <Download className="w-4 h-4 shrink-0" />
             <span>Build Proof Pack</span>
           </Button>
 
@@ -208,7 +208,7 @@ export const DocumentsPage: React.FC = () => {
             onClick={() => setIsUploadModalOpen(true)}
             disabled={cases.length === 0}
           >
-            <Plus className="w-4 h-4 mr-1.5" />
+            <Plus className="w-4 h-4 shrink-0" />
             <span>Add File</span>
           </Button>
         </div>
@@ -369,7 +369,7 @@ export const DocumentsPage: React.FC = () => {
                 isLoading={isGeneratingPdf}
                 className="w-full"
               >
-                <Download className="w-4 h-4 mr-2" />
+                <Download className="w-4 h-4 shrink-0" />
                 <span>{isGeneratingPdf ? 'Compiling PDF...' : 'Download PDF Proof Pack'}</span>
               </Button>
 
@@ -379,7 +379,7 @@ export const DocumentsPage: React.FC = () => {
                 onClick={handleCopyComplaintLetter}
                 className="w-full"
               >
-                <Copy className="w-4 h-4 mr-2" />
+                <Copy className="w-4 h-4 shrink-0" />
                 <span>Copy Complaint Letter</span>
               </Button>
             </div>

@@ -129,14 +129,14 @@ export const RemindersPage: React.FC = () => {
           </p>
         </div>
 
-        <div className="flex items-center gap-3">
+        <div className="flex flex-wrap items-center gap-2.5">
           {notifPermission !== 'granted' && (
             <Button
               variant="outline"
               size="md"
               onClick={requestNotificationPermission}
             >
-              <Bell className="w-4 h-4 mr-1.5" />
+              <Bell className="w-4 h-4 shrink-0" />
               <span>Enable Notifications</span>
             </Button>
           )}
@@ -146,7 +146,7 @@ export const RemindersPage: React.FC = () => {
             size="md"
             onClick={() => setIsAddModalOpen(true)}
           >
-            <Plus className="w-4 h-4 mr-1.5" />
+            <Plus className="w-4 h-4 shrink-0" />
             <span>New Reminder</span>
           </Button>
         </div>
@@ -259,14 +259,14 @@ export const RemindersPage: React.FC = () => {
               <button
                 type="button"
                 onClick={() => setQuickDate(7, 'Follow up with company care on ticket status')}
-                className="px-2.5 py-1 rounded-lg border border-neutral-200 dark:border-neutral-800 bg-surface-light-subtle dark:bg-surface-dark-subtle hover:border-brand-300"
+                className="inline-flex items-center justify-center font-medium px-3 py-1.5 rounded-lg border border-neutral-300 dark:border-neutral-700 bg-surface-light-subtle dark:bg-surface-dark-subtle hover:border-brand-300 transition-colors leading-none"
               >
                 +7 Days (Customer care turnaround)
               </button>
               <button
                 type="button"
                 onClick={() => setQuickDate(3, 'Verify UPI / bank statement for refund credit')}
-                className="px-2.5 py-1 rounded-lg border border-neutral-200 dark:border-neutral-800 bg-surface-light-subtle dark:bg-surface-dark-subtle hover:border-brand-300"
+                className="inline-flex items-center justify-center font-medium px-3 py-1.5 rounded-lg border border-neutral-300 dark:border-neutral-700 bg-surface-light-subtle dark:bg-surface-dark-subtle hover:border-brand-300 transition-colors leading-none"
               >
                 +3 Days (Banking settlement)
               </button>

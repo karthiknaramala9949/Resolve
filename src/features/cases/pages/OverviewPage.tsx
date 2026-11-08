@@ -38,8 +38,8 @@ export const OverviewPage: React.FC = () => {
       {/* Welcome Banner */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 p-6 md:p-8 rounded-2xl bg-gradient-to-br from-white via-surface-light-subtle to-brand-50/30 dark:from-surface-dark dark:via-surface-dark-subtle dark:to-brand-950/20 border border-neutral-200/80 dark:border-neutral-800 shadow-subtle">
         <div className="max-w-2xl">
-          <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-brand-100/60 dark:bg-brand-950/60 text-brand-800 dark:text-brand-300 text-xs font-semibold mb-3">
-            <span className="w-1.5 h-1.5 rounded-full bg-brand-500" />
+          <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-brand-100/60 dark:bg-brand-950/60 text-brand-800 dark:text-brand-300 text-xs font-semibold mb-3 leading-none select-none">
+            <span className="w-1.5 h-1.5 rounded-full bg-brand-500 shrink-0" />
             <span>Customer-controlled dispute support</span>
           </div>
           <h2 className="text-2xl md:text-3xl font-bold font-serif text-neutral-900 dark:text-neutral-100 tracking-tight">
@@ -57,7 +57,7 @@ export const OverviewPage: React.FC = () => {
             onClick={() => setIsIntakeOpen(true)}
             className="w-full md:w-auto shadow-elevated"
           >
-            <Plus className="w-5 h-5 mr-1.5" />
+            <Plus className="w-5 h-5 shrink-0" />
             <span>Tell Us What Happened</span>
           </Button>
         </div>
@@ -138,7 +138,7 @@ export const OverviewPage: React.FC = () => {
                 className="w-full md:w-auto"
               >
                 <span>Take Next Step</span>
-                <ArrowRight className="w-4 h-4 ml-1.5" />
+                <ArrowRight className="w-4 h-4 shrink-0" />
               </Button>
             </div>
           </div>
@@ -154,10 +154,10 @@ export const OverviewPage: React.FC = () => {
           <button
             type="button"
             onClick={() => navigate('/app/cases')}
-            className="text-sm font-semibold text-brand-600 dark:text-brand-400 hover:underline flex items-center gap-1"
+            className="text-sm font-semibold text-brand-600 dark:text-brand-400 hover:underline inline-flex items-center gap-1 leading-none"
           >
             <span>View all</span>
-            <ArrowRight className="w-3.5 h-3.5" />
+            <ArrowRight className="w-3.5 h-3.5 shrink-0" />
           </button>
         </div>
 

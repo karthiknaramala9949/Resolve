@@ -58,25 +58,25 @@ export const EvidenceTile: React.FC<EvidenceTileProps> = ({
           </div>
         </div>
 
-        <div className="flex items-center gap-1">
+        <div className="flex items-center gap-1 shrink-0">
           {onDownload && (
             <button
               type="button"
               onClick={onDownload}
-              className="p-1.5 text-neutral-400 hover:text-neutral-700 dark:hover:text-neutral-200 rounded-md hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-colors"
+              className="p-1.5 text-neutral-400 hover:text-neutral-700 dark:hover:text-neutral-200 rounded-md hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-colors inline-flex items-center justify-center shrink-0 min-w-[36px] min-h-[36px]"
               title="Download evidence"
             >
-              <Download className="w-4 h-4" />
+              <Download className="w-4 h-4 shrink-0" />
             </button>
           )}
           {onDelete && (
             <button
               type="button"
               onClick={onDelete}
-              className="p-1.5 text-neutral-400 hover:text-red-600 rounded-md hover:bg-red-50 dark:hover:bg-red-950/40 transition-colors"
+              className="p-1.5 text-neutral-400 hover:text-red-600 rounded-md hover:bg-red-50 dark:hover:bg-red-950/40 transition-colors inline-flex items-center justify-center shrink-0 min-w-[36px] min-h-[36px]"
               title="Remove evidence"
             >
-              <Trash2 className="w-4 h-4" />
+              <Trash2 className="w-4 h-4 shrink-0" />
             </button>
           )}
         </div>

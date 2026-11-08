@@ -74,21 +74,21 @@ export const StatusChip: React.FC<StatusChipProps> = ({
   const IconComponent = config.icon;
 
   const sizeClasses = {
-    sm: 'text-xs px-2 py-0.5 gap-1',
-    md: 'text-sm font-medium px-2.5 py-1 gap-1.5',
-    lg: 'text-base font-medium px-3 py-1.5 gap-2',
+    sm: 'text-xs font-semibold px-2.5 py-1 gap-1.5 leading-none',
+    md: 'text-xs sm:text-sm font-semibold px-3 py-1.5 gap-1.5 leading-none',
+    lg: 'text-sm font-semibold px-3.5 py-1.5 gap-2 leading-none',
   };
 
   const iconSizes = {
     sm: 'w-3 h-3',
-    md: 'w-4 h-4',
+    md: 'w-3.5 h-3.5',
     lg: 'w-4 h-4',
   };
 
   return (
     <span
       className={cn(
-        'inline-flex items-center rounded-full border transition-colors select-none font-medium',
+        'inline-flex items-center justify-center rounded-full border transition-colors select-none font-medium whitespace-nowrap leading-none',
         config.bg,
         config.text,
         config.border,
@@ -97,7 +97,7 @@ export const StatusChip: React.FC<StatusChipProps> = ({
       )}
     >
       {showIcon && <IconComponent className={cn('shrink-0', iconSizes[size])} aria-hidden="true" />}
-      <span>{config.label}</span>
+      <span className="leading-none">{config.label}</span>
     </span>
   );
 };

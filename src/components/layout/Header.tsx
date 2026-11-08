@@ -61,8 +61,8 @@ export const Header: React.FC = () => {
         </button>
 
         {/* Local Storage Trust Badge */}
-        <div className="hidden lg:flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-neutral-100 dark:bg-neutral-800 text-[11px] font-medium text-neutral-600 dark:text-neutral-300 border border-neutral-200 dark:border-neutral-700">
-          <Shield className="w-3 h-3 text-emerald-600 dark:text-emerald-400" />
+        <div className="hidden lg:inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-neutral-100 dark:bg-neutral-800 text-[11px] font-medium text-neutral-600 dark:text-neutral-300 border border-neutral-200 dark:border-neutral-700 leading-none select-none">
+          <Shield className="w-3 h-3 text-emerald-600 dark:text-emerald-400 shrink-0" />
           <span>On-device only</span>
         </div>
       </div>

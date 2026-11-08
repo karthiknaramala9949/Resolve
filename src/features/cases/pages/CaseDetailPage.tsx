@@ -397,17 +397,17 @@ export const CaseDetailPage: React.FC = () => {
 
         <div className="flex flex-wrap items-center gap-2">
           <Button variant="outline" size="sm" onClick={handleCopyComplaint}>
-            <Copy className="w-3.5 h-3.5 mr-1.5" />
+            <Copy className="w-3.5 h-3.5" />
             <span>Copy Complaint Notice</span>
           </Button>
 
           <Button variant="outline" size="sm" onClick={() => setIsChannelModalOpen(true)}>
-            <ExternalLink className="w-3.5 h-3.5 mr-1.5" />
+            <ExternalLink className="w-3.5 h-3.5" />
             <span>Open Official Channel</span>
           </Button>
 
           <Button variant="outline" size="sm" onClick={() => navigate('/app/documents')}>
-            <Download className="w-3.5 h-3.5 mr-1.5" />
+            <Download className="w-3.5 h-3.5" />
             <span>Export Proof Pack</span>
           </Button>
         </div>
@@ -417,7 +417,7 @@ export const CaseDetailPage: React.FC = () => {
       <Card variant="elevated" className="p-6 md:p-8 space-y-4">
         <div className="flex flex-wrap items-center justify-between gap-4">
           <div className="flex items-center gap-2">
-            <span className="font-mono text-sm font-bold uppercase tracking-wider text-neutral-500 dark:text-neutral-400 bg-neutral-100 dark:bg-neutral-800 px-2.5 py-1 rounded-md">
+            <span className="font-mono text-sm font-bold uppercase tracking-wider text-neutral-500 dark:text-neutral-400 bg-neutral-100 dark:bg-neutral-800 px-2.5 py-1 rounded-md leading-none inline-flex items-center">
               {caseData.id}
             </span>
             <span className="text-xs text-neutral-400">•</span>
@@ -463,7 +463,7 @@ export const CaseDetailPage: React.FC = () => {
           <div className="flex flex-wrap items-center gap-2">
             {caseData.status === 'action_required' && (
               <Button variant="secondary" size="sm" onClick={handleMarkSent}>
-                <Send className="w-3.5 h-3.5 mr-1.5" />
+                <Send className="w-3.5 h-3.5" />
                 <span>Mark Sent to Company</span>
               </Button>
             )}
@@ -476,7 +476,7 @@ export const CaseDetailPage: React.FC = () => {
                 setIsOutcomeModalOpen(true);
               }}
             >
-              <FileCheck className="w-3.5 h-3.5 mr-1.5" />
+              <FileCheck className="w-3.5 h-3.5" />
               <span>Record Company Reply</span>
             </Button>
 
@@ -485,18 +485,18 @@ export const CaseDetailPage: React.FC = () => {
               size="sm"
               onClick={() => setIsAddReminderOpen(true)}
             >
-              <Clock className="w-3.5 h-3.5 mr-1.5" />
+              <Clock className="w-3.5 h-3.5" />
               <span>Add Follow-Up Reminder</span>
             </Button>
 
             {(caseData.status === 'resolved' || caseData.status === 'closed') ? (
               <Button variant="outline" size="sm" onClick={handleReopen}>
-                <RotateCcw className="w-3.5 h-3.5 mr-1.5" />
+                <RotateCcw className="w-3.5 h-3.5" />
                 <span>Reopen Case</span>
               </Button>
             ) : (
               <Button variant="outline" size="sm" onClick={handleArchive}>
-                <Archive className="w-3.5 h-3.5 mr-1.5" />
+                <Archive className="w-3.5 h-3.5" />
                 <span>Archive Case</span>
               </Button>
             )}
@@ -508,7 +508,7 @@ export const CaseDetailPage: React.FC = () => {
             onClick={handleDeleteCase}
             className="text-red-600 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-950/40 border-red-200 dark:border-red-900"
           >
-            <Trash2 className="w-3.5 h-3.5 mr-1.5" />
+            <Trash2 className="w-3.5 h-3.5" />
             <span>Delete Case</span>
           </Button>
         </div>
@@ -559,7 +559,7 @@ export const CaseDetailPage: React.FC = () => {
               setIsOutcomeModalOpen(true);
             }}
           >
-            <CheckCircle className="w-4 h-4 mr-2" />
+            <CheckCircle className="w-4 h-4 shrink-0" />
             <span>Update Resolution / Verify Bank Receipt</span>
           </Button>
 
@@ -571,7 +571,7 @@ export const CaseDetailPage: React.FC = () => {
 
       {/* Refund Reality Check (Signature Feature #5) */}
       <Card variant="subtle" className="p-6 space-y-4">
-        <div className="flex items-center justify-between">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
           <div>
             <h3 className="text-sm font-bold uppercase tracking-wider text-neutral-700 dark:text-neutral-300">
               Refund Reality Check
@@ -584,6 +584,7 @@ export const CaseDetailPage: React.FC = () => {
           <Button
             variant="secondary"
             size="sm"
+            className="w-full sm:w-auto shrink-0"
             onClick={() => {
               setOutcomeStage('company');
               setIsOutcomeModalOpen(true);
@@ -631,7 +632,7 @@ export const CaseDetailPage: React.FC = () => {
             Case Timeline
           </h3>
           <Button variant="secondary" size="sm" onClick={() => setIsAddEventOpen(true)}>
-            <Plus className="w-4 h-4 mr-1" />
+            <Plus className="w-4 h-4 shrink-0" />
             <span>Add Event</span>
           </Button>
         </div>
@@ -650,7 +651,7 @@ export const CaseDetailPage: React.FC = () => {
           </h3>
           <div className="flex items-center gap-2">
             <Button variant="primary" size="sm" onClick={() => setIsUploadEvidenceOpen(true)}>
-              <Plus className="w-4 h-4 mr-1" />
+              <Plus className="w-4 h-4 shrink-0" />
               <span>Attach Evidence</span>
             </Button>
             <Button variant="outline" size="sm" onClick={() => navigate('/app/documents')}>

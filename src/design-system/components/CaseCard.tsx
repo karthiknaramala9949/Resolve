@@ -41,17 +41,17 @@ export const CaseCard: React.FC<CaseCardProps> = ({ caseData, onClick, className
       )}
     >
       {/* Top Header: ID, Date, and Status */}
-      <div className="flex items-center justify-between gap-3 mb-3">
+      <div className="flex flex-wrap items-center justify-between gap-2 mb-3">
         <div className="flex items-center gap-2">
-          <span className="font-mono text-xs font-semibold uppercase tracking-wider text-neutral-500 dark:text-neutral-400">
+          <span className="font-mono text-xs font-semibold uppercase tracking-wider text-neutral-500 dark:text-neutral-400 leading-none">
             {caseData.id}
           </span>
-          <span className="text-neutral-300 dark:text-neutral-700">•</span>
-          <span className="text-xs text-neutral-500 dark:text-neutral-400">
+          <span className="text-neutral-300 dark:text-neutral-700 leading-none">•</span>
+          <span className="text-xs text-neutral-500 dark:text-neutral-400 leading-none">
             {formatRelativeTime(caseData.updatedAt)}
           </span>
         </div>
-        <StatusChip status={caseData.status} size="sm" />
+        <StatusChip status={caseData.status} size="sm" className="shrink-0" />
       </div>
 
       {/* Main Content: Title, Company, Amount */}

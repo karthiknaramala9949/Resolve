@@ -90,7 +90,7 @@ export const HelpPage: React.FC = () => {
         {decisionStep === null && (
           <Button variant="primary" size="md" onClick={() => setDecisionStep(1)}>
             <span>Start Decision Tree</span>
-            <ArrowRight className="w-4 h-4 ml-1.5" />
+            <ArrowRight className="w-4 h-4 shrink-0" />
           </Button>
         )}
 
@@ -120,7 +120,7 @@ export const HelpPage: React.FC = () => {
               Under Indian consumer law and NCH rules, statutory commissions require proof that you first gave the merchant an opportunity to rectify the issue. Use our Proof Pack builder to generate a formal complaint letter and submit it via the merchant's support channel.
             </p>
             <Button variant="secondary" size="sm" onClick={() => setDecisionStep(null)}>
-              <RefreshCw className="w-3.5 h-3.5 mr-1.5" />
+              <RefreshCw className="w-3.5 h-3.5 shrink-0" />
               <span>Reset Decision Tree</span>
             </Button>
           </div>
@@ -159,10 +159,10 @@ export const HelpPage: React.FC = () => {
                 href="https://consumerhelpline.gov.in"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg bg-blue-600 text-white text-xs font-semibold hover:bg-blue-700 transition-colors"
+                className="inline-flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg bg-blue-600 text-white text-xs font-semibold hover:bg-blue-700 transition-colors leading-none"
               >
                 <span>Open NCH Portal</span>
-                <ExternalLink className="w-3.5 h-3.5" />
+                <ExternalLink className="w-3.5 h-3.5 shrink-0" />
               </a>
               <Button variant="outline" size="sm" onClick={() => setDecisionStep(null)}>
                 Reset
@@ -185,10 +185,10 @@ export const HelpPage: React.FC = () => {
                 href="https://cms.rbi.org.in"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg bg-purple-600 text-white text-xs font-semibold hover:bg-purple-700 transition-colors"
+                className="inline-flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg bg-purple-600 text-white text-xs font-semibold hover:bg-purple-700 transition-colors leading-none"
               >
                 <span>Open RBI CMS Portal</span>
-                <ExternalLink className="w-3.5 h-3.5" />
+                <ExternalLink className="w-3.5 h-3.5 shrink-0" />
               </a>
               <Button variant="outline" size="sm" onClick={() => setDecisionStep(null)}>
                 Reset
@@ -211,10 +211,10 @@ export const HelpPage: React.FC = () => {
                 href="https://e-jagriti.gov.in/"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg bg-emerald-600 text-white text-xs font-semibold hover:bg-emerald-700 transition-colors"
+                className="inline-flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg bg-emerald-600 text-white text-xs font-semibold hover:bg-emerald-700 transition-colors leading-none"
               >
                 <span>Open e-Jagriti Portal</span>
-                <ExternalLink className="w-3.5 h-3.5" />
+                <ExternalLink className="w-3.5 h-3.5 shrink-0" />
               </a>
               <Button variant="outline" size="sm" onClick={() => setDecisionStep(null)}>
                 Reset
@@ -274,10 +274,10 @@ export const HelpPage: React.FC = () => {
                 href={r.sourceUrl || r.webUrl}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="inline-flex items-center justify-center gap-1.5 w-full py-2.5 px-3 rounded-lg border border-neutral-300 dark:border-neutral-700 text-xs font-semibold text-neutral-800 dark:text-neutral-200 hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-colors"
+                className="inline-flex items-center justify-center gap-1.5 w-full py-2.5 px-3 rounded-lg border border-neutral-300 dark:border-neutral-700 text-xs font-semibold text-neutral-800 dark:text-neutral-200 hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-colors leading-none min-h-[44px]"
               >
                 <span>Visit Official Government Site</span>
-                <ExternalLink className="w-3.5 h-3.5" />
+                <ExternalLink className="w-3.5 h-3.5 shrink-0" />
               </a>
             </div>
           </Card>

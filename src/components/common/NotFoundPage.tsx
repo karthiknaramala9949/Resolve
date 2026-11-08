@@ -20,16 +20,16 @@ export const NotFoundPage: React.FC = () => {
           </p>
         </div>
 
-        <div className="flex items-center justify-center gap-3 pt-2">
+        <div className="flex flex-wrap items-center justify-center gap-3 pt-2">
           <Link to="/">
             <Button variant="primary">
-              <Home className="w-4 h-4 mr-1.5" />
+              <Home className="w-4 h-4 shrink-0" />
               <span>Go to Home</span>
             </Button>
           </Link>
           <Link to="/app/overview">
             <Button variant="outline">
-              <ArrowLeft className="w-4 h-4 mr-1.5" />
+              <ArrowLeft className="w-4 h-4 shrink-0" />
               <span>Open My Cases</span>
             </Button>
           </Link>

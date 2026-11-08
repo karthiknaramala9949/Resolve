@@ -91,7 +91,7 @@ export const LandingPage: React.FC = () => {
               R
             </div>
             <span className="font-serif font-bold text-xl tracking-tight">RESOLVE-ONE</span>
-            <span className="hidden sm:inline-block text-[11px] font-mono px-2 py-0.5 rounded-full bg-neutral-100 dark:bg-neutral-800 text-neutral-700 dark:text-neutral-300 font-medium border border-neutral-200 dark:border-neutral-700">
+            <span className="hidden sm:inline-flex items-center text-[11px] font-mono px-2.5 py-0.5 rounded-full bg-neutral-100 dark:bg-neutral-800 text-neutral-700 dark:text-neutral-300 font-medium border border-neutral-200 dark:border-neutral-700 leading-none">
               India Consumer Rights
             </span>
           </div>
@@ -143,7 +143,7 @@ export const LandingPage: React.FC = () => {
               onClick={() => navigate('/app/cases?new=true')}
             >
               <span>Start in 60s</span>
-              <ArrowRight className="w-3.5 h-3.5 ml-1" />
+              <ArrowRight className="w-3.5 h-3.5 shrink-0" />
             </Button>
           </div>
         </div>
@@ -151,8 +151,8 @@ export const LandingPage: React.FC = () => {
 
       {/* Hero Section */}
       <section className="px-4 md:px-8 pt-12 md:pt-20 pb-16 max-w-5xl mx-auto text-center space-y-6">
-        <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-brand-50 dark:bg-brand-950/60 border border-brand-200 dark:border-brand-900 text-brand-700 dark:text-brand-300 text-xs font-semibold shadow-2xs">
-          <span className="w-2 h-2 rounded-full bg-brand-500 animate-pulse" />
+        <div className="inline-flex items-center justify-center gap-2 px-3.5 py-1.5 rounded-full bg-brand-50 dark:bg-brand-950/60 border border-brand-200 dark:border-brand-900 text-brand-700 dark:text-brand-300 text-xs font-semibold shadow-2xs leading-none">
+          <span className="w-2 h-2 rounded-full bg-brand-500 animate-pulse shrink-0" />
           <span>India-First Consumer Dispute Resolution</span>
         </div>
 
@@ -168,12 +168,12 @@ export const LandingPage: React.FC = () => {
         {/* Live Interactive Hero Demo (Signature Experience #1 Showcase) */}
         <div className="max-w-2xl mx-auto pt-6 text-left">
           <Card variant="elevated" className="p-5 md:p-6 space-y-4 border-brand-200 dark:border-brand-900/60">
-            <div className="flex items-center justify-between">
-              <span className="text-xs font-bold uppercase tracking-wider text-brand-600 dark:text-brand-400 flex items-center gap-1.5">
-                <Sparkles className="w-3.5 h-3.5" />
+            <div className="flex flex-wrap items-center justify-between gap-2">
+              <span className="text-xs font-bold uppercase tracking-wider text-brand-600 dark:text-brand-400 inline-flex items-center gap-1.5 leading-none">
+                <Sparkles className="w-3.5 h-3.5 shrink-0" />
                 <span>Interactive Live Demo — Try Typing or Editing</span>
               </span>
-              <span className="text-[11px] text-neutral-600 dark:text-neutral-400 font-medium">Rule-based parsing</span>
+              <span className="text-[11px] text-neutral-600 dark:text-neutral-400 font-medium leading-none">Rule-based parsing</span>
             </div>
 
             <textarea
@@ -191,39 +191,40 @@ export const LandingPage: React.FC = () => {
               </span>
               <div className="flex flex-wrap gap-2 text-xs">
                 {parsedDemo.company && (
-                  <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-md bg-white dark:bg-surface-dark border text-neutral-900 dark:text-neutral-100 font-medium shadow-2xs">
-                    <Building2 className="w-3 h-3 text-neutral-600 dark:text-neutral-400" />
+                  <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-white dark:bg-surface-dark border text-neutral-900 dark:text-neutral-100 font-medium shadow-2xs leading-none">
+                    <Building2 className="w-3.5 h-3.5 text-neutral-600 dark:text-neutral-400 shrink-0" />
                     <span>Company: {parsedDemo.company}</span>
                   </span>
                 )}
                 {parsedDemo.issueType && (
-                  <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-md bg-white dark:bg-surface-dark border text-brand-700 dark:text-brand-300 font-medium shadow-2xs">
-                    <Tag className="w-3 h-3 text-brand-500" />
+                  <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-white dark:bg-surface-dark border text-brand-700 dark:text-brand-300 font-medium shadow-2xs leading-none">
+                    <Tag className="w-3.5 h-3.5 text-brand-500 shrink-0" />
                     <span>Issue: {parsedDemo.issueType}</span>
                   </span>
                 )}
                 {parsedDemo.amount !== null && (
-                  <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-md bg-white dark:bg-surface-dark border text-emerald-700 dark:text-emerald-300 font-medium shadow-2xs">
-                    <IndianRupee className="w-3 h-3 text-emerald-600" />
+                  <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-white dark:bg-surface-dark border text-emerald-700 dark:text-emerald-300 font-medium shadow-2xs leading-none">
+                    <IndianRupee className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
                     <span>₹{parsedDemo.amount}</span>
                   </span>
                 )}
                 {parsedDemo.orderRef && (
-                  <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-md bg-white dark:bg-surface-dark border text-neutral-800 dark:text-neutral-200 font-mono shadow-2xs">
-                    <Hash className="w-3 h-3 text-neutral-600 dark:text-neutral-400" />
+                  <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-white dark:bg-surface-dark border text-neutral-800 dark:text-neutral-200 font-mono shadow-2xs leading-none">
+                    <Hash className="w-3.5 h-3.5 text-neutral-600 dark:text-neutral-400 shrink-0" />
                     <span>Ref: {parsedDemo.orderRef}</span>
                   </span>
                 )}
               </div>
             </div>
 
-            <div className="pt-2 flex items-center justify-between border-t border-neutral-100 dark:border-neutral-800">
-              <span className="text-xs text-neutral-600 dark:text-neutral-400">
+            <div className="pt-2 flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-t border-neutral-100 dark:border-neutral-800">
+              <span className="text-xs text-neutral-600 dark:text-neutral-400 leading-snug">
                 Notice: All parsing runs client-side. Zero cloud transmission.
               </span>
               <Button
                 variant="primary"
                 size="sm"
+                className="w-full sm:w-auto shrink-0"
                 onClick={() =>
                   navigate(
                     `/app/cases?new=true&store=${encodeURIComponent(parsedDemo.company)}&orderRef=${encodeURIComponent(
@@ -233,24 +234,24 @@ export const LandingPage: React.FC = () => {
                 }
               >
                 <span>Convert to Case</span>
-                <ArrowRight className="w-3.5 h-3.5 ml-1" />
+                <ArrowRight className="w-3.5 h-3.5" />
               </Button>
             </div>
           </Card>
         </div>
 
         {/* Trust Badges */}
-        <div className="pt-6 flex flex-wrap items-center justify-center gap-6 text-xs text-neutral-700 dark:text-neutral-300 font-medium">
-          <div className="flex items-center gap-1.5">
-            <Lock className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
+        <div className="pt-6 flex flex-wrap items-center justify-center gap-4 sm:gap-6 text-xs text-neutral-700 dark:text-neutral-300 font-medium">
+          <div className="inline-flex items-center gap-1.5 leading-none">
+            <Lock className="w-4 h-4 text-emerald-600 dark:text-emerald-400 shrink-0" />
             <span>100% On-Device IndexedDB</span>
           </div>
-          <div className="flex items-center gap-1.5">
-            <ShieldCheck className="w-4 h-4 text-blue-600 dark:text-blue-400" />
+          <div className="inline-flex items-center gap-1.5 leading-none">
+            <ShieldCheck className="w-4 h-4 text-blue-600 dark:text-blue-400 shrink-0" />
             <span>Never Auto-Sends Without Approval</span>
           </div>
-          <div className="flex items-center gap-1.5">
-            <CheckCircle2 className="w-4 h-4 text-brand-500" />
+          <div className="inline-flex items-center gap-1.5 leading-none">
+            <CheckCircle2 className="w-4 h-4 text-brand-500 shrink-0" />
             <span>Zero Passwords or OTPs</span>
           </div>
         </div>
@@ -350,13 +351,13 @@ export const LandingPage: React.FC = () => {
           <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
             <Card variant="default" className="p-5 flex flex-col justify-between space-y-3">
               <div className="space-y-2">
-                <div className="flex items-center justify-between text-xs">
+                <div className="flex flex-wrap items-center justify-between gap-2 text-xs">
                   <span className="font-mono text-neutral-600 dark:text-neutral-400 font-medium">Toll Free 1915 / WhatsApp 8800001915</span>
-                  <span className="px-1.5 py-0.5 rounded text-[10px] font-semibold bg-amber-100 dark:bg-amber-950 text-amber-800 dark:text-amber-300 border border-amber-300 dark:border-amber-800">
+                  <span className="shrink-0 px-2 py-0.5 rounded text-[10px] font-semibold bg-amber-100 dark:bg-amber-950 text-amber-800 dark:text-amber-300 border border-amber-300 dark:border-amber-800 whitespace-nowrap leading-none">
                     Verify before launch
                   </span>
                 </div>
-                <div className="text-[11px] text-amber-800 dark:text-amber-300 font-semibold">
+                <div className="text-[11px] text-amber-800 dark:text-amber-300 font-semibold leading-none">
                   Not yet verified: open the official site to confirm
                 </div>
                 <h3 className="text-base font-bold text-neutral-900 dark:text-neutral-100">National Consumer Helpline (NCH)</h3>
@@ -368,7 +369,7 @@ export const LandingPage: React.FC = () => {
                 href="https://consumerhelpline.gov.in"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="inline-flex items-center gap-1.5 text-xs font-semibold text-brand-600 dark:text-brand-400 hover:underline pt-2 border-t border-neutral-100 dark:border-neutral-800"
+                className="inline-flex items-center justify-center sm:justify-start gap-1.5 text-xs font-semibold text-brand-600 dark:text-brand-400 hover:underline pt-2 border-t border-neutral-100 dark:border-neutral-800 leading-none"
               >
                 <span>Visit official site</span>
                 <ExternalLink className="w-3.5 h-3.5" />
@@ -377,13 +378,13 @@ export const LandingPage: React.FC = () => {
 
             <Card variant="default" className="p-5 flex flex-col justify-between space-y-3">
               <div className="space-y-2">
-                <div className="flex items-center justify-between text-xs">
+                <div className="flex flex-wrap items-center justify-between gap-2 text-xs">
                   <span className="font-mono text-neutral-600 dark:text-neutral-400 font-medium">e-jagriti.gov.in</span>
-                  <span className="px-1.5 py-0.5 rounded text-[10px] font-semibold bg-amber-100 dark:bg-amber-950 text-amber-800 dark:text-amber-300 border border-amber-300 dark:border-amber-800">
+                  <span className="shrink-0 px-2 py-0.5 rounded text-[10px] font-semibold bg-amber-100 dark:bg-amber-950 text-amber-800 dark:text-amber-300 border border-amber-300 dark:border-amber-800 whitespace-nowrap leading-none">
                     Verify before launch
                   </span>
                 </div>
-                <div className="text-[11px] text-amber-800 dark:text-amber-300 font-semibold">
+                <div className="text-[11px] text-amber-800 dark:text-amber-300 font-semibold leading-none">
                   Not yet verified: open the official site to confirm
                 </div>
                 <h3 className="text-base font-bold text-neutral-900 dark:text-neutral-100">e-Jagriti (Consumer Commission)</h3>
@@ -395,7 +396,7 @@ export const LandingPage: React.FC = () => {
                 href="https://e-jagriti.gov.in/"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="inline-flex items-center gap-1.5 text-xs font-semibold text-brand-600 dark:text-brand-400 hover:underline pt-2 border-t border-neutral-100 dark:border-neutral-800"
+                className="inline-flex items-center justify-center sm:justify-start gap-1.5 text-xs font-semibold text-brand-600 dark:text-brand-400 hover:underline pt-2 border-t border-neutral-100 dark:border-neutral-800 leading-none"
               >
                 <span>Visit official site</span>
                 <ExternalLink className="w-3.5 h-3.5" />
@@ -404,13 +405,13 @@ export const LandingPage: React.FC = () => {
 
             <Card variant="default" className="p-5 flex flex-col justify-between space-y-3">
               <div className="space-y-2">
-                <div className="flex items-center justify-between text-xs">
+                <div className="flex flex-wrap items-center justify-between gap-2 text-xs">
                   <span className="font-mono text-neutral-600 dark:text-neutral-400 font-medium">Toll Free 14448 / SMS 14448</span>
-                  <span className="px-1.5 py-0.5 rounded text-[10px] font-semibold bg-amber-100 dark:bg-amber-950 text-amber-800 dark:text-amber-300 border border-amber-300 dark:border-amber-800">
+                  <span className="shrink-0 px-2 py-0.5 rounded text-[10px] font-semibold bg-amber-100 dark:bg-amber-950 text-amber-800 dark:text-amber-300 border border-amber-300 dark:border-amber-800 whitespace-nowrap leading-none">
                     Verify before launch
                   </span>
                 </div>
-                <div className="text-[11px] text-amber-800 dark:text-amber-300 font-semibold">
+                <div className="text-[11px] text-amber-800 dark:text-amber-300 font-semibold leading-none">
                   Not yet verified: open the official site to confirm
                 </div>
                 <h3 className="text-base font-bold text-neutral-900 dark:text-neutral-100">RBI Integrated Ombudsman</h3>
@@ -422,7 +423,7 @@ export const LandingPage: React.FC = () => {
                 href="https://cms.rbi.org.in"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="inline-flex items-center gap-1.5 text-xs font-semibold text-brand-600 dark:text-brand-400 hover:underline pt-2 border-t border-neutral-100 dark:border-neutral-800"
+                className="inline-flex items-center justify-center sm:justify-start gap-1.5 text-xs font-semibold text-brand-600 dark:text-brand-400 hover:underline pt-2 border-t border-neutral-100 dark:border-neutral-800 leading-none"
               >
                 <span>Visit official site</span>
                 <ExternalLink className="w-3.5 h-3.5" />

@@ -61,9 +61,9 @@ export const Sidebar: React.FC<SidebarProps> = ({ className }) => {
         <div className="mb-6 px-1">
           <Link
             to="/app/cases?new=true"
-            className="flex items-center justify-center gap-2 w-full py-2.5 px-4 rounded-xl bg-brand-500 hover:bg-brand-600 text-white font-medium text-sm shadow-sm transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500 active:scale-[0.98]"
+            className="inline-flex items-center justify-center gap-2 w-full py-2.5 px-4 rounded-xl bg-brand-500 hover:bg-brand-600 text-white font-medium text-sm shadow-sm transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500 active:scale-[0.98] leading-none min-h-[44px]"
           >
-            <Plus className="w-4 h-4" />
+            <Plus className="w-4 h-4 shrink-0" />
             <span>Tell Us What Happened</span>
           </Link>
         </div>
@@ -94,7 +94,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ className }) => {
                     <span>{item.label}</span>
                   </div>
                   {item.badge !== undefined && item.badge > 0 && (
-                    <span className="text-[11px] font-mono font-semibold px-2 py-0.5 rounded-full bg-brand-50 dark:bg-brand-950/60 text-brand-700 dark:text-brand-300 border border-brand-200 dark:border-brand-800">
+                    <span className="text-[11px] font-mono font-semibold px-2 py-0.5 rounded-full bg-brand-50 dark:bg-brand-950/60 text-brand-700 dark:text-brand-300 border border-brand-200 dark:border-brand-800 leading-none shrink-0">
                       {item.badge}
                     </span>
                   )}

@@ -91,19 +91,19 @@ export const StoragePersistenceBanner: React.FC = () => {
         <button
           type="button"
           onClick={handleExport}
-          className="inline-flex items-center gap-1.5 px-3 py-1 rounded-md bg-neutral-950 text-white font-semibold text-xs hover:bg-neutral-800 transition-colors shadow-2xs"
+          className="inline-flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-md bg-neutral-950 text-white font-semibold text-xs hover:bg-neutral-800 transition-colors shadow-2xs leading-none shrink-0"
         >
-          <Download className="w-3.5 h-3.5" />
+          <Download className="w-3.5 h-3.5 shrink-0" />
           <span>Export Backup</span>
         </button>
 
         <button
           type="button"
           onClick={showPersistenceWarning ? () => setShowPersistenceWarning(false) : dismissBackup}
-          className="p-1 text-neutral-950/70 hover:text-neutral-950 rounded hover:bg-amber-600/20 transition-colors"
+          className="p-1.5 text-neutral-950/70 hover:text-neutral-950 rounded hover:bg-amber-600/20 transition-colors inline-flex items-center justify-center shrink-0 min-w-[32px] min-h-[32px]"
           aria-label="Dismiss notification"
         >
-          <X className="w-4 h-4" />
+          <X className="w-4 h-4 shrink-0" />
         </button>
       </div>
     </aside>
