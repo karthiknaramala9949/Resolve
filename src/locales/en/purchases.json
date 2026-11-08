@@ -1,0 +1,14 @@
+{
+  "title": "Purchases & Protection",
+  "subtitle": "Track return windows, warranty countdowns, and start dispute cases with one tap.",
+  "addPurchase": "Add Purchase",
+  "importOrders": "Import Orders",
+  "importModalTitle": "Import Order Confirmation",
+  "importModalDesc": "Upload a CSV, JSON, or paste order email text to review and import into your vault.",
+  "startCaseBtn": "Start a case from this purchase",
+  "daysRemaining": "{{count}} days remaining to return",
+  "lastDay": "Last day to return today",
+  "closed": "Return window closed",
+  "warranty": "Warranty active: {{months}} months"
+}
+

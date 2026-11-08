@@ -1,0 +1,16 @@
+{
+  "title": "Application Preferences",
+  "subtitle": "Control language, appearance, and text accessibility. Persisted locally on your device.",
+  "languageTitle": "Language / भाषा / భాష",
+  "languageDesc": "Instant switching across English, Hindi, and Telugu. Stored in localStorage.",
+  "langEn": "English",
+  "langHi": "हिन्दी (Hindi)",
+  "langTe": "తెలుగు (Telugu)",
+  "simpleModeTitle": "Simple Language Mode",
+  "simpleModeDesc": "Replaces long explanations with shorter, concise sentences. Best for quick reading under stress.",
+  "appearanceTitle": "Appearance",
+  "appearanceDesc": "Warm off-white light mode and crafted deep ink dark mode.",
+  "lightTheme": "Light Theme (Warm Paper)",
+  "darkTheme": "Dark Theme (Deep Ink)"
+}
+

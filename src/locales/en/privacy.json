@@ -1,0 +1,28 @@
+{
+  "title": "Privacy & Data Trust",
+  "subtitle": "RESOLVE-ONE is local-first. We do not operate tracking trackers, remote customer databases, or telemetry. Your evidence and dispute data remain strictly on your device.",
+  "zeroTelemetry": "Zero-Telemetry & Absolute Local Ownership",
+  "whatsStoredTitle": "What is stored where?",
+  "indexedDbTitle": "Browser IndexedDB (Dexie)",
+  "indexedDbDesc": "Holds your dispute cases, chronological facts, timeline logs, return records, and actual PDF/image evidence binary files.",
+  "localPrefsTitle": "Local UI Preferences",
+  "localPrefsDesc": "Stored in localStorage: dark/light theme, active language, and simple language mode toggle.",
+  "cloudTitle": "Remote Cloud Servers",
+  "cloudDesc": "Zero. No personal data, case details, or uploaded receipts are ever transmitted to remote cloud servers.",
+  "encryptionTitle": "Client-Side Passphrase Encryption (WebCrypto AES-256-GCM)",
+  "encryptionDesc": "Optionally secure your local storage with an AES-GCM 256-bit encryption key derived via PBKDF2 (100,000 rounds).",
+  "encryptionActive": "Active on Device",
+  "encryptionInactive": "Unencrypted Storage",
+  "passphraseWarningTitle": "Crucial Passphrase Trade-off:",
+  "passphraseWarning": "Because RESOLVE-ONE has zero backend servers or user accounts, if you forget your passphrase, your encrypted dispute records cannot be decrypted or recovered by anyone.",
+  "enableBtn": "Enable Encryption",
+  "disableBtn": "Disable Encryption",
+  "exportTitle": "Export Full Data Package",
+  "exportDesc": "Download a portable, unencrypted JSON backup of all your cases, timeline logs, and evidence records.",
+  "downloadJson": "Download JSON Backup",
+  "exportZip": "Export ZIP Archive (JSON + Evidence)",
+  "deleteTitle": "Delete All Local Data",
+  "deleteDesc": "Immediately purges all IndexedDB records, evidence files, purchases, and localStorage settings from this browser.",
+  "wipeBtn": "Wipe All Records"
+}
+

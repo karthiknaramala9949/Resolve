@@ -1,0 +1,53 @@
+{
+  "appName": "RESOLVE-ONE",
+  "tagline": "Sort it out. One step at a time.",
+  "subtitle": "Customer-controlled consumer dispute resolution for India.",
+  "nav": {
+    "home": "Home",
+    "cases": "Cases",
+    "documents": "Documents",
+    "purchases": "Purchases",
+    "help": "Help & Rights",
+    "reminders": "Reminders",
+    "privacy": "Privacy & Data",
+    "settings": "Settings",
+    "openApp": "Open App",
+    "more": "More",
+    "moreFeatures": "More Features",
+    "moreDesc": "Purchases, rights guides, reminders, and data settings."
+  },
+  "status": {
+    "action_required": "Action Required",
+    "waiting_company": "Waiting for Company",
+    "response_received": "Response Received",
+    "resolved": "Confirmed Resolved",
+    "closed": "Closed"
+  },
+  "actions": {
+    "tellUs": "Tell Us What Happened",
+    "startCase": "Start in 60s",
+    "save": "Save",
+    "cancel": "Cancel",
+    "delete": "Delete",
+    "edit": "Edit",
+    "confirm": "Confirm",
+    "close": "Close",
+    "reset": "Reset",
+    "export": "Export Backup",
+    "viewAll": "View all",
+    "done": "Done",
+    "takeNextStep": "Take Next Step"
+  },
+  "storage": {
+    "indexedDbActive": "IndexedDB Active",
+    "onDeviceOnly": "On-device only",
+    "v2": "v2.0"
+  },
+  "toast": {
+    "copied": "Copied to clipboard",
+    "saved": "Saved successfully",
+    "deleted": "Deleted successfully",
+    "error": "An error occurred"
+  }
+}
+

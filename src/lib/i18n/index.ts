@@ -1,173 +1,103 @@
 import i18n from 'i18next';
 import { initReactI18next } from 'react-i18next';
 
+// English
+import enCommon from '@/locales/en/common.json';
+import enLanding from '@/locales/en/landing.json';
+import enCases from '@/locales/en/cases.json';
+import enDocuments from '@/locales/en/documents.json';
+import enPurchases from '@/locales/en/purchases.json';
+import enHelp from '@/locales/en/help.json';
+import enReminders from '@/locales/en/reminders.json';
+import enPrivacy from '@/locales/en/privacy.json';
+import enSettings from '@/locales/en/settings.json';
+
+// Hindi
+import hiCommon from '@/locales/hi/common.json';
+import hiLanding from '@/locales/hi/landing.json';
+import hiCases from '@/locales/hi/cases.json';
+import hiDocuments from '@/locales/hi/documents.json';
+import hiPurchases from '@/locales/hi/purchases.json';
+import hiHelp from '@/locales/hi/help.json';
+import hiReminders from '@/locales/hi/reminders.json';
+import hiPrivacy from '@/locales/hi/privacy.json';
+import hiSettings from '@/locales/hi/settings.json';
+
+// Telugu
+import teCommon from '@/locales/te/common.json';
+import teLanding from '@/locales/te/landing.json';
+import teCases from '@/locales/te/cases.json';
+import teDocuments from '@/locales/te/documents.json';
+import tePurchases from '@/locales/te/purchases.json';
+import teHelp from '@/locales/te/help.json';
+import teReminders from '@/locales/te/reminders.json';
+import tePrivacy from '@/locales/te/privacy.json';
+import teSettings from '@/locales/te/settings.json';
+
 export const resources = {
   en: {
-    translation: {
-      app_title: 'RESOLVE-ONE',
-      tagline: 'Sort it out. One step at a time.',
-      subtitle: 'Customer-controlled consumer dispute resolution for India.',
-      tell_us: 'Tell Us What Happened',
-      active_disputes: 'Active Disputes',
-      action_needed: 'Action Needed',
-      awaiting_company: 'Awaiting Company',
-      confirmed_resolved: 'Confirmed Resolved',
-      priority_next_action: 'Priority Next Action',
-      take_next_step: 'Take Next Step',
-      my_cases: 'My Cases',
-      documents_proof: 'Documents & Proof',
-      purchases_protection: 'Purchases & Protection',
-      help_rights: 'Help & Rights',
-      reminders: 'Reminders',
-      privacy_data: 'Privacy & Data',
-      settings: 'Settings',
-      status: {
-        action_required: 'Action required',
-        waiting_company: 'Waiting for company',
-        response_received: 'Reply received',
-        resolved: 'Outcome confirmed',
-        closed: 'Closed',
-      },
-      intake: {
-        title: 'Tell us what happened',
-        desc: 'In plain words, what went wrong? We will organize the facts into an actionable case.',
-        sample_refund: 'Refund not received',
-        sample_defective: 'Defective item rejected',
-        voice_hint: 'Listening... Speak clearly into your microphone. Tap microphone icon to finish.',
-        suggested_chips: 'Suggested from your words (local rule-based parsing, not AI)',
-        confirm_btn: 'Confirm & Create Case',
-      },
-      reality_check: {
-        title: 'Refund Reality Check',
-        desc: 'Never confuse a company promise with money received. Always compare with your bank statement.',
-        claimed: 'Your Original Claim',
-        promised: 'Company Promised Refund',
-        confirmed: 'Confirmed in Your Bank',
-      },
-      honesty: {
-        manifesto: 'What RESOLVE-ONE Never Does',
-        no_passwords: 'Never collects passwords, OTPs, or PINs',
-        no_fake_ai: 'No fake AI; honest rule-based local checks only',
-        no_auto_send: 'Never files or contacts anyone without your explicit approval',
-        separate_statuses: 'Company statements and actual bank receipts are strictly kept separate',
-      },
-    },
+    common: enCommon,
+    translation: enCommon,
+    landing: enLanding,
+    cases: enCases,
+    documents: enDocuments,
+    purchases: enPurchases,
+    help: enHelp,
+    reminders: enReminders,
+    privacy: enPrivacy,
+    settings: enSettings,
   },
   hi: {
-    translation: {
-      app_title: 'रिजॉल्व-वन (RESOLVE-ONE)',
-      tagline: 'सुलझाएं। एक बार में एक कदम।',
-      subtitle: 'भारतीय उपभोक्ताओं के लिए पूर्णतः आपके नियंत्रण में शिकायत समाधान।',
-      tell_us: 'बताएं क्या हुआ',
-      active_disputes: 'सक्रिय मामले',
-      action_needed: 'आपकी कार्रवाई आवश्यक',
-      awaiting_company: 'कंपनी के जवाब का इंतज़ार',
-      confirmed_resolved: 'समाधान की पुष्टि',
-      priority_next_action: 'प्राथमिक अगला कदम',
-      take_next_step: 'अगला कदम उठाएं',
-      my_cases: 'मेरे मामले',
-      documents_proof: 'दस्तावेज़ और सबूत',
-      purchases_protection: 'खरीदारी और वारंटी',
-      help_rights: 'मदद और उपभोक्ता अधिकार',
-      reminders: 'रिमाइंडर',
-      privacy_data: 'गोपनीयता और डेटा',
-      settings: 'सेटिंग्स',
-      status: {
-        action_required: 'कार्रवाई आवश्यक',
-        waiting_company: 'कंपनी के जवाब का इंतज़ार',
-        response_received: 'जवाब प्राप्त हुआ',
-        resolved: 'समाधान की पुष्टि हुई',
-        closed: 'समाप्त',
-      },
-      intake: {
-        title: 'बताएं क्या हुआ',
-        desc: 'साधारण शब्दों में लिखें क्या समस्या हुई? हम इसे व्यवस्थित करेंगे।',
-        sample_refund: 'रिफंड नहीं मिला',
-        sample_defective: 'खराब सामान लौटाने से इनकार',
-        voice_hint: 'सुन रहे हैं... स्पष्ट बोलें। पूरा होने पर माइक्रोफ़ोन आइकन टैप करें।',
-        suggested_chips: 'आपके शब्दों से सुझाए गए तथ्य (स्थानीय नियम-आधारित, कोई नकली एआई नहीं)',
-        confirm_btn: 'पुष्टि करें और मामला बनाएं',
-      },
-      reality_check: {
-        title: 'रिफंड की वास्तविकता जांच',
-        desc: 'कंपनी के वादे को खाते में पैसे आने से अलग रखें। बैंक स्टेटमेंट से मिलान अवश्य करें।',
-        claimed: 'आपका मूल दावा',
-        promised: 'कंपनी द्वारा वादा किया रिफंड',
-        confirmed: 'बैंक खाते में प्राप्त राशि',
-      },
-      honesty: {
-        manifesto: 'RESOLVE-ONE क्या कभी नहीं करता',
-        no_passwords: 'कभी पासवर्ड, ओटीपी या पिन नहीं मांगता',
-        no_fake_ai: 'कोई नकली एआई दावा नहीं; केवल पारदर्शी स्थानीय नियम',
-        no_auto_send: 'आपकी अनुमति के बिना कभी किसी को ईमेल या संदेश नहीं भेजता',
-        separate_statuses: 'कंपनी का कथन और बैंक में पैसे आने को अलग-अलग रखता है',
-      },
-    },
+    common: hiCommon,
+    translation: hiCommon,
+    landing: hiLanding,
+    cases: hiCases,
+    documents: hiDocuments,
+    purchases: hiPurchases,
+    help: hiHelp,
+    reminders: hiReminders,
+    privacy: hiPrivacy,
+    settings: hiSettings,
   },
   te: {
-    translation: {
-      app_title: 'రిసాల్వ్-వన్ (RESOLVE-ONE)',
-      tagline: 'పరిష్కరించుకోండి. ఒక్కో అడుగుగా.',
-      subtitle: 'భారతీయ వినియోగదారుల కోసం మీ పూర్తి నియంత్రణలో వివాద పరిష్కారం.',
-      tell_us: 'ఏమి జరిగిందో చెప్పండి',
-      active_disputes: 'ప్రస్తుత వివాదాలు',
-      action_needed: 'మీ చర్య అవసరం',
-      awaiting_company: 'కంపెనీ స్పందన కోసం నిరీక్షణ',
-      confirmed_resolved: 'పరిష్కారం నిర్ధారించబడింది',
-      priority_next_action: 'తదుపరి ప్రాధాన్యత చర్య',
-      take_next_step: 'తదుపరి అడుగు వేయండి',
-      my_cases: 'నా వివాదాలు',
-      documents_proof: 'పత్రాలు మరియు సాక్ష్యాలు',
-      purchases_protection: 'కొనుగోళ్లు & రక్షణ',
-      help_rights: 'సహాయం & హక్కులు',
-      reminders: 'రిమైండర్లు',
-      privacy_data: 'గోప్యత & డేటా భద్రత',
-      settings: 'సెట్టింగ్‌లు',
-      status: {
-        action_required: 'చర్య అవసరం',
-        waiting_company: 'కంపెనీ కోసం వేచి చూస్తున్నారు',
-        response_received: 'సమాధానం వచ్చింది',
-        resolved: 'పరిష్కారం నిర్ధారించబడింది',
-        closed: 'ముగిసింది',
-      },
-      intake: {
-        title: 'ఏమి జరిగిందో చెప్పండి',
-        desc: 'సాధారణ మాటల్లో మీ సమస్యను వివరించండి. మేము దాన్ని నమోదు చేస్తాము.',
-        sample_refund: 'రీఫండ్ రాలేదు',
-        sample_defective: 'లోపభూయిష్ట వస్తువు తిరస్కరణ',
-        voice_hint: 'వింటున్నాము... స్పష్టంగా మాట్లాడండి. పూర్తయిన తర్వాత మైక్రోఫోన్ చిహ్నాన్ని నొక్కండి.',
-        suggested_chips: 'మీ మాటల ఆధారంగా గుర్తించిన అంశాలు (స్థానిక నిబంధనల ఆధారంగా, నకిలీ AI కాదు)',
-        confirm_btn: 'ధృవీకరించి వివాదాన్ని సృష్టించండి',
-      },
-      reality_check: {
-        title: 'రీఫండ్ వాస్తవ నిర్ధారణ',
-        desc: 'కంపెనీ మాటలను ఖాతాలో జమ అయినట్లు భావించవద్దు. ఎల్లప్పుడూ బ్యాంక్ స్టేట్‌మెంట్‌తో సరిచూడండి.',
-        claimed: 'మీ అసలు క్లెయిమ్',
-        promised: 'కంపెనీ తెలిపిన రీఫండ్',
-        confirmed: 'బ్యాంక్ ఖాతాలో జమ అయిన మొత్తం',
-      },
-      honesty: {
-        manifesto: 'RESOLVE-ONE ఎప్పుడూ చేయనివి',
-        no_passwords: 'పాస్‌వర్డ్‌లు, OTPలు లేదా PINలను ఎప్పుడూ అడగదు',
-        no_fake_ai: 'నకిలీ AI వాదనలు ఉండవు; పారదర్శక స్థానిక నిబంధనలు మాత్రమే',
-        no_auto_send: 'మీ అనుమతి లేకుండా ఎవరికీ మెయిల్స్ లేదా సందేశాలు పంపదు',
-        separate_statuses: 'కంపెనీ హామీని మరియు బ్యాంక్‌లో నగదు జమను విడివిడిగా ట్రాక్ చేస్తుంది',
-      },
-    },
+    common: teCommon,
+    translation: teCommon,
+    landing: teLanding,
+    cases: teCases,
+    documents: teDocuments,
+    purchases: tePurchases,
+    help: teHelp,
+    reminders: teReminders,
+    privacy: tePrivacy,
+    settings: teSettings,
   },
 };
 
 const savedLocale =
-  typeof window !== 'undefined' ? localStorage.getItem('resolve-one-locale') || 'en' : 'en';
+  typeof window !== 'undefined'
+    ? localStorage.getItem('resolve-one-locale') || 'en'
+    : 'en';
 
 i18n.use(initReactI18next).init({
   resources,
   lng: savedLocale,
   fallbackLng: 'en',
+  defaultNS: 'common',
+  ns: [
+    'common',
+    'translation',
+    'landing',
+    'cases',
+    'documents',
+    'purchases',
+    'help',
+    'reminders',
+    'privacy',
+    'settings',
+  ],
   interpolation: {
     escapeValue: false,
   },
 });
 
 export default i18n;
-

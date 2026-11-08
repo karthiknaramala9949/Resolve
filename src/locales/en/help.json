@@ -1,0 +1,18 @@
+{
+  "title": "Rights & Official Helplines",
+  "subtitle": "Plain-language verified guidance for Indian consumers. General informational starting points, not legal advice. Always check official government portals.",
+  "decisionTreeTitle": "Interactive Route Decision Tree",
+  "decisionTreeHeadline": "Which route fits your problem?",
+  "decisionTreeDesc": "Answer 2 quick factual questions to find whether company escalation, NCH 1915, RBI Ombudsman, or e-Jagriti is appropriate.",
+  "startTree": "Start Decision Tree",
+  "q1": "Question 1: Have you already lodged a formal complaint with the company's customer care?",
+  "q1Yes": "Yes, I lodged a ticket and have a reference / ticket number",
+  "q1No": "No, I haven't contacted them yet",
+  "q2": "Question 2: What is the current status of the dispute?",
+  "q2SellerRejected": "Seller rejected return, item defective, or no reply for 4+ days",
+  "q2UpiFailed": "Seller claims refund was sent via UPI, but money not received",
+  "q2HighValue": "High-value claim (over ₹20,000) where NCH failed to resolve",
+  "notYetVerified": "Not yet verified: open the official site to confirm",
+  "verifyBeforeLaunch": "Verify before launch"
+}
+

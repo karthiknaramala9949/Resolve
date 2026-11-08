@@ -1,0 +1,21 @@
+{
+  "title": "Reminders & Follow-Ups",
+  "subtitle": "Track company response windows and suggested follow-ups. Stored on-device.",
+  "newReminder": "New Reminder",
+  "enableNotifications": "Enable Notifications",
+  "notice": "Notice: Follow-up dates are suggested follow-ups for your convenience, not legal deadlines. They are not attributed to any law, regulation, or official guideline.",
+  "noRemindersTitle": "No pending reminders",
+  "noRemindersDesc": "Schedule a follow-up date to check on company response or bank statement.",
+  "modalTitle": "Schedule Follow-Up Reminder",
+  "modalDesc": "Choose a date to compare records or escalate.",
+  "smartSuggestions": "Smart Suggestions:",
+  "preset7Days": "+7 Days (Customer care turnaround)",
+  "preset3Days": "+3 Days (Banking settlement)",
+  "actionLabel": "Reminder Action",
+  "dueDate": "Due Date",
+  "setBtn": "Set Reminder",
+  "deleteBtn": "Delete reminder",
+  "markCompleted": "Mark completed",
+  "markIncomplete": "Mark incomplete"
+}
+

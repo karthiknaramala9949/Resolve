@@ -1,0 +1,58 @@
+{
+  "list": {
+    "title": "Dispute Cases",
+    "subtitle": "Track, escalate, and verify resolution progress on your consumer disputes.",
+    "filterAll": "All Cases",
+    "filterActive": "Active",
+    "filterResolved": "Resolved",
+    "filterClosed": "Closed",
+    "searchPlaceholder": "Search by store, product, or order ID...",
+    "newCaseBtn": "New Case",
+    "noCasesTitle": "No dispute cases found",
+    "noCasesDesc": "Start a case in 60 seconds with free text, order proof, or voice.",
+    "caseCreatedToast": "Dispute case {{id}} created successfully!"
+  },
+  "detail": {
+    "timeline": "Timeline & Progress",
+    "addEvent": "Add Event",
+    "evidence": "Evidence Files (Fingerprinted)",
+    "addEvidence": "Upload Evidence",
+    "copyLetter": "Copy Complaint Notice",
+    "openChannel": "Open Official Channel",
+    "addReminder": "Add Follow-Up Reminder",
+    "markSent": "Mark Sent to Company",
+    "recordReply": "Record Company Reply",
+    "reopen": "Reopen Case",
+    "archive": "Archive Case",
+    "deleteCase": "Delete Case",
+    "exportReport": "Export Proof Pack PDF",
+    "realityCheck": "Three-Stage Resolution Reality Check",
+    "stage1": "Company Stated Refund",
+    "stage2": "Payment Reference Found",
+    "stage3": "Customer Confirms Received",
+    "updateOutcome": "Update Resolution / Verify Bank Receipt"
+  },
+  "intake": {
+    "title": "Tell us what happened",
+    "subtitle": "In plain words, what went wrong? We will organize the facts into an actionable case.",
+    "samplePrompt": "Try a sample:",
+    "sampleRefund": "Refund not received",
+    "sampleDefective": "Defective item rejected",
+    "storyPlaceholder": "e.g. I bought a shirt from Myntra for ₹1,299 on Order #MY-8821. It arrived torn, and customer support refused replacement...",
+    "voiceNoticeTitle": "Microphone Transcription Notice",
+    "voiceNoticeDesc": "Your browser may send audio to its speech provider (for example Google in Chrome) to transcribe it. Use typing if you prefer.",
+    "cancelType": "Cancel, I will type",
+    "optInVoice": "I understand, start microphone",
+    "listening": "Listening... Speak clearly. Tap microphone icon when finished.",
+    "speechUnsupported": "Speech recognition is not supported in this browser. Please type your story.",
+    "factsBadge": "Facts Recognized",
+    "ruleNotice": "Instant rule-based parsing on device, not fake AI",
+    "companyChip": "Company",
+    "productChip": "Product",
+    "orderChip": "Order Ref",
+    "amountChip": "Amount",
+    "issueChip": "Issue",
+    "confirmBtn": "Confirm & Create Case"
+  }
+}
+

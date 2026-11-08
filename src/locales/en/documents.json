@@ -1,0 +1,14 @@
+{
+  "title": "Evidence Vault & Proof Packs",
+  "subtitle": "Securely store invoices, call recordings, emails, and photos with SHA-256 cryptographic fingerprints.",
+  "buildPack": "Build Proof Pack",
+  "uploadFile": "Upload File",
+  "limitsNotice": "Enforced limits: 15 MB per file. Allowed: PDF, PNG, JPG, WEBP, HEIC, MP4, TXT, EML, CSV, JSON.",
+  "packModalTitle": "Compile Consumer Proof Pack PDF",
+  "packModalDesc": "Generates a clean, court-admissible PDF dossier with timeline, case facts, and verified file SHA-256 hashes.",
+  "downloadPdf": "Download PDF Proof Pack",
+  "copyLetter": "Copy Formal Notice",
+  "redactionWarningTitle": "Sensitive Information Warning",
+  "redactionNotice": "We detected sensitive numbers (like Aadhaar, PAN, CVV, or card digits) in this filename. Please redact before sharing externally."
+}
+

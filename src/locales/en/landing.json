@@ -1,0 +1,33 @@
+{
+  "badge": "India-First Consumer Dispute Resolution",
+  "heroTitle": "Sort it out. One step at a time.",
+  "heroDesc": "Stuck with a rejected refund, damaged delivery, or warranty runaround? Turn your stressful complaint into an organized dispute pack and official escalation in under 3 minutes.",
+  "demoBadge": "Interactive Live Demo — Try Typing or Editing",
+  "demoRuleNotice": "Rule-based parsing",
+  "demoPlaceholder": "I ordered a phone case from Example Store for ₹499 on Oct 28. Order #EX-2048. I returned it via pickup on Oct 30 but refund has not arrived in my account.",
+  "extractedHeader": "EXTRACTED FACTS (INSTANT BROWSER HEURISTICS)",
+  "convertToCase": "Convert to Case",
+  "clientSideNotice": "Notice: All parsing runs client-side. Zero cloud transmission.",
+  "problemTitle": "What went wrong?",
+  "problemSubtitle": "Select your situation to load a pre-structured dispute template.",
+  "problems": {
+    "refund": {
+      "title": "Refund Not Credited",
+      "desc": "Returned item or canceled order, but money hasn't returned to source account."
+    },
+    "defective": {
+      "title": "Defective / Damaged Item",
+      "desc": "Arrived broken, used, or missing parts, and seller rejected return."
+    },
+    "warranty": {
+      "title": "Warranty Denied",
+      "desc": "Service center refuses repair, delays over 30 days, or demands illegal charges."
+    }
+  },
+  "routesTitle": "Official Consumer Escalation Channels",
+  "routesSubtitle": "Independent, statutory dispute channels in India. Verified source links.",
+  "lastVerified": "Last verified",
+  "faqTitle": "Frequently Asked Questions",
+  "faqSubtitle": "Honest answers about how RESOLVE-ONE protects your rights and data."
+}
+
