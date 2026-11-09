@@ -62,7 +62,7 @@ async function verifyPhase0() {
 
   // Test 1: Voice Notice Opt-In in Intake Modal
   console.log('   - Testing Voice Intake Opt-In notice and consent...');
-  await dPage.goto('http://127.0.0.1:5173/app/cases?new=true', { waitUntil: 'networkidle' });
+  await dPage.goto('http://127.0.0.1:3000/app/cases?new=true', { waitUntil: 'networkidle' });
   await dPage.waitForSelector('text=Tell us what happened');
   
   // Click microphone
@@ -78,7 +78,7 @@ async function verifyPhase0() {
 
   // Test 2: Help Page per-card verification and "Verify before launch" badges
   console.log('   - Testing Help page per-card verification & source links...');
-  await dPage.goto('http://127.0.0.1:5173/app/help', { waitUntil: 'networkidle' });
+  await dPage.goto('http://127.0.0.1:3000/app/help', { waitUntil: 'networkidle' });
   await dPage.waitForSelector('text=Not yet verified: open the official site to confirm');
   await dPage.waitForSelector('text=Verify before launch');
   console.log('   ✓ "Not yet verified" and "Verify before launch" badges validated.');
@@ -95,7 +95,7 @@ async function verifyPhase0() {
   console.log('   - Testing Mobile Viewport (390x844)...');
   const mContext = await browser.newContext({ viewport: { width: 390, height: 844 }, isMobile: true });
   const mPage = await mContext.newPage();
-  await mPage.goto('http://127.0.0.1:5173/app/help', { waitUntil: 'networkidle' });
+  await mPage.goto('http://127.0.0.1:3000/app/help', { waitUntil: 'networkidle' });
   await mPage.screenshot({ path: path.join(artifactDir, 'phase0-mobile-help-verification.png') });
   console.log('   ✓ Mobile Help page captured.');
 

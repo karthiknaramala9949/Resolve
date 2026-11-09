@@ -1,5 +1,7 @@
+'use client';
+
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useRouter } from 'next/navigation';
 import { Button, Input, Select, Textarea, useToast, BottomSheet } from '@/design-system';
 import { parseComplaintText } from '@/lib/rules/intakeParser';
 import { caseRepository } from '@/lib/db/repositories';
@@ -22,7 +24,7 @@ export const IntakeModal: React.FC<IntakeModalProps> = ({
   onClose,
   prefill,
 }) => {
-  const navigate = useNavigate();
+  const router = useRouter();
   const { toast } = useToast();
 
   const [story, setStory] = useState(prefill?.story || '');
@@ -177,7 +179,7 @@ export const IntakeModal: React.FC<IntakeModalProps> = ({
 
       toast(`Dispute case ${created.id} created successfully!`, 'success');
       onClose();
-      navigate(`/app/cases/${created.id}`);
+      router.push(`/app/cases/${created.id}`);
     } catch (err: any) {
       toast(`Error creating case: ${err.message}`, 'error');
     }

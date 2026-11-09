@@ -1,5 +1,7 @@
+'use client';
+
 import React, { useState, useEffect } from 'react';
-import { useNavigate, useSearchParams } from 'react-router-dom';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { Button, CaseCard, EmptyState, Input, Select } from '@/design-system';
 import { Plus, Search } from 'lucide-react';
 import { caseRepository } from '@/lib/db/repositories';
@@ -7,8 +9,8 @@ import { Case } from '@/lib/db/types';
 import { IntakeModal } from '../components/IntakeModal';
 
 export const CasesListPage: React.FC = () => {
-  const navigate = useNavigate();
-  const [searchParams, setSearchParams] = useSearchParams();
+  const router = useRouter();
+  const searchParams = useSearchParams();
   const [filter, setFilter] = useState('all');
   const [search, setSearch] = useState('');
   const [cases, setCases] = useState<Case[]>([]);
@@ -16,7 +18,7 @@ export const CasesListPage: React.FC = () => {
 
   // Check URL query parameter ?new=true
   useEffect(() => {
-    if (searchParams.get('new') === 'true') {
+    if (searchParams?.get('new') === 'true') {
       setIsIntakeOpen(true);
     }
   }, [searchParams]);
@@ -35,22 +37,16 @@ export const CasesListPage: React.FC = () => {
 
   const handleCloseIntake = () => {
     setIsIntakeOpen(false);
-    searchParams.delete('new');
-    searchParams.delete('story');
-    searchParams.delete('store');
-    searchParams.delete('orderRef');
-    searchParams.delete('amount');
-    searchParams.delete('product');
-    setSearchParams(searchParams);
+    router.replace('/app/cases');
     loadCases();
   };
 
   const prefill = {
-    store: searchParams.get('store') || undefined,
-    product: searchParams.get('product') || undefined,
-    orderRef: searchParams.get('orderRef') || undefined,
-    amount: searchParams.get('amount') ? parseFloat(searchParams.get('amount')!) : undefined,
-    story: searchParams.get('story') || undefined,
+    store: searchParams?.get('store') || undefined,
+    product: searchParams?.get('product') || undefined,
+    orderRef: searchParams?.get('orderRef') || undefined,
+    amount: searchParams?.get('amount') ? parseFloat(searchParams.get('amount')!) : undefined,
+    story: searchParams?.get('story') || undefined,
   };
 
   return (
@@ -129,13 +125,13 @@ export const CasesListPage: React.FC = () => {
                 nextAction: c.nextAction,
                 updatedAt: c.updatedAt,
               }}
-              onClick={() => navigate(`/app/cases/${c.id}`)}
+              onClick={() => router.push(`/app/cases/${c.id}`)}
             />
           ))}
         </div>
       )}
 
-      {/* 60-Second Conversational Intake Modal */}
+      {/* Intake Modal */}
       <IntakeModal
         isOpen={isIntakeOpen}
         onClose={handleCloseIntake}

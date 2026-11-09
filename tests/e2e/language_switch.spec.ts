@@ -53,7 +53,7 @@ async function runMultilingualSuite() {
 
   // 1. Audit Hindi Language Switching
   console.log('--- Testing Hindi (hi) Locale Parity Across Workspace ---');
-  await page.goto('http://127.0.0.1:5173/app/overview', { waitUntil: 'networkidle' });
+  await page.goto('http://127.0.0.1:3000/app/overview', { waitUntil: 'networkidle' });
   await page.evaluate(() => {
     localStorage.setItem('resolve-one-locale', 'hi');
   });
@@ -66,7 +66,7 @@ async function runMultilingualSuite() {
   console.log('   ✓ Hindi locale stored and active in localStorage');
 
   for (const route of routes) {
-    await page.goto(`http://127.0.0.1:5173${route}`, { waitUntil: 'networkidle' });
+    await page.goto(`http://127.0.0.1:3000${route}`, { waitUntil: 'networkidle' });
     await page.waitForTimeout(200);
 
     // Verify Indic script rendering on main heading
@@ -88,7 +88,7 @@ async function runMultilingualSuite() {
   console.log('   ✓ Telugu locale stored and active in localStorage');
 
   for (const route of routes) {
-    await page.goto(`http://127.0.0.1:5173${route}`, { waitUntil: 'networkidle' });
+    await page.goto(`http://127.0.0.1:3000${route}`, { waitUntil: 'networkidle' });
     await page.waitForTimeout(200);
 
     const headingText = (await page.textContent('h1, h2')) || '';

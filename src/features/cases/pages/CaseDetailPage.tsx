@@ -1,5 +1,7 @@
+'use client';
+
 import React, { useState, useEffect } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useRouter } from 'next/navigation';
 import {
   Button,
   Card,
@@ -43,8 +45,9 @@ import { validateUploadedFile } from '@/lib/rules/fileValidator';
 import { detectSensitiveInfo } from '@/lib/rules/redactionChecker';
 
 export const CaseDetailPage: React.FC = () => {
-  const { id } = useParams<{ id: string }>();
-  const navigate = useNavigate();
+  const params = useParams<{ id: string }>();
+  const id = params?.id;
+  const router = useRouter();
   const { toast } = useToast();
 
   const [caseData, setCaseData] = useState<Case | null>(null);
@@ -103,7 +106,7 @@ export const CaseDetailPage: React.FC = () => {
         <p className="text-sm text-neutral-500">
           Case {id} does not exist in this browser's local database.
         </p>
-        <Button onClick={() => navigate('/app/cases')}>Return to Cases</Button>
+        <Button onClick={() => router.push('/app/cases')}>Return to Cases</Button>
       </div>
     );
   }
@@ -199,7 +202,7 @@ export const CaseDetailPage: React.FC = () => {
     try {
       await caseRepository.delete(caseData.id);
       toast(`Case ${caseData.id} deleted.`, 'info');
-      navigate('/app/cases');
+      router.push('/app/cases');
     } catch (err: any) {
       toast(`Error deleting case: ${err.message}`, 'error');
     }
@@ -388,7 +391,7 @@ export const CaseDetailPage: React.FC = () => {
       <div className="flex flex-wrap items-center justify-between gap-4">
         <button
           type="button"
-          onClick={() => navigate('/app/cases')}
+          onClick={() => router.push('/app/cases')}
           className="inline-flex items-center gap-2 text-sm font-medium text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-neutral-100 transition-colors"
         >
           <ArrowLeft className="w-4 h-4" />
@@ -406,7 +409,7 @@ export const CaseDetailPage: React.FC = () => {
             <span>Open Official Channel</span>
           </Button>
 
-          <Button variant="outline" size="sm" onClick={() => navigate('/app/documents')}>
+          <Button variant="outline" size="sm" onClick={() => router.push('/app/documents')}>
             <Download className="w-3.5 h-3.5" />
             <span>Export Proof Pack</span>
           </Button>
@@ -563,7 +566,7 @@ export const CaseDetailPage: React.FC = () => {
             <span>Update Resolution / Verify Bank Receipt</span>
           </Button>
 
-          <Button variant="outline" size="md" onClick={() => navigate('/app/help')}>
+          <Button variant="outline" size="md" onClick={() => router.push('/app/help')}>
             <span>Check Official Rights Guide</span>
           </Button>
         </div>
@@ -654,7 +657,7 @@ export const CaseDetailPage: React.FC = () => {
               <Plus className="w-4 h-4 shrink-0" />
               <span>Attach Evidence</span>
             </Button>
-            <Button variant="outline" size="sm" onClick={() => navigate('/app/documents')}>
+            <Button variant="outline" size="sm" onClick={() => router.push('/app/documents')}>
               <span>View Documents</span>
             </Button>
           </div>

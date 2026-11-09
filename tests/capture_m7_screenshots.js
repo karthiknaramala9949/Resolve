@@ -8,7 +8,7 @@ async function capture() {
   // 1. Desktop Landing Page (Full Hero + Demo)
   const dContext = await browser.newContext({ viewport: { width: 1440, height: 900 } });
   const dPage = await dContext.newPage();
-  await dPage.goto('http://127.0.0.1:5173/', { waitUntil: 'networkidle' });
+  await dPage.goto('http://127.0.0.1:3000/', { waitUntil: 'networkidle' });
   await dPage.waitForTimeout(600);
   await dPage.screenshot({ path: path.join(artifactDir, 'milestone7-desktop-landing-hero.png'), fullPage: false });
 
@@ -25,7 +25,7 @@ async function capture() {
   // 2. Mobile Landing Page (390x844)
   const mContext = await browser.newContext({ viewport: { width: 390, height: 844 }, isMobile: true });
   const mPage = await mContext.newPage();
-  await mPage.goto('http://127.0.0.1:5173/', { waitUntil: 'networkidle' });
+  await mPage.goto('http://127.0.0.1:3000/', { waitUntil: 'networkidle' });
   await mPage.waitForTimeout(600);
   await mPage.screenshot({ path: path.join(artifactDir, 'milestone7-mobile-landing.png'), fullPage: false });
 

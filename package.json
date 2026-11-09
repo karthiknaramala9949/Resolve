@@ -4,9 +4,10 @@
   "version": "2.0.0",
   "type": "module",
   "scripts": {
-    "dev": "vite",
-    "build": "tsc && vite build",
-    "preview": "vite preview",
+    "dev": "next dev -H 0.0.0.0 -p 3000",
+    "build": "next build",
+    "start": "next start -H 0.0.0.0 -p 3000",
+    "preview": "next start -H 0.0.0.0 -p 3000",
     "i18n:check": "node scripts/i18n-check.js",
     "test": "vitest run",
     "test:watch": "vitest"
@@ -26,10 +27,10 @@
     "i18next": "^23.16.8",
     "jspdf": "^2.5.2",
     "lucide-react": "^0.460.0",
+    "next": "^14.2.35",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
     "react-i18next": "^15.1.3",
-    "react-router-dom": "^6.28.0",
     "tailwind-merge": "^2.5.5",
     "zod": "^3.23.8",
     "zustand": "^5.0.1"

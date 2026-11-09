@@ -20,7 +20,7 @@ async function capture() {
   const desktopPage = await desktopContext.newPage();
 
   console.log('Navigating to overview in Hindi (desktop)...');
-  await desktopPage.goto('http://127.0.0.1:5173/app/overview', { waitUntil: 'networkidle' });
+  await desktopPage.goto('http://127.0.0.1:3000/app/overview', { waitUntil: 'networkidle' });
   // Click Hindi language button
   await desktopPage.click('button:has-text("हिन्दी")');
   await desktopPage.waitForTimeout(400);
@@ -32,7 +32,7 @@ async function capture() {
   await desktopPage.screenshot({ path: path.join(outDir, 'milestone6-desktop-telugu.png') });
 
   console.log('Navigating to Privacy (desktop)...');
-  await desktopPage.goto('http://127.0.0.1:5173/app/privacy', { waitUntil: 'networkidle' });
+  await desktopPage.goto('http://127.0.0.1:3000/app/privacy', { waitUntil: 'networkidle' });
   await desktopPage.screenshot({ path: path.join(outDir, 'milestone6-desktop-privacy.png') });
 
   // Mobile (390x844)
@@ -43,7 +43,7 @@ async function capture() {
   const mobilePage = await mobileContext.newPage();
 
   console.log('Navigating to Privacy in Telugu (mobile)...');
-  await mobilePage.goto('http://127.0.0.1:5173/app/privacy', { waitUntil: 'networkidle' });
+  await mobilePage.goto('http://127.0.0.1:3000/app/privacy', { waitUntil: 'networkidle' });
   await mobilePage.screenshot({ path: path.join(outDir, 'milestone6-mobile-privacy.png') });
 
   await browser.close();

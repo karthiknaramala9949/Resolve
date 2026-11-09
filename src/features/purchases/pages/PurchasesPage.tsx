@@ -1,5 +1,7 @@
+'use client';
+
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useRouter } from 'next/navigation';
 import {
   Button,
   Card,
@@ -32,7 +34,7 @@ import {
 } from '@/lib/rules/purchaseRules';
 
 export const PurchasesPage: React.FC = () => {
-  const navigate = useNavigate();
+  const router = useRouter();
   const { toast } = useToast();
 
   const [purchases, setPurchases] = useState<Purchase[]>([]);
@@ -335,7 +337,7 @@ export const PurchasesPage: React.FC = () => {
                   variant="secondary"
                   size="sm"
                   onClick={() =>
-                    navigate(
+                    router.push(
                       `/app/cases?new=true&store=${encodeURIComponent(p.store)}&product=${encodeURIComponent(
                         p.product
                       )}&orderRef=${encodeURIComponent(p.orderRef || '')}&amount=${p.amount || ''}`

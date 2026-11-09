@@ -1,5 +1,7 @@
+'use client';
+
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useRouter } from 'next/navigation';
 import { Button, Card, StatusChip } from '@/design-system';
 import {
   ArrowRight,
@@ -22,7 +24,7 @@ import {
 import { parseComplaintText } from '@/lib/rules/intakeParser';
 
 export const LandingPage: React.FC = () => {
-  const navigate = useNavigate();
+  const router = useRouter();
 
   // Interactive Live Demo in Hero
   const [demoText, setDemoText] = useState(
@@ -132,7 +134,7 @@ export const LandingPage: React.FC = () => {
             <Button
               variant="outline"
               size="sm"
-              onClick={() => navigate('/app/overview')}
+              onClick={() => router.push('/app/overview')}
               className="hidden sm:inline-flex"
             >
               Open App
@@ -140,7 +142,7 @@ export const LandingPage: React.FC = () => {
             <Button
               variant="primary"
               size="sm"
-              onClick={() => navigate('/app/cases?new=true')}
+              onClick={() => router.push('/app/cases?new=true')}
             >
               <span>Start in 60s</span>
               <ArrowRight className="w-3.5 h-3.5 shrink-0" />
@@ -226,7 +228,7 @@ export const LandingPage: React.FC = () => {
                 size="sm"
                 className="w-full sm:w-auto shrink-0"
                 onClick={() =>
-                  navigate(
+                  router.push(
                     `/app/cases?new=true&store=${encodeURIComponent(parsedDemo.company)}&orderRef=${encodeURIComponent(
                       parsedDemo.orderRef
                     )}&amount=${parsedDemo.amount || ''}&story=${encodeURIComponent(demoText)}`
@@ -476,11 +478,11 @@ export const LandingPage: React.FC = () => {
           General informational guidance only. Not legal advice. Direct all formal legal disputes through official Consumer Commissions under the Consumer Protection Act, 2019.
         </p>
         <div className="pt-2 flex items-center justify-center gap-4 text-[11px] text-neutral-700 dark:text-neutral-300 font-semibold">
-          <button type="button" onClick={() => navigate('/app/overview')} className="hover:underline">
+          <button type="button" onClick={() => router.push('/app/overview')} className="hover:underline">
             Consumer Workspace
           </button>
           <span>•</span>
-          <button type="button" onClick={() => navigate('/app/privacy')} className="hover:underline">
+          <button type="button" onClick={() => router.push('/app/privacy')} className="hover:underline">
             Privacy & Trust
           </button>
         </div>

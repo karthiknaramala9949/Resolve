@@ -1,5 +1,7 @@
+'use client';
+
 import React, { useEffect, useState } from 'react';
-import { Outlet, useLocation } from 'react-router-dom';
+import { usePathname } from 'next/navigation';
 import { Sidebar } from './Sidebar';
 import { Header } from './Header';
 import { MobileNav } from './MobileNav';
@@ -10,10 +12,14 @@ import { useAppStore } from '@/store/useAppStore';
 import { caseRepository } from '@/lib/db/repositories';
 import { Case } from '@/lib/db/types';
 
-export const AppShell: React.FC = () => {
+interface AppShellProps {
+  children?: React.ReactNode;
+}
+
+export const AppShell: React.FC<AppShellProps> = ({ children }) => {
   const { isCommandPaletteOpen, openCommandPalette, closeCommandPalette, setActiveCaseCount } = useAppStore();
   const [cases, setCases] = useState<Case[]>([]);
-  const location = useLocation();
+  const pathname = usePathname();
 
   const refreshCases = async () => {
     try {
@@ -27,7 +33,7 @@ export const AppShell: React.FC = () => {
 
   useEffect(() => {
     refreshCases();
-  }, [location.pathname]);
+  }, [pathname]);
 
   // Global ⌘K / Ctrl-K listener
   useEffect(() => {
@@ -60,7 +66,7 @@ export const AppShell: React.FC = () => {
         <div className="flex-1 flex flex-col min-w-0 pb-20 md:pb-6">
           <Header />
           <main className="flex-1 p-4 md:p-8 max-w-7xl w-full mx-auto">
-            <Outlet />
+            {children}
           </main>
         </div>
       </div>

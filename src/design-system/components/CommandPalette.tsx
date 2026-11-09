@@ -1,5 +1,7 @@
+'use client';
+
 import React, { useState, useEffect, useRef } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useRouter } from 'next/navigation';
 import { cn } from '@/lib/utils';
 import { Search, FolderKanban, FileText, ShoppingBag, BookOpen, Clock, ShieldCheck, Plus, Sparkles, X } from 'lucide-react';
 
@@ -16,7 +18,7 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({
 }) => {
   const [query, setQuery] = useState('');
   const [selectedIndex, setSelectedIndex] = useState(0);
-  const navigate = useNavigate();
+  const router = useRouter();
   const inputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -29,14 +31,14 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({
 
   // Static routes and quick actions
   const actions = [
-    { id: 'act-new', label: 'Create new case', category: 'Actions', icon: Plus, action: () => navigate('/app/cases?new=true') },
-    { id: 'nav-overview', label: 'Go to Overview', category: 'Navigation', icon: FolderKanban, action: () => navigate('/app/overview') },
-    { id: 'nav-cases', label: 'Go to My Cases', category: 'Navigation', icon: FolderKanban, action: () => navigate('/app/cases') },
-    { id: 'nav-docs', label: 'Go to Documents', category: 'Navigation', icon: FileText, action: () => navigate('/app/documents') },
-    { id: 'nav-purchases', label: 'Go to Purchases', category: 'Navigation', icon: ShoppingBag, action: () => navigate('/app/purchases') },
-    { id: 'nav-help', label: 'Rights & Consumer Routes Guide', category: 'Navigation', icon: BookOpen, action: () => navigate('/app/help') },
-    { id: 'nav-reminders', label: 'Go to Reminders', category: 'Navigation', icon: Clock, action: () => navigate('/app/reminders') },
-    { id: 'nav-privacy', label: 'Privacy & Data Trust Export', category: 'Navigation', icon: ShieldCheck, action: () => navigate('/app/privacy') },
+    { id: 'act-new', label: 'Create new case', category: 'Actions', icon: Plus, action: () => router.push('/app/cases?new=true') },
+    { id: 'nav-overview', label: 'Go to Overview', category: 'Navigation', icon: FolderKanban, action: () => router.push('/app/overview') },
+    { id: 'nav-cases', label: 'Go to My Cases', category: 'Navigation', icon: FolderKanban, action: () => router.push('/app/cases') },
+    { id: 'nav-docs', label: 'Go to Documents', category: 'Navigation', icon: FileText, action: () => router.push('/app/documents') },
+    { id: 'nav-purchases', label: 'Go to Purchases', category: 'Navigation', icon: ShoppingBag, action: () => router.push('/app/purchases') },
+    { id: 'nav-help', label: 'Rights & Consumer Routes Guide', category: 'Navigation', icon: BookOpen, action: () => router.push('/app/help') },
+    { id: 'nav-reminders', label: 'Go to Reminders', category: 'Navigation', icon: Clock, action: () => router.push('/app/reminders') },
+    { id: 'nav-privacy', label: 'Privacy & Data Trust Export', category: 'Navigation', icon: ShieldCheck, action: () => router.push('/app/privacy') },
   ];
 
   // Map cases to searchable items
@@ -45,7 +47,7 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({
     label: `${c.id} · ${c.title} (${c.company})`,
     category: 'Cases',
     icon: FolderKanban,
-    action: () => navigate(`/app/cases/${c.id}`),
+    action: () => router.push(`/app/cases/${c.id}`),
   }));
 
   const allItems = [...actions, ...caseItems];

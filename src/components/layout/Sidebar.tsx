@@ -1,5 +1,8 @@
+'use client';
+
 import React from 'react';
-import { NavLink, Link } from 'react-router-dom';
+import Link from 'next/link';
+import { usePathname } from 'next/navigation';
 import { cn } from '@/lib/utils';
 import { useAppStore } from '@/store/useAppStore';
 import {
@@ -10,7 +13,6 @@ import {
   HelpCircle,
   Clock,
   ShieldCheck,
-  Settings,
   Plus,
 } from 'lucide-react';
 
@@ -20,6 +22,7 @@ interface SidebarProps {
 
 export const Sidebar: React.FC<SidebarProps> = ({ className }) => {
   const { activeCaseCount } = useAppStore();
+  const pathname = usePathname();
 
   const primaryNav = [
     { to: '/app/overview', label: 'Home', icon: Home },
@@ -43,7 +46,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ className }) => {
     >
       <div>
         {/* Brand / Logo */}
-        <Link to="/" className="flex items-center gap-3 px-2 mb-6 group focus-visible:outline-none">
+        <Link href="/" className="flex items-center gap-3 px-2 mb-6 group focus-visible:outline-none">
           <div className="w-8 h-8 rounded-lg bg-brand-500 flex items-center justify-center text-white shadow-sm font-bold text-lg font-serif">
             R
           </div>
@@ -60,7 +63,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ className }) => {
         {/* Quick Action: New Case CTA */}
         <div className="mb-6 px-1">
           <Link
-            to="/app/cases?new=true"
+            href="/app/cases?new=true"
             className="inline-flex items-center justify-center gap-2 w-full py-2.5 px-4 rounded-xl bg-brand-500 hover:bg-brand-600 text-white font-medium text-sm shadow-sm transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500 active:scale-[0.98] leading-none min-h-[44px]"
           >
             <Plus className="w-4 h-4 shrink-0" />
@@ -76,18 +79,18 @@ export const Sidebar: React.FC<SidebarProps> = ({ className }) => {
           <nav className="mt-2 space-y-1">
             {primaryNav.map((item) => {
               const Icon = item.icon;
+              const isActive = pathname === item.to || (item.to !== '/app/overview' && pathname?.startsWith(item.to));
+
               return (
-                <NavLink
+                <Link
                   key={item.to}
-                  to={item.to}
-                  className={({ isActive }) =>
-                    cn(
-                      'flex items-center justify-between px-3 py-2.5 rounded-lg text-sm font-medium transition-colors',
-                      isActive
-                        ? 'bg-neutral-100 dark:bg-neutral-800 text-brand-600 dark:text-brand-400 font-semibold'
-                        : 'text-neutral-600 dark:text-neutral-400 hover:bg-neutral-50 dark:hover:bg-neutral-800/50 hover:text-neutral-900 dark:hover:text-neutral-100'
-                    )
-                  }
+                  href={item.to}
+                  className={cn(
+                    'flex items-center justify-between px-3 py-2.5 rounded-lg text-sm font-medium transition-colors',
+                    isActive
+                      ? 'bg-neutral-100 dark:bg-neutral-800 text-brand-600 dark:text-brand-400 font-semibold'
+                      : 'text-neutral-600 dark:text-neutral-400 hover:bg-neutral-50 dark:hover:bg-neutral-800/50 hover:text-neutral-900 dark:hover:text-neutral-100'
+                  )}
                 >
                   <div className="flex items-center gap-3">
                     <Icon className="w-4 h-4 shrink-0" />
@@ -98,7 +101,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ className }) => {
                       {item.badge}
                     </span>
                   )}
-                </NavLink>
+                </Link>
               );
             })}
           </nav>
@@ -112,22 +115,22 @@ export const Sidebar: React.FC<SidebarProps> = ({ className }) => {
           <nav className="mt-2 space-y-1">
             {secondaryNav.map((item) => {
               const Icon = item.icon;
+              const isActive = pathname === item.to;
+
               return (
-                <NavLink
+                <Link
                   key={item.to}
-                  to={item.to}
-                  className={({ isActive }) =>
-                    cn(
-                      'flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors',
-                      isActive
-                        ? 'bg-neutral-100 dark:bg-neutral-800 text-brand-600 dark:text-brand-400 font-semibold'
-                        : 'text-neutral-600 dark:text-neutral-400 hover:bg-neutral-50 dark:hover:bg-neutral-800/50 hover:text-neutral-900 dark:hover:text-neutral-100'
-                    )
-                  }
+                  href={item.to}
+                  className={cn(
+                    'flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors',
+                    isActive
+                      ? 'bg-neutral-100 dark:bg-neutral-800 text-brand-600 dark:text-brand-400 font-semibold'
+                      : 'text-neutral-600 dark:text-neutral-400 hover:bg-neutral-50 dark:hover:bg-neutral-800/50 hover:text-neutral-900 dark:hover:text-neutral-100'
+                  )}
                 >
                   <Icon className="w-4 h-4 shrink-0" />
                   <span>{item.label}</span>
-                </NavLink>
+                </Link>
               );
             })}
           </nav>
@@ -147,4 +150,3 @@ export const Sidebar: React.FC<SidebarProps> = ({ className }) => {
     </aside>
   );
 };
-

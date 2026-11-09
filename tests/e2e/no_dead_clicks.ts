@@ -32,8 +32,8 @@ async function runNoDeadClickSweep() {
   const deadClicks: string[] = [];
 
   for (const route of routes) {
-    console.log(`\nAuditing route: http://127.0.0.1:5173${route}`);
-    await page.goto(`http://127.0.0.1:5173${route}`, { waitUntil: 'networkidle' });
+    console.log(`\nAuditing route: http://127.0.0.1:3000${route}`);
+    await page.goto(`http://127.0.0.1:3000${route}`, { waitUntil: 'networkidle' });
     await page.waitForTimeout(300);
 
     // Get all visible interactive buttons and links
@@ -50,7 +50,7 @@ async function runNoDeadClickSweep() {
 
       // Re-navigate if route was changed or modal remained
       if (new URL(page.url()).pathname !== route || (await page.$('[role="dialog"]'))) {
-        await page.goto(`http://127.0.0.1:5173${route}`, { waitUntil: 'networkidle' });
+        await page.goto(`http://127.0.0.1:3000${route}`, { waitUntil: 'networkidle' });
         await page.waitForTimeout(150);
       }
 
@@ -67,6 +67,13 @@ async function runNoDeadClickSweep() {
 
       const isAriaDisabled = (await target.getAttribute('aria-disabled')) === 'true';
       const isDisabled = await target.isDisabled().catch(() => false);
+
+      const isDevOverlay = await target.evaluate((el) => {
+        return Boolean(el.closest('nextjs-portal') || el.closest('[data-nextjs-toast]') || el.closest('#__next-build-watcher'));
+      }).catch(() => false);
+      if (isDevOverlay || text.includes('Hide Errors')) {
+        continue;
+      }
 
       if (isDisabled || isAriaDisabled) {
         console.log(`   [SKIP] "${text}" is intentionally disabled.`);
@@ -94,7 +101,7 @@ async function runNoDeadClickSweep() {
 
       try {
         await target.click({ timeout: 1000 }).catch(() => null);
-        await page.waitForTimeout(150);
+        await page.waitForTimeout(400);
 
         const stateAfter = await page.evaluate(() => ({
           url: window.location.href,

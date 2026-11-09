@@ -1,3 +1,5 @@
+'use client';
+
 import React, { useEffect, useState } from 'react';
 import { AlertTriangle, Download, X, ShieldAlert } from 'lucide-react';
 import { exportFullBackup } from '@/lib/utils/exportBackup';

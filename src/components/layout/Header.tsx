@@ -1,14 +1,17 @@
+'use client';
+
 import React from 'react';
-import { useLocation, Link } from 'react-router-dom';
+import Link from 'next/link';
+import { usePathname } from 'next/navigation';
 import { useAppStore } from '@/store/useAppStore';
 import { Search, Shield } from 'lucide-react';
 
 export const Header: React.FC = () => {
   const { openCommandPalette } = useAppStore();
-  const location = useLocation();
+  const pathname = usePathname();
 
   const getPageTitle = () => {
-    const path = location.pathname;
+    const path = pathname || '';
     if (path.includes('/app/overview')) return 'Overview';
     if (path.includes('/app/cases')) return 'My Cases';
     if (path.includes('/app/documents')) return 'Documents & Proof';
@@ -23,7 +26,7 @@ export const Header: React.FC = () => {
     <header className="sticky top-0 z-30 flex items-center justify-between px-4 md:px-8 py-3.5 bg-white/80 dark:bg-surface-dark/80 backdrop-blur-md border-b border-neutral-200/80 dark:border-neutral-800/80 select-none">
       {/* Left: Mobile Brand & Desktop Breadcrumbs */}
       <div className="flex items-center gap-3">
-        <Link to="/" className="md:hidden flex items-center gap-2">
+        <Link href="/" className="md:hidden flex items-center gap-2">
           <div className="w-7 h-7 rounded-lg bg-brand-500 flex items-center justify-center text-white font-bold text-sm font-serif">
             R
           </div>
@@ -69,4 +72,3 @@ export const Header: React.FC = () => {
     </header>
   );
 };
-

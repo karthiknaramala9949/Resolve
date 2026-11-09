@@ -1,5 +1,7 @@
+'use client';
+
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useRouter } from 'next/navigation';
 import { Button, Card, CaseCard, MoneyDisplay } from '@/design-system';
 import { Plus, ArrowRight, Clock, CheckCircle2, AlertCircle } from 'lucide-react';
 import { caseRepository } from '@/lib/db/repositories';
@@ -9,7 +11,7 @@ import { IntakeModal } from '../components/IntakeModal';
 import { useAppStore } from '@/store/useAppStore';
 
 export const OverviewPage: React.FC = () => {
-  const navigate = useNavigate();
+  const router = useRouter();
   const { setActiveCaseCount } = useAppStore();
   const [cases, setCases] = useState<Case[]>([]);
   const [isIntakeOpen, setIsIntakeOpen] = useState(false);
@@ -134,7 +136,7 @@ export const OverviewPage: React.FC = () => {
               <Button
                 variant="primary"
                 size="md"
-                onClick={() => navigate(`/app/cases/${priorityCase.id}`)}
+                onClick={() => router.push(`/app/cases/${priorityCase.id}`)}
                 className="w-full md:w-auto"
               >
                 <span>Take Next Step</span>
@@ -153,7 +155,7 @@ export const OverviewPage: React.FC = () => {
           </h3>
           <button
             type="button"
-            onClick={() => navigate('/app/cases')}
+            onClick={() => router.push('/app/cases')}
             className="text-sm font-semibold text-brand-600 dark:text-brand-400 hover:underline inline-flex items-center gap-1 leading-none"
           >
             <span>View all</span>
@@ -175,7 +177,7 @@ export const OverviewPage: React.FC = () => {
                 nextAction: c.nextAction,
                 updatedAt: c.updatedAt,
               }}
-              onClick={() => navigate(`/app/cases/${c.id}`)}
+              onClick={() => router.push(`/app/cases/${c.id}`)}
             />
           ))}
         </div>

@@ -1,5 +1,5 @@
 import React from 'react';
-import { Link } from 'react-router-dom';
+import Link from 'next/link';
 import { ArrowLeft, Home, FileQuestion } from 'lucide-react';
 import { Button } from '@/design-system';
 
@@ -21,13 +21,13 @@ export const NotFoundPage: React.FC = () => {
         </div>
 
         <div className="flex flex-wrap items-center justify-center gap-3 pt-2">
-          <Link to="/">
+          <Link href="/">
             <Button variant="primary">
               <Home className="w-4 h-4 shrink-0" />
               <span>Go to Home</span>
             </Button>
           </Link>
-          <Link to="/app/overview">
+          <Link href="/app/overview">
             <Button variant="outline">
               <ArrowLeft className="w-4 h-4 shrink-0" />
               <span>Open My Cases</span>
@@ -38,4 +38,3 @@ export const NotFoundPage: React.FC = () => {
     </div>
   );
 };
-

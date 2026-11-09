@@ -1,3 +1,5 @@
+'use client';
+
 import React, { useState } from 'react';
 import { Button, Card, useToast } from '@/design-system';
 import {

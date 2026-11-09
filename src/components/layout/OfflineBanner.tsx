@@ -1,13 +1,19 @@
+'use client';
+
 import React, { useState, useEffect } from 'react';
 import { WifiOff, CheckCircle2 } from 'lucide-react';
 
 export const OfflineBanner: React.FC = () => {
-  const [isOnline, setIsOnline] = useState(() => {
-    return typeof navigator !== 'undefined' ? navigator.onLine : true;
-  });
+  const [mounted, setMounted] = useState(false);
+  const [isOnline, setIsOnline] = useState(true);
   const [showReconnected, setShowReconnected] = useState(false);
 
   useEffect(() => {
+    setMounted(true);
+    if (typeof navigator !== 'undefined') {
+      setIsOnline(navigator.onLine);
+    }
+
     const handleOnline = () => {
       setIsOnline(true);
       setShowReconnected(true);
@@ -27,6 +33,7 @@ export const OfflineBanner: React.FC = () => {
     };
   }, []);
 
+  if (!mounted) return null;
   if (isOnline && !showReconnected) return null;
 
   return (

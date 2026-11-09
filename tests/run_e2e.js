@@ -15,8 +15,8 @@ async function runE2E() {
   const page = await context.newPage();
 
   // Step 1: Open landing page
-  console.log('1. Loading landing page at http://127.0.0.1:5173/');
-  await page.goto('http://127.0.0.1:5173/', { waitUntil: 'networkidle' });
+  console.log('1. Loading landing page at http://127.0.0.1:3000/');
+  await page.goto('http://127.0.0.1:3000/', { waitUntil: 'networkidle' });
   const title = await page.title();
   console.log(`   Page title: "${title}"`);
   if (!title.includes('RESOLVE-ONE')) throw new Error('Invalid title');
@@ -73,26 +73,26 @@ async function runE2E() {
 
   // Step 7: Documents & Proof Pack
   console.log('9. Navigating to Documents & Proof Pack builder...');
-  await page.goto('http://127.0.0.1:5173/app/documents', { waitUntil: 'networkidle' });
+  await page.goto('http://127.0.0.1:3000/app/documents', { waitUntil: 'networkidle' });
   await page.click('button:has-text("Build Proof Pack")');
   await page.waitForSelector('text=Bundle Contents');
   console.log('   ✓ Proof Pack builder validated with SHA-256 evidence index.');
 
   // Step 8: Purchases Vault
   console.log('10. Navigating to Purchases & Warranty Vault...');
-  await page.goto('http://127.0.0.1:5173/app/purchases', { waitUntil: 'networkidle' });
+  await page.goto('http://127.0.0.1:3000/app/purchases', { waitUntil: 'networkidle' });
   await page.waitForSelector('text=Purchases & Protection');
   console.log('   ✓ Purchases vault loaded with return countdown math.');
 
   // Step 9: Rights & Help Guide
   console.log('11. Navigating to Official Consumer Rights Guide...');
-  await page.goto('http://127.0.0.1:5173/app/help', { waitUntil: 'networkidle' });
+  await page.goto('http://127.0.0.1:3000/app/help', { waitUntil: 'networkidle' });
   await page.waitForSelector('text=National Consumer Helpline (NCH)');
   console.log('   ✓ NCH 1915, e-Jagriti, and RBI Ombudsman channels verified.');
 
   // Step 10: Privacy & Data Trust
   console.log('12. Navigating to Privacy & Data Trust...');
-  await page.goto('http://127.0.0.1:5173/app/privacy', { waitUntil: 'networkidle' });
+  await page.goto('http://127.0.0.1:3000/app/privacy', { waitUntil: 'networkidle' });
   await page.waitForSelector('text=What is stored where?');
   console.log('   ✓ Privacy dashboard loaded.');
 
@@ -103,7 +103,7 @@ async function runE2E() {
     isMobile: true,
   });
   const mPage = await mContext.newPage();
-  await mPage.goto('http://127.0.0.1:5173/app/overview', { waitUntil: 'networkidle' });
+  await mPage.goto('http://127.0.0.1:3000/app/overview', { waitUntil: 'networkidle' });
   await mPage.waitForSelector('text=Overview');
   console.log('   ✓ Mobile viewport rendered with bottom navigation bar.');
 

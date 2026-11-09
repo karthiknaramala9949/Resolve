@@ -21,17 +21,24 @@ async function runPhase4Audit() {
     viewport: { width: 1440, height: 900 },
     bypassCSP: true,
   });
+  await desktopContext.addInitScript(() => {
+    // @ts-ignore
+    if (typeof window !== 'undefined' && typeof window.__name === 'undefined') {
+      // @ts-ignore
+      window.__name = (t: any, v: any) => t;
+    }
+  });
   const dPage: Page = await desktopContext.newPage();
 
   const auditRoutes = [
-    { name: 'Landing Page', url: 'http://127.0.0.1:5173/' },
-    { name: 'Overview', url: 'http://127.0.0.1:5173/app/overview' },
-    { name: 'Cases List', url: 'http://127.0.0.1:5173/app/cases' },
-    { name: 'Documents & Proof', url: 'http://127.0.0.1:5173/app/documents' },
-    { name: 'Purchases Vault', url: 'http://127.0.0.1:5173/app/purchases' },
-    { name: 'Rights & Help', url: 'http://127.0.0.1:5173/app/help' },
-    { name: 'Reminders', url: 'http://127.0.0.1:5173/app/reminders' },
-    { name: 'Privacy & Data', url: 'http://127.0.0.1:5173/app/privacy' },
+    { name: 'Landing Page', url: 'http://127.0.0.1:3000/' },
+    { name: 'Overview', url: 'http://127.0.0.1:3000/app/overview' },
+    { name: 'Cases List', url: 'http://127.0.0.1:3000/app/cases' },
+    { name: 'Documents & Proof', url: 'http://127.0.0.1:3000/app/documents' },
+    { name: 'Purchases Vault', url: 'http://127.0.0.1:3000/app/purchases' },
+    { name: 'Rights & Help', url: 'http://127.0.0.1:3000/app/help' },
+    { name: 'Reminders', url: 'http://127.0.0.1:3000/app/reminders' },
+    { name: 'Privacy & Data', url: 'http://127.0.0.1:3000/app/privacy' },
   ];
 
   for (const r of auditRoutes) {
@@ -40,12 +47,15 @@ async function runPhase4Audit() {
 
     const results = await dPage.evaluate(async () => {
       // @ts-ignore
-      const axeResult = await window.axe.run(document, {
-        runOnly: {
-          type: 'tag',
-          values: ['wcag2a', 'wcag2aa', 'wcag21aa', 'wcag22aa'],
-        },
-      });
+      const axeResult = await window.axe.run(
+        { include: [['body']], exclude: [['nextjs-portal']] },
+        {
+          runOnly: {
+            type: 'tag',
+            values: ['wcag2a', 'wcag2aa', 'wcag21aa', 'wcag22aa'],
+          },
+        }
+      );
       return {
         violations: axeResult.violations.filter((v: any) => v.impact === 'critical' || v.impact === 'serious'),
         totalViolations: axeResult.violations.length,
@@ -64,7 +74,7 @@ async function runPhase4Audit() {
 
   // 2.1 15MB Upload Constraint & Localized Error Handling
   console.log('Testing File Upload Boundary (15MB Limit & Allowed Extensions)...');
-  await dPage.goto('http://127.0.0.1:5173/app/documents', { waitUntil: 'networkidle' });
+  await dPage.goto('http://127.0.0.1:3000/app/documents', { waitUntil: 'networkidle' });
   
   // Test file validation logic directly in browser context
   const validationTest = await dPage.evaluate(() => {
@@ -107,7 +117,7 @@ async function runPhase4Audit() {
 
   // 2.2 /internal Isolation & Production Shielding
   console.log('Testing /internal isolation...');
-  await dPage.goto('http://127.0.0.1:5173/internal', { waitUntil: 'networkidle' });
+  await dPage.goto('http://127.0.0.1:3000/internal', { waitUntil: 'networkidle' });
   const is404 = await dPage.evaluate(() => {
     return document.body.innerText.includes('404') || document.body.innerText.includes('Page Not Found');
   });
@@ -117,7 +127,7 @@ async function runPhase4Audit() {
 
   // 2.3 Storage Persistence Warning & Export Backup Trigger
   console.log('Testing Storage Persistence notification and one-click backup...');
-  await dPage.goto('http://127.0.0.1:5173/app/overview', { waitUntil: 'networkidle' });
+  await dPage.goto('http://127.0.0.1:3000/app/overview', { waitUntil: 'networkidle' });
   const hasStorageBanner = await dPage.locator('text=Browser storage is not persistent').count();
   if (hasStorageBanner > 0) {
     console.log('   ✓ Storage persistence advisory banner present with Export Backup action');
@@ -134,31 +144,38 @@ async function runPhase4Audit() {
   console.log('\n--- PART 3: CAPTURING FINAL SCREENSHOTS ---');
 
   // Desktop Overview (1440px)
-  await dPage.goto('http://127.0.0.1:5173/app/overview', { waitUntil: 'networkidle' });
+  await dPage.goto('http://127.0.0.1:3000/app/overview', { waitUntil: 'networkidle' });
   await dPage.screenshot({ path: path.join(artifactDir, 'phase4-desktop-overview.png'), fullPage: false });
   console.log('   ✓ Saved phase4-desktop-overview.png');
 
   // Desktop Purchases Return Vault (1440px)
-  await dPage.goto('http://127.0.0.1:5173/app/purchases', { waitUntil: 'networkidle' });
+  await dPage.goto('http://127.0.0.1:3000/app/purchases', { waitUntil: 'networkidle' });
   await dPage.screenshot({ path: path.join(artifactDir, 'phase4-desktop-purchases.png'), fullPage: false });
   console.log('   ✓ Saved phase4-desktop-purchases.png');
 
   // Desktop Privacy & Trust (1440px)
-  await dPage.goto('http://127.0.0.1:5173/app/privacy', { waitUntil: 'networkidle' });
+  await dPage.goto('http://127.0.0.1:3000/app/privacy', { waitUntil: 'networkidle' });
   await dPage.screenshot({ path: path.join(artifactDir, 'phase4-desktop-privacy.png'), fullPage: false });
   console.log('   ✓ Saved phase4-desktop-privacy.png');
 
   // Mobile Context (390px x 844px - iPhone 14 / modern Android dimension)
   const mobileContext = await browser.newContext({ viewport: { width: 390, height: 844 } });
+  await mobileContext.addInitScript(() => {
+    // @ts-ignore
+    if (typeof window !== 'undefined' && typeof window.__name === 'undefined') {
+      // @ts-ignore
+      window.__name = (t: any, v: any) => t;
+    }
+  });
   const mPage: Page = await mobileContext.newPage();
 
   // Mobile Overview (390px)
-  await mPage.goto('http://127.0.0.1:5173/app/overview', { waitUntil: 'networkidle' });
+  await mPage.goto('http://127.0.0.1:3000/app/overview', { waitUntil: 'networkidle' });
   await mPage.screenshot({ path: path.join(artifactDir, 'phase4-mobile-overview.png'), fullPage: false });
   console.log('   ✓ Saved phase4-mobile-overview.png');
 
   // Mobile Rights & Decision Tree (390px)
-  await mPage.goto('http://127.0.0.1:5173/app/help', { waitUntil: 'networkidle' });
+  await mPage.goto('http://127.0.0.1:3000/app/help', { waitUntil: 'networkidle' });
   await mPage.screenshot({ path: path.join(artifactDir, 'phase4-mobile-help.png'), fullPage: false });
   console.log('   ✓ Saved phase4-mobile-help.png');
 

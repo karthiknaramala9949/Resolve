@@ -1,5 +1,8 @@
+'use client';
+
 import React, { useState } from 'react';
-import { NavLink, useNavigate } from 'react-router-dom';
+import Link from 'next/link';
+import { usePathname, useRouter } from 'next/navigation';
 import { cn } from '@/lib/utils';
 import { useAppStore } from '@/store/useAppStore';
 import {
@@ -12,19 +15,23 @@ import {
   HelpCircle,
   Clock,
   ShieldCheck,
-  Settings,
 } from 'lucide-react';
 import { BottomSheet } from '@/design-system/components/BottomSheet';
 
 export const MobileNav: React.FC = () => {
   const [isMoreOpen, setIsMoreOpen] = useState(false);
   const { activeCaseCount } = useAppStore();
-  const navigate = useNavigate();
+  const router = useRouter();
+  const pathname = usePathname();
 
   const handleMoreNavigation = (to: string) => {
     setIsMoreOpen(false);
-    navigate(to);
+    router.push(to);
   };
+
+  const isHomeActive = pathname === '/app/overview';
+  const isCasesActive = pathname?.startsWith('/app/cases');
+  const isDocsActive = pathname?.startsWith('/app/documents');
 
   return (
     <>
@@ -33,32 +40,28 @@ export const MobileNav: React.FC = () => {
         className="md:hidden fixed bottom-0 left-0 right-0 z-40 bg-white/95 dark:bg-surface-dark/95 backdrop-blur-md border-t border-neutral-200 dark:border-neutral-800 px-2 py-1 flex items-center justify-around select-none pb-safe"
       >
         {/* 1. Home */}
-        <NavLink
-          to="/app/overview"
-          className={({ isActive }) =>
-            cn(
-              'flex flex-col items-center justify-center min-w-[56px] min-h-[48px] py-1 text-xs font-medium transition-colors',
-              isActive
-                ? 'text-brand-600 dark:text-brand-400 font-semibold'
-                : 'text-neutral-500 dark:text-neutral-400'
-            )
-          }
+        <Link
+          href="/app/overview"
+          className={cn(
+            'flex flex-col items-center justify-center min-w-[56px] min-h-[48px] py-1 text-xs font-medium transition-colors',
+            isHomeActive
+              ? 'text-brand-600 dark:text-brand-400 font-semibold'
+              : 'text-neutral-500 dark:text-neutral-400'
+          )}
         >
           <Home className="w-5 h-5 mb-0.5" />
           <span>Home</span>
-        </NavLink>
+        </Link>
 
         {/* 2. Cases */}
-        <NavLink
-          to="/app/cases"
-          className={({ isActive }) =>
-            cn(
-              'relative flex flex-col items-center justify-center min-w-[56px] min-h-[48px] py-1 text-xs font-medium transition-colors',
-              isActive
-                ? 'text-brand-600 dark:text-brand-400 font-semibold'
-                : 'text-neutral-500 dark:text-neutral-400'
-            )
-          }
+        <Link
+          href="/app/cases"
+          className={cn(
+            'relative flex flex-col items-center justify-center min-w-[56px] min-h-[48px] py-1 text-xs font-medium transition-colors',
+            isCasesActive
+              ? 'text-brand-600 dark:text-brand-400 font-semibold'
+              : 'text-neutral-500 dark:text-neutral-400'
+          )}
         >
           <FolderKanban className="w-5 h-5 mb-0.5" />
           <span>Cases</span>
@@ -67,12 +70,12 @@ export const MobileNav: React.FC = () => {
               {activeCaseCount}
             </span>
           )}
-        </NavLink>
+        </Link>
 
         {/* 3. Center Action: + New Case */}
         <button
           type="button"
-          onClick={() => navigate('/app/cases?new=true')}
+          onClick={() => router.push('/app/cases?new=true')}
           className="flex flex-col items-center justify-center -mt-4 w-12 h-12 rounded-full bg-brand-500 text-white shadow-elevated hover:bg-brand-600 active:scale-95 transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500 shrink-0"
           aria-label="Create new dispute case"
         >
@@ -80,20 +83,18 @@ export const MobileNav: React.FC = () => {
         </button>
 
         {/* 4. Documents */}
-        <NavLink
-          to="/app/documents"
-          className={({ isActive }) =>
-            cn(
-              'flex flex-col items-center justify-center min-w-[56px] min-h-[48px] py-1 text-xs font-medium transition-colors',
-              isActive
-                ? 'text-brand-600 dark:text-brand-400 font-semibold'
-                : 'text-neutral-500 dark:text-neutral-400'
-            )
-          }
+        <Link
+          href="/app/documents"
+          className={cn(
+            'flex flex-col items-center justify-center min-w-[56px] min-h-[48px] py-1 text-xs font-medium transition-colors',
+            isDocsActive
+              ? 'text-brand-600 dark:text-brand-400 font-semibold'
+              : 'text-neutral-500 dark:text-neutral-400'
+          )}
         >
           <FileText className="w-5 h-5 mb-0.5" />
           <span>Proof</span>
-        </NavLink>
+        </Link>
 
         {/* 5. More menu trigger */}
         <button
@@ -158,4 +159,3 @@ export const MobileNav: React.FC = () => {
     </>
   );
 };
-

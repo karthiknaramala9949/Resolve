@@ -15,6 +15,13 @@ async function runInteractionsSuite() {
 
   // Mock speech recognition API in browser context
   await context.addInitScript(() => {
+    if (typeof (window as any).__name === 'undefined') {
+      (window as any).__name = (target: any, value: string) => {
+        try { Object.defineProperty(target, 'name', { value, configurable: true }); } catch (e) {}
+        return target;
+      };
+    }
+
     class MockSpeechRecognition {
       lang = 'en-IN';
       continuous = false;
@@ -54,7 +61,7 @@ async function runInteractionsSuite() {
 
   // FLOW 1: Landing Page (CTAs, Accordion, Theme, Language)
   console.log('Flow 1: Verifying Landing Page interactions...');
-  await page.goto('http://127.0.0.1:5173/', { waitUntil: 'networkidle' });
+  await page.goto('http://127.0.0.1:3000/', { waitUntil: 'networkidle' });
 
   // 1.1 Header Navigation
   await page.click('a:has-text("How it Works")');
@@ -84,7 +91,7 @@ async function runInteractionsSuite() {
   await page.click('button:has-text("Open App")');
   await page.waitForFunction(() => window.location.pathname === '/app/overview');
   console.log('   ✓ Header "Open App" navigates to /app/overview');
-  await page.goto('http://127.0.0.1:5173/', { waitUntil: 'networkidle' });
+  await page.goto('http://127.0.0.1:3000/', { waitUntil: 'networkidle' });
 
   // 1.2 FAQ Accordion
   await page.click('button:has-text("Does RESOLVE-ONE contact the company")');
@@ -167,7 +174,7 @@ async function runInteractionsSuite() {
 
   // FLOW 5: Documents & Proof Pack PDF
   console.log('\nFlow 5: Verifying Documents & Proof Pack builder...');
-  await page.goto('http://127.0.0.1:5173/app/documents', { waitUntil: 'networkidle' });
+  await page.goto('http://127.0.0.1:3000/app/documents', { waitUntil: 'networkidle' });
   await page.click('button:has-text("Build Proof Pack")');
   await page.waitForSelector('text=Bundle Contents');
   await page.click('button:has-text("Download PDF Proof Pack")');
@@ -176,7 +183,7 @@ async function runInteractionsSuite() {
 
   // FLOW 6: Purchases & Protection Vault
   console.log('\nFlow 6: Verifying Purchases Vault (Add, Edit, Import, Case creation)...');
-  await page.goto('http://127.0.0.1:5173/app/purchases', { waitUntil: 'networkidle' });
+  await page.goto('http://127.0.0.1:3000/app/purchases', { waitUntil: 'networkidle' });
   
   // 6.1 Manual Add
   await page.click('button:has-text("Add Purchase")');
@@ -197,7 +204,7 @@ async function runInteractionsSuite() {
 
   // FLOW 7: Rights & Official Helplines (Decision Tree)
   console.log('\nFlow 7: Verifying Rights & Interactive Decision Tree...');
-  await page.goto('http://127.0.0.1:5173/app/help', { waitUntil: 'networkidle' });
+  await page.goto('http://127.0.0.1:3000/app/help', { waitUntil: 'networkidle' });
   await page.click('button:has-text("Start Decision Tree")');
   await page.click('button:has-text("Yes, I lodged a ticket")');
   await page.waitForSelector('text=Question 2: What is the current status of the dispute?');
@@ -208,7 +215,7 @@ async function runInteractionsSuite() {
 
   // FLOW 8: Reminders Management
   console.log('\nFlow 8: Verifying Reminders creation, completion, and deletion...');
-  await page.goto('http://127.0.0.1:5173/app/reminders', { waitUntil: 'networkidle' });
+  await page.goto('http://127.0.0.1:3000/app/reminders', { waitUntil: 'networkidle' });
   await page.click('button:has-text("New Reminder")');
   await page.click('button:has-text("+3 Days")');
   await page.click('button:has-text("Set Reminder")');
@@ -221,7 +228,7 @@ async function runInteractionsSuite() {
 
   // FLOW 9: Privacy, JSON & ZIP Export, and Local Encryption
   console.log('\nFlow 9: Verifying Privacy Dashboard, JSON & ZIP export, and Encryption...');
-  await page.goto('http://127.0.0.1:5173/app/privacy', { waitUntil: 'networkidle' });
+  await page.goto('http://127.0.0.1:3000/app/privacy', { waitUntil: 'networkidle' });
   
   // Download JSON
   await page.click('button:has-text("Download JSON Backup")');
@@ -249,19 +256,19 @@ async function runInteractionsSuite() {
 
   // FLOW 10: Settings Removal Verification
   console.log('\nFlow 10: Verifying complete removal of Settings page and navigation...');
-  await page.goto('http://127.0.0.1:5173/app/overview', { waitUntil: 'networkidle' });
+  await page.goto('http://127.0.0.1:3000/app/overview', { waitUntil: 'networkidle' });
   const hasSettingsSidebar = await page.locator('aside a:has-text("Settings")').count();
   if (hasSettingsSidebar > 0) throw new Error('Settings link should not exist in Sidebar');
   console.log('   ✓ Verified Settings navigation link is removed from Sidebar');
 
-  await page.goto('http://127.0.0.1:5173/app/settings', { waitUntil: 'networkidle' });
+  await page.goto('http://127.0.0.1:3000/app/settings', { waitUntil: 'networkidle' });
   const is404 = await page.evaluate(() => document.body.innerText.includes('404') || document.body.innerText.includes('Page Not Found'));
   if (!is404) throw new Error('Navigating to /app/settings should yield 404 Page Not Found');
   console.log('   ✓ Direct navigation to /app/settings correctly yields 404 (Removed)');
 
   // FLOW 11: Command Palette Keyboard Navigation
   console.log('\nFlow 11: Verifying Command Palette (⌘K) keyboard search...');
-  await page.goto('http://127.0.0.1:5173/app/overview', { waitUntil: 'networkidle' });
+  await page.goto('http://127.0.0.1:3000/app/overview', { waitUntil: 'networkidle' });
   await page.keyboard.press(process.platform === 'darwin' ? 'Meta+K' : 'Control+K');
   await page.waitForSelector('input[placeholder*="Search cases, companies"]');
   await page.fill('input[placeholder*="Search cases, companies"]', 'Reminders');
@@ -276,7 +283,7 @@ async function runInteractionsSuite() {
     isMobile: true,
   });
   const mPage = await mContext.newPage();
-  await mPage.goto('http://127.0.0.1:5173/app/overview', { waitUntil: 'networkidle' });
+  await mPage.goto('http://127.0.0.1:3000/app/overview', { waitUntil: 'networkidle' });
   
   // Test More sheet
   await mPage.click('text=More');
