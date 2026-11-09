@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { Button, Card, StatusChip } from '@/design-system';
+import { Button, Card } from '@/design-system';
 import {
   ArrowRight,
   ShieldCheck,
@@ -10,16 +10,14 @@ import {
   Lock,
   Sparkles,
   Scale,
-  Phone,
   Building2,
   ChevronDown,
   ChevronUp,
-  FileText,
-  Clock,
   ExternalLink,
   Tag,
   IndianRupee,
   Hash,
+  Ban,
 } from 'lucide-react';
 import { parseComplaintText } from '@/lib/rules/intakeParser';
 
@@ -84,47 +82,47 @@ export const LandingPage: React.FC = () => {
   ];
 
   return (
-    <div className="min-h-screen bg-surface-light-ground dark:bg-surface-dark-ground text-neutral-900 dark:text-neutral-100 selection:bg-brand-100 selection:text-brand-900">
-      {/* Top Header */}
-      <header className="sticky top-0 z-40 bg-white/90 dark:bg-surface-dark/90 backdrop-blur-md border-b border-neutral-200/80 dark:border-neutral-800/80">
+    <div className="min-h-screen bg-white text-charcoal selection:bg-coral-100 selection:text-coral-900">
+      {/* Top Header - Clean Plain Navbar matching App Shell */}
+      <header className="sticky top-0 z-40 bg-white/95 backdrop-blur-md border-b border-steel-grey-200 select-none">
         <div className="max-w-7xl mx-auto px-4 md:px-8 py-3.5 flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className="w-8 h-8 rounded-lg bg-brand-500 flex items-center justify-center text-white font-serif font-bold text-lg shadow-sm">
+            <div className="w-9 h-9 rounded-xl bg-coral flex items-center justify-center text-white font-serif font-black text-xl shadow-xs">
               R
             </div>
-            <span className="font-serif font-bold text-xl tracking-tight">RESOLVE-ONE</span>
-            <span className="hidden sm:inline-flex items-center text-[11px] font-mono px-2.5 py-0.5 rounded-full bg-neutral-100 dark:bg-neutral-800 text-neutral-700 dark:text-neutral-300 font-medium border border-neutral-200 dark:border-neutral-700 leading-none">
-              India Consumer Rights
+            <span className="font-serif font-black text-xl tracking-tight text-charcoal">RESOLVE-ONE</span>
+            <span className="hidden sm:inline-flex items-center text-[11px] font-mono px-2.5 py-0.5 rounded-full bg-steel-grey-50 text-steel-grey-700 font-medium border border-steel-grey-200 leading-none">
+              India Consumer Care
             </span>
           </div>
 
           {/* Center Navigation Links */}
-          <nav className="hidden md:flex items-center gap-6 text-xs font-semibold text-neutral-600 dark:text-neutral-400">
+          <nav className="hidden md:flex items-center gap-6 text-xs font-semibold tracking-wide uppercase text-steel-grey-600">
             <a
               href="#how-it-works"
               onClick={(e) => scrollToSection(e, 'how-it-works')}
-              className="hover:text-brand-600 dark:hover:text-brand-400 transition-colors"
+              className="hover:text-coral transition-colors"
             >
               How it Works
             </a>
             <a
               href="#rights"
               onClick={(e) => scrollToSection(e, 'rights')}
-              className="hover:text-brand-600 dark:hover:text-brand-400 transition-colors"
+              className="hover:text-coral transition-colors"
             >
               Your Rights
             </a>
             <a
               href="#privacy"
               onClick={(e) => scrollToSection(e, 'privacy')}
-              className="hover:text-brand-600 dark:hover:text-brand-400 transition-colors"
+              className="hover:text-coral transition-colors"
             >
-              Privacy & Trust
+              Honesty Manifesto
             </a>
             <a
               href="#faq"
               onClick={(e) => scrollToSection(e, 'faq')}
-              className="hover:text-brand-600 dark:hover:text-brand-400 transition-colors"
+              className="hover:text-coral transition-colors"
             >
               FAQ
             </a>
@@ -132,10 +130,10 @@ export const LandingPage: React.FC = () => {
 
           <div className="flex items-center gap-2.5">
             <Button
-              variant="outline"
+              variant="secondary"
               size="sm"
               onClick={() => router.push('/app/overview')}
-              className="hidden sm:inline-flex"
+              className="hidden sm:inline-flex bg-steel-grey-50 hover:bg-steel-grey-100 text-charcoal border border-steel-grey-200 font-semibold text-xs px-3.5 py-2 rounded-xl transition-all"
             >
               Open App
             </Button>
@@ -143,6 +141,7 @@ export const LandingPage: React.FC = () => {
               variant="primary"
               size="sm"
               onClick={() => router.push('/app/cases?new=true')}
+              className="bg-coral hover:bg-coral-600 text-white font-bold text-xs px-4 py-2 rounded-xl shadow-sm transition-all flex items-center gap-1.5"
             >
               <span>Start in 60s</span>
               <ArrowRight className="w-3.5 h-3.5 shrink-0" />
@@ -152,81 +151,83 @@ export const LandingPage: React.FC = () => {
       </header>
 
       {/* Hero Section */}
-      <section className="px-4 md:px-8 pt-12 md:pt-20 pb-16 max-w-5xl mx-auto text-center space-y-6">
-        <div className="inline-flex items-center justify-center gap-2 px-3.5 py-1.5 rounded-full bg-brand-50 dark:bg-brand-950/60 border border-brand-200 dark:border-brand-900 text-brand-700 dark:text-brand-300 text-xs font-semibold shadow-2xs leading-none">
-          <span className="w-2 h-2 rounded-full bg-brand-500 animate-pulse shrink-0" />
+      <section className="px-4 md:px-8 pt-14 md:pt-24 pb-16 max-w-5xl mx-auto text-center space-y-6">
+        <div className="inline-flex items-center justify-center gap-2 px-3.5 py-1.5 rounded-full bg-steel-grey-50 border border-steel-grey-200 text-charcoal text-xs font-semibold shadow-xs leading-none">
+          <span className="w-2 h-2 rounded-full bg-coral animate-pulse shrink-0" />
           <span>India-First Consumer Dispute Resolution</span>
         </div>
 
-        <h1 className="text-4xl sm:text-5xl md:text-6xl font-bold font-serif tracking-tight leading-[1.1] max-w-4xl mx-auto">
-          Sort it out. <br />
-          <span className="italic text-brand-600 dark:text-brand-400">One step at a time.</span>
+        <h1 className="text-4xl sm:text-5xl md:text-6xl font-black tracking-tight leading-[1.1] max-w-4xl mx-auto text-charcoal font-sans">
+          Sort it out. <br className="hidden sm:block" />
+          One step at a <span className="text-coral">time</span>.
         </h1>
 
-        <p className="text-lg md:text-xl text-neutral-600 dark:text-neutral-300 max-w-2xl mx-auto leading-relaxed">
+        <p className="text-lg md:text-xl text-steel-grey-600 max-w-2xl mx-auto leading-relaxed font-normal">
           Stuck with a rejected refund, damaged delivery, or warranty runaround? Turn your stressful complaint into an organized dispute pack and official escalation in under 3 minutes.
         </p>
 
-        {/* Live Interactive Hero Demo (Signature Experience #1 Showcase) */}
+        {/* Live Interactive Hero Demo Card */}
         <div className="max-w-2xl mx-auto pt-6 text-left">
-          <Card variant="elevated" className="p-5 md:p-6 space-y-4 border-brand-200 dark:border-brand-900/60">
+          <Card variant="elevated" className="p-5 md:p-7 space-y-4 border-steel-grey-200 bg-white shadow-lg rounded-2xl">
             <div className="flex flex-wrap items-center justify-between gap-2">
-              <span className="text-xs font-bold uppercase tracking-wider text-brand-600 dark:text-brand-400 inline-flex items-center gap-1.5 leading-none">
+              <span className="text-xs font-bold uppercase tracking-wider text-coral inline-flex items-center gap-1.5 leading-none">
                 <Sparkles className="w-3.5 h-3.5 shrink-0" />
                 <span>Interactive Live Demo — Try Typing or Editing</span>
               </span>
-              <span className="text-[11px] text-neutral-600 dark:text-neutral-400 font-medium leading-none">Rule-based parsing</span>
+              <span className="text-[11px] font-mono text-steel-grey-600 font-medium px-2 py-0.5 rounded bg-steel-grey-50 border border-steel-grey-200 leading-none">
+                100% Client-Side Rules
+              </span>
             </div>
 
             <textarea
               rows={3}
               value={demoText}
               onChange={(e) => setDemoText(e.target.value)}
-              className="w-full p-3 rounded-lg border border-neutral-300 dark:border-neutral-700 bg-surface-light-subtle dark:bg-surface-dark-subtle text-sm text-neutral-900 dark:text-neutral-100 focus:outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20"
+              className="w-full p-3.5 rounded-xl border border-steel-grey-200 bg-steel-grey-50/50 text-charcoal text-sm leading-relaxed focus:outline-none focus:border-coral focus:ring-2 focus:ring-coral/20 font-sans transition-all"
               placeholder="Type your dispute here..."
             />
 
             {/* Live extracted chips */}
             <div className="space-y-2">
-              <span className="text-[11px] font-semibold uppercase text-neutral-600 dark:text-neutral-400 block">
+              <span className="text-[11px] font-bold uppercase tracking-wider text-steel-grey-600 block">
                 Extracted Facts (Instant Browser Heuristics)
               </span>
               <div className="flex flex-wrap gap-2 text-xs">
                 {parsedDemo.company && (
-                  <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-white dark:bg-surface-dark border text-neutral-900 dark:text-neutral-100 font-medium shadow-2xs leading-none">
-                    <Building2 className="w-3.5 h-3.5 text-neutral-600 dark:text-neutral-400 shrink-0" />
+                  <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-steel-grey-50 border border-steel-grey-200 text-charcoal font-semibold shadow-2xs leading-none">
+                    <Building2 className="w-3.5 h-3.5 text-steel-grey-500 shrink-0" />
                     <span>Company: {parsedDemo.company}</span>
                   </span>
                 )}
                 {parsedDemo.issueType && (
-                  <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-white dark:bg-surface-dark border text-brand-700 dark:text-brand-300 font-medium shadow-2xs leading-none">
-                    <Tag className="w-3.5 h-3.5 text-brand-500 shrink-0" />
+                  <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-coral-50 border border-coral-200 text-coral font-semibold shadow-2xs leading-none">
+                    <Tag className="w-3.5 h-3.5 text-coral shrink-0" />
                     <span>Issue: {parsedDemo.issueType}</span>
                   </span>
                 )}
                 {parsedDemo.amount !== null && (
-                  <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-white dark:bg-surface-dark border text-emerald-700 dark:text-emerald-300 font-medium shadow-2xs leading-none">
-                    <IndianRupee className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
+                  <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-steel-grey-50 border border-steel-grey-200 text-charcoal font-semibold shadow-2xs leading-none">
+                    <IndianRupee className="w-3.5 h-3.5 text-coral shrink-0" />
                     <span>₹{parsedDemo.amount}</span>
                   </span>
                 )}
                 {parsedDemo.orderRef && (
-                  <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-white dark:bg-surface-dark border text-neutral-800 dark:text-neutral-200 font-mono shadow-2xs leading-none">
-                    <Hash className="w-3.5 h-3.5 text-neutral-600 dark:text-neutral-400 shrink-0" />
+                  <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-steel-grey-50 border border-steel-grey-200 text-charcoal font-mono font-medium shadow-2xs leading-none">
+                    <Hash className="w-3.5 h-3.5 text-steel-grey-500 shrink-0" />
                     <span>Ref: {parsedDemo.orderRef}</span>
                   </span>
                 )}
               </div>
             </div>
 
-            <div className="pt-2 flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-t border-neutral-100 dark:border-neutral-800">
-              <span className="text-xs text-neutral-600 dark:text-neutral-400 leading-snug">
+            <div className="pt-3 flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-t border-steel-grey-100">
+              <span className="text-xs text-steel-grey-600 font-medium leading-snug">
                 Notice: All parsing runs client-side. Zero cloud transmission.
               </span>
               <Button
                 variant="primary"
                 size="sm"
-                className="w-full sm:w-auto shrink-0"
+                className="w-full sm:w-auto shrink-0 bg-coral hover:bg-coral-600 text-white font-bold text-sm px-5 py-2.5 rounded-xl shadow-xs transition-all"
                 onClick={() =>
                   router.push(
                     `/app/cases?new=true&store=${encodeURIComponent(parsedDemo.company)}&orderRef=${encodeURIComponent(
@@ -243,57 +244,61 @@ export const LandingPage: React.FC = () => {
         </div>
 
         {/* Trust Badges */}
-        <div className="pt-6 flex flex-wrap items-center justify-center gap-4 sm:gap-6 text-xs text-neutral-700 dark:text-neutral-300 font-medium">
-          <div className="inline-flex items-center gap-1.5 leading-none">
-            <Lock className="w-4 h-4 text-emerald-600 dark:text-emerald-400 shrink-0" />
+        <div className="pt-8 flex flex-wrap items-center justify-center gap-4 sm:gap-8 text-xs font-semibold text-charcoal">
+          <div className="inline-flex items-center gap-2 leading-none">
+            <Lock className="w-4 h-4 text-steel-grey-500 shrink-0" />
             <span>100% On-Device IndexedDB</span>
           </div>
-          <div className="inline-flex items-center gap-1.5 leading-none">
-            <ShieldCheck className="w-4 h-4 text-blue-600 dark:text-blue-400 shrink-0" />
+          <div className="inline-flex items-center gap-2 leading-none">
+            <ShieldCheck className="w-4 h-4 text-steel-grey-500 shrink-0" />
             <span>Never Auto-Sends Without Approval</span>
           </div>
-          <div className="inline-flex items-center gap-1.5 leading-none">
-            <CheckCircle2 className="w-4 h-4 text-brand-500 shrink-0" />
+          <div className="inline-flex items-center gap-2 leading-none">
+            <CheckCircle2 className="w-4 h-4 text-coral shrink-0" />
             <span>Zero Passwords or OTPs</span>
           </div>
         </div>
       </section>
 
       {/* How it Works: 3 Steps */}
-      <section id="how-it-works" className="scroll-mt-20 px-4 md:px-8 py-16 bg-white dark:bg-surface-dark border-y border-neutral-200/80 dark:border-neutral-800">
+      <section id="how-it-works" className="scroll-mt-20 px-4 md:px-8 py-20 bg-steel-grey-50/50 border-y border-steel-grey-200">
         <div className="max-w-6xl mx-auto space-y-12">
-          <div className="text-center space-y-2">
-            <h2 className="text-3xl font-bold font-serif">How RESOLVE-ONE Works</h2>
-            <p className="text-sm text-neutral-500">A calm, competent friend who handles the paperwork.</p>
+          <div className="text-center space-y-3">
+            <h2 className="text-3xl sm:text-4xl font-extrabold tracking-tight text-charcoal font-sans">
+              How RESOLVE-ONE <span className="text-coral">Works</span>
+            </h2>
+            <p className="text-base text-steel-grey-600 max-w-md mx-auto">
+              A calm, competent friend who handles the paperwork.
+            </p>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <Card variant="subtle" className="p-6 space-y-3">
-              <div className="w-10 h-10 rounded-xl bg-brand-500 text-white font-bold text-lg flex items-center justify-center font-serif">
+            <Card variant="subtle" className="p-6 sm:p-7 space-y-4 bg-white border border-steel-grey-200 rounded-2xl hover:border-steel-grey-300 hover:shadow-sm transition-all shadow-xs">
+              <div className="w-11 h-11 rounded-xl bg-charcoal text-white font-bold text-lg flex items-center justify-center font-mono shadow-xs">
                 1
               </div>
-              <h3 className="text-lg font-bold">Tell us what happened</h3>
-              <p className="text-sm text-neutral-600 dark:text-neutral-400 leading-relaxed">
+              <h3 className="text-lg font-bold text-charcoal">Tell us what happened</h3>
+              <p className="text-sm text-steel-grey-600 leading-relaxed font-normal">
                 Describe the problem in plain words or voice note. Transparent rule heuristics extract company name, order ID, amount, and dates into editable chips in seconds.
               </p>
             </Card>
 
-            <Card variant="subtle" className="p-6 space-y-3">
-              <div className="w-10 h-10 rounded-xl bg-brand-500 text-white font-bold text-lg flex items-center justify-center font-serif">
+            <Card variant="subtle" className="p-6 sm:p-7 space-y-4 bg-white border border-steel-grey-200 rounded-2xl hover:border-steel-grey-300 hover:shadow-sm transition-all shadow-xs">
+              <div className="w-11 h-11 rounded-xl bg-charcoal text-white font-bold text-lg flex items-center justify-center font-mono shadow-xs">
                 2
               </div>
-              <h3 className="text-lg font-bold">Follow exactly one Next Step</h3>
-              <p className="text-sm text-neutral-600 dark:text-neutral-400 leading-relaxed">
+              <h3 className="text-lg font-bold text-charcoal">Follow exactly one Next Step</h3>
+              <p className="text-sm text-steel-grey-600 leading-relaxed font-normal">
                 No 40-step confusion. We show one clear action—like attaching a defect photo or verifying return window math—with transparent reasons why.
               </p>
             </Card>
 
-            <Card variant="subtle" className="p-6 space-y-3">
-              <div className="w-10 h-10 rounded-xl bg-brand-500 text-white font-bold text-lg flex items-center justify-center font-serif">
+            <Card variant="subtle" className="p-6 sm:p-7 space-y-4 bg-white border border-steel-grey-200 rounded-2xl hover:border-steel-grey-300 hover:shadow-sm transition-all shadow-xs">
+              <div className="w-11 h-11 rounded-xl bg-charcoal text-white font-bold text-lg flex items-center justify-center font-mono shadow-xs">
                 3
               </div>
-              <h3 className="text-lg font-bold">Export Proof & Escalate</h3>
-              <p className="text-sm text-neutral-600 dark:text-neutral-400 leading-relaxed">
+              <h3 className="text-lg font-bold text-charcoal">Export Proof & Escalate</h3>
+              <p className="text-sm text-steel-grey-600 leading-relaxed font-normal">
                 Export a clean, client-side PDF Proof Pack with SHA-256 hashes. Copy formal dispute letters directly into NCH 1915 or company escalation forms.
               </p>
             </Card>
@@ -301,41 +306,58 @@ export const LandingPage: React.FC = () => {
         </div>
       </section>
 
-      {/* Honesty Boundaries Manifesto */}
-      <section id="privacy" className="scroll-mt-20 px-4 md:px-8 py-16 max-w-4xl mx-auto space-y-8">
-        <div className="text-center space-y-2">
-          <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-neutral-100 dark:bg-neutral-800 text-neutral-600 dark:text-neutral-300 text-xs font-semibold">
-            <Scale className="w-3.5 h-3.5" />
+      {/* Honesty Boundaries Manifesto - Plain Clean Section */}
+      <section id="privacy" className="scroll-mt-20 px-4 md:px-8 py-20 bg-white space-y-10">
+        <div className="text-center space-y-3 max-w-4xl mx-auto">
+          <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-steel-grey-50 text-steel-grey-700 text-xs font-semibold border border-steel-grey-200">
+            <Scale className="w-3.5 h-3.5 text-coral" />
             <span>Honesty Manifesto</span>
           </div>
-          <h2 className="text-3xl font-bold font-serif">What RESOLVE-ONE Never Does</h2>
+          <h2 className="text-3xl sm:text-4xl font-extrabold tracking-tight text-charcoal font-sans">
+            What RESOLVE-ONE Never <span className="text-coral">Does</span>
+          </h2>
+          <p className="text-sm sm:text-base text-steel-grey-600 max-w-xl mx-auto leading-relaxed">
+            Our uncompromised ethical boundaries protect your privacy, security, and peace of mind.
+          </p>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          <div className="p-5 rounded-xl border border-neutral-200 dark:border-neutral-800 bg-white dark:bg-surface-dark space-y-1.5">
-            <h4 className="text-sm font-bold text-neutral-900 dark:text-neutral-100">🚫 Never collects credentials</h4>
-            <p className="text-xs text-neutral-600 dark:text-neutral-400 leading-relaxed">
+        <div className="max-w-4xl mx-auto grid grid-cols-1 sm:grid-cols-2 gap-5">
+          <div className="p-6 rounded-2xl border border-steel-grey-200 bg-steel-grey-50/50 text-charcoal space-y-2 hover:border-steel-grey-300 transition-colors shadow-xs">
+            <h4 className="text-base font-bold text-charcoal flex items-center gap-2">
+              <Ban className="w-4 h-4 text-coral shrink-0" aria-hidden="true" />
+              <span>Never collects credentials</span>
+            </h4>
+            <p className="text-xs sm:text-sm text-steel-grey-600 leading-relaxed font-normal">
               We strictly prohibit asking for passwords, OTPs, session cookies, or banking PINs. You maintain 100% security.
             </p>
           </div>
 
-          <div className="p-5 rounded-xl border border-neutral-200 dark:border-neutral-800 bg-white dark:bg-surface-dark space-y-1.5">
-            <h4 className="text-sm font-bold text-neutral-900 dark:text-neutral-100">🚫 Never claims fake AI</h4>
-            <p className="text-xs text-neutral-600 dark:text-neutral-400 leading-relaxed">
+          <div className="p-6 rounded-2xl border border-steel-grey-200 bg-steel-grey-50/50 text-charcoal space-y-2 hover:border-steel-grey-300 transition-colors shadow-xs">
+            <h4 className="text-base font-bold text-charcoal flex items-center gap-2">
+              <Ban className="w-4 h-4 text-coral shrink-0" aria-hidden="true" />
+              <span>Never claims fake AI</span>
+            </h4>
+            <p className="text-xs sm:text-sm text-steel-grey-600 leading-relaxed font-normal">
               All text extraction uses honest, transparent in-browser heuristics. No simulated LLM hallucinations or phantom legal advice.
             </p>
           </div>
 
-          <div className="p-5 rounded-xl border border-neutral-200 dark:border-neutral-800 bg-white dark:bg-surface-dark space-y-1.5">
-            <h4 className="text-sm font-bold text-neutral-900 dark:text-neutral-100">🚫 Never contacts anyone for you</h4>
-            <p className="text-xs text-neutral-600 dark:text-neutral-400 leading-relaxed">
+          <div className="p-6 rounded-2xl border border-steel-grey-200 bg-steel-grey-50/50 text-charcoal space-y-2 hover:border-steel-grey-300 transition-colors shadow-xs">
+            <h4 className="text-base font-bold text-charcoal flex items-center gap-2">
+              <Ban className="w-4 h-4 text-coral shrink-0" aria-hidden="true" />
+              <span>Never contacts anyone for you</span>
+            </h4>
+            <p className="text-xs sm:text-sm text-steel-grey-600 leading-relaxed font-normal">
               You review, approve, and send every complaint yourself. RESOLVE-ONE never acts autonomously.
             </p>
           </div>
 
-          <div className="p-5 rounded-xl border border-neutral-200 dark:border-neutral-800 bg-white dark:bg-surface-dark space-y-1.5">
-            <h4 className="text-sm font-bold text-neutral-900 dark:text-neutral-100">🚫 Never confuses promises with money</h4>
-            <p className="text-xs text-neutral-600 dark:text-neutral-400 leading-relaxed">
+          <div className="p-6 rounded-2xl border border-steel-grey-200 bg-steel-grey-50/50 text-charcoal space-y-2 hover:border-steel-grey-300 transition-colors shadow-xs">
+            <h4 className="text-base font-bold text-charcoal flex items-center gap-2">
+              <Ban className="w-4 h-4 text-coral shrink-0" aria-hidden="true" />
+              <span>Never confuses promises with money</span>
+            </h4>
+            <p className="text-xs sm:text-sm text-steel-grey-600 leading-relaxed font-normal">
               "Company says refund initiated" and "Customer verified in bank" are strictly kept separate until you confirm receipt.
             </p>
           </div>
@@ -343,27 +365,33 @@ export const LandingPage: React.FC = () => {
       </section>
 
       {/* India Routes Teaser */}
-      <section id="rights" className="scroll-mt-20 px-4 md:px-8 py-16 bg-surface-light-subtle dark:bg-surface-dark-subtle border-t border-neutral-200/80 dark:border-neutral-800">
-        <div className="max-w-6xl mx-auto space-y-8">
-          <div className="text-center space-y-2">
-            <h2 className="text-3xl font-bold font-serif">India-Specific Escalation Channels</h2>
-            <p className="text-sm text-neutral-600 dark:text-neutral-400">Direct connections to official government and regulatory helplines.</p>
+      <section id="rights" className="scroll-mt-20 px-4 md:px-8 py-20 bg-steel-grey-50/50 border-y border-steel-grey-200">
+        <div className="max-w-6xl mx-auto space-y-10">
+          <div className="text-center space-y-3">
+            <h2 className="text-3xl sm:text-4xl font-extrabold tracking-tight text-charcoal font-sans">
+              India-Specific Escalation <span className="text-coral">Channels</span>
+            </h2>
+            <p className="text-sm sm:text-base text-steel-grey-600 max-w-lg mx-auto">
+              Direct connections to official government and regulatory helplines.
+            </p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
-            <Card variant="default" className="p-5 flex flex-col justify-between space-y-3">
-              <div className="space-y-2">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <Card variant="default" className="p-6 flex flex-col justify-between space-y-4 bg-white border border-steel-grey-200 rounded-2xl shadow-xs hover:border-steel-grey-300 hover:shadow-sm transition-all">
+              <div className="space-y-3">
                 <div className="flex flex-wrap items-center justify-between gap-2 text-xs">
-                  <span className="font-mono text-neutral-600 dark:text-neutral-400 font-medium">Toll Free 1915 / WhatsApp 8800001915</span>
-                  <span className="shrink-0 px-2 py-0.5 rounded text-[10px] font-semibold bg-amber-100 dark:bg-amber-950 text-amber-800 dark:text-amber-300 border border-amber-300 dark:border-amber-800 whitespace-nowrap leading-none">
+                  <span className="font-mono text-charcoal font-semibold bg-steel-grey-50 px-2.5 py-1 rounded-lg border border-steel-grey-200">
+                    Toll Free 1915 / WA 8800001915
+                  </span>
+                  <span className="shrink-0 px-2 py-0.5 rounded text-[10px] font-bold bg-amber-50 text-amber-800 border border-amber-200 whitespace-nowrap leading-none">
                     Verify before launch
                   </span>
                 </div>
-                <div className="text-[11px] text-amber-800 dark:text-amber-300 font-semibold leading-none">
-                  Not yet verified: open the official site to confirm
+                <div className="text-[11px] text-steel-grey-500 font-medium leading-none">
+                  Not yet verified: open official site to confirm
                 </div>
-                <h3 className="text-base font-bold text-neutral-900 dark:text-neutral-100">National Consumer Helpline (NCH)</h3>
-                <p className="text-xs text-neutral-600 dark:text-neutral-400">
+                <h3 className="text-lg font-bold text-charcoal">National Consumer Helpline (NCH)</h3>
+                <p className="text-xs sm:text-sm text-steel-grey-600 leading-relaxed font-normal">
                   Department of Consumer Affairs convergence channel resolving e-commerce and retail disputes in days.
                 </p>
               </div>
@@ -371,26 +399,28 @@ export const LandingPage: React.FC = () => {
                 href="https://consumerhelpline.gov.in"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="inline-flex items-center justify-center sm:justify-start gap-1.5 text-xs font-semibold text-brand-600 dark:text-brand-400 hover:underline pt-2 border-t border-neutral-100 dark:border-neutral-800 leading-none"
+                className="inline-flex items-center gap-2 text-sm font-bold text-charcoal hover:text-coral transition-colors pt-3 border-t border-steel-grey-100 group"
               >
                 <span>Visit official site</span>
-                <ExternalLink className="w-3.5 h-3.5" />
+                <ExternalLink className="w-4 h-4 text-coral group-hover:translate-x-0.5 transition-transform" />
               </a>
             </Card>
 
-            <Card variant="default" className="p-5 flex flex-col justify-between space-y-3">
-              <div className="space-y-2">
+            <Card variant="default" className="p-6 flex flex-col justify-between space-y-4 bg-white border border-steel-grey-200 rounded-2xl shadow-xs hover:border-steel-grey-300 hover:shadow-sm transition-all">
+              <div className="space-y-3">
                 <div className="flex flex-wrap items-center justify-between gap-2 text-xs">
-                  <span className="font-mono text-neutral-600 dark:text-neutral-400 font-medium">e-jagriti.gov.in</span>
-                  <span className="shrink-0 px-2 py-0.5 rounded text-[10px] font-semibold bg-amber-100 dark:bg-amber-950 text-amber-800 dark:text-amber-300 border border-amber-300 dark:border-amber-800 whitespace-nowrap leading-none">
+                  <span className="font-mono text-charcoal font-semibold bg-steel-grey-50 px-2.5 py-1 rounded-lg border border-steel-grey-200">
+                    e-jagriti.gov.in
+                  </span>
+                  <span className="shrink-0 px-2 py-0.5 rounded text-[10px] font-bold bg-amber-50 text-amber-800 border border-amber-200 whitespace-nowrap leading-none">
                     Verify before launch
                   </span>
                 </div>
-                <div className="text-[11px] text-amber-800 dark:text-amber-300 font-semibold leading-none">
-                  Not yet verified: open the official site to confirm
+                <div className="text-[11px] text-steel-grey-500 font-medium leading-none">
+                  Not yet verified: open official site to confirm
                 </div>
-                <h3 className="text-base font-bold text-neutral-900 dark:text-neutral-100">e-Jagriti (Consumer Commission)</h3>
-                <p className="text-xs text-neutral-600 dark:text-neutral-400">
+                <h3 className="text-lg font-bold text-charcoal">e-Jagriti (Consumer Commission)</h3>
+                <p className="text-xs sm:text-sm text-steel-grey-600 leading-relaxed font-normal">
                   Online consumer commission filing before District, State, and National Commissions under CPA 2019 without advocates.
                 </p>
               </div>
@@ -398,26 +428,28 @@ export const LandingPage: React.FC = () => {
                 href="https://e-jagriti.gov.in/"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="inline-flex items-center justify-center sm:justify-start gap-1.5 text-xs font-semibold text-brand-600 dark:text-brand-400 hover:underline pt-2 border-t border-neutral-100 dark:border-neutral-800 leading-none"
+                className="inline-flex items-center gap-2 text-sm font-bold text-charcoal hover:text-coral transition-colors pt-3 border-t border-steel-grey-100 group"
               >
                 <span>Visit official site</span>
-                <ExternalLink className="w-3.5 h-3.5" />
+                <ExternalLink className="w-4 h-4 text-coral group-hover:translate-x-0.5 transition-transform" />
               </a>
             </Card>
 
-            <Card variant="default" className="p-5 flex flex-col justify-between space-y-3">
-              <div className="space-y-2">
+            <Card variant="default" className="p-6 flex flex-col justify-between space-y-4 bg-white border border-steel-grey-200 rounded-2xl shadow-xs hover:border-steel-grey-300 hover:shadow-sm transition-all">
+              <div className="space-y-3">
                 <div className="flex flex-wrap items-center justify-between gap-2 text-xs">
-                  <span className="font-mono text-neutral-600 dark:text-neutral-400 font-medium">Toll Free 14448 / SMS 14448</span>
-                  <span className="shrink-0 px-2 py-0.5 rounded text-[10px] font-semibold bg-amber-100 dark:bg-amber-950 text-amber-800 dark:text-amber-300 border border-amber-300 dark:border-amber-800 whitespace-nowrap leading-none">
+                  <span className="font-mono text-charcoal font-semibold bg-steel-grey-50 px-2.5 py-1 rounded-lg border border-steel-grey-200">
+                    Toll Free 14448 / SMS 14448
+                  </span>
+                  <span className="shrink-0 px-2 py-0.5 rounded text-[10px] font-bold bg-amber-50 text-amber-800 border border-amber-200 whitespace-nowrap leading-none">
                     Verify before launch
                   </span>
                 </div>
-                <div className="text-[11px] text-amber-800 dark:text-amber-300 font-semibold leading-none">
-                  Not yet verified: open the official site to confirm
+                <div className="text-[11px] text-steel-grey-500 font-medium leading-none">
+                  Not yet verified: open official site to confirm
                 </div>
-                <h3 className="text-base font-bold text-neutral-900 dark:text-neutral-100">RBI Integrated Ombudsman</h3>
-                <p className="text-xs text-neutral-600 dark:text-neutral-400">
+                <h3 className="text-lg font-bold text-charcoal">RBI Integrated Ombudsman</h3>
+                <p className="text-xs sm:text-sm text-steel-grey-600 leading-relaxed font-normal">
                   Mandatory turnaround resolution for failed UPI refunds, net banking, or debit card reversal discrepancies.
                 </p>
               </div>
@@ -425,10 +457,10 @@ export const LandingPage: React.FC = () => {
                 href="https://cms.rbi.org.in"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="inline-flex items-center justify-center sm:justify-start gap-1.5 text-xs font-semibold text-brand-600 dark:text-brand-400 hover:underline pt-2 border-t border-neutral-100 dark:border-neutral-800 leading-none"
+                className="inline-flex items-center gap-2 text-sm font-bold text-charcoal hover:text-coral transition-colors pt-3 border-t border-steel-grey-100 group"
               >
                 <span>Visit official site</span>
-                <ExternalLink className="w-3.5 h-3.5" />
+                <ExternalLink className="w-4 h-4 text-coral group-hover:translate-x-0.5 transition-transform" />
               </a>
             </Card>
           </div>
@@ -436,10 +468,12 @@ export const LandingPage: React.FC = () => {
       </section>
 
       {/* FAQ Accordion */}
-      <section id="faq" className="scroll-mt-20 px-4 md:px-8 py-16 max-w-4xl mx-auto space-y-8">
-        <div className="text-center space-y-2">
-          <h2 className="text-3xl font-bold font-serif">Frequently Asked Questions</h2>
-          <p className="text-sm text-neutral-700 dark:text-neutral-300 font-medium">Everything you need to know about RESOLVE-ONE.</p>
+      <section id="faq" className="scroll-mt-20 px-4 md:px-8 py-20 max-w-4xl mx-auto space-y-10">
+        <div className="text-center space-y-3">
+          <h2 className="text-3xl sm:text-4xl font-extrabold tracking-tight text-charcoal font-sans">
+            Frequently Asked <span className="text-coral">Questions</span>
+          </h2>
+          <p className="text-base text-steel-grey-600 max-w-md mx-auto">Everything you need to know about RESOLVE-ONE.</p>
         </div>
 
         <div className="space-y-3">
@@ -448,18 +482,18 @@ export const LandingPage: React.FC = () => {
             return (
               <div
                 key={index}
-                className="border border-neutral-200 dark:border-neutral-800 rounded-xl bg-white dark:bg-surface-dark overflow-hidden transition-colors"
+                className="border border-steel-grey-200 rounded-2xl bg-white overflow-hidden transition-all shadow-xs"
               >
                 <button
                   type="button"
                   onClick={() => toggleFaq(index)}
-                  className="w-full p-5 text-left flex items-center justify-between gap-4 font-semibold text-base text-neutral-900 dark:text-neutral-100 hover:text-brand-600 dark:hover:text-brand-400 transition-colors"
+                  className="w-full p-5 text-left flex items-center justify-between gap-4 font-bold text-base text-charcoal hover:text-coral transition-colors"
                 >
                   <span>{faq.q}</span>
-                  {isOpen ? <ChevronUp className="w-5 h-5 shrink-0" /> : <ChevronDown className="w-5 h-5 shrink-0" />}
+                  {isOpen ? <ChevronUp className="w-5 h-5 shrink-0 text-coral" /> : <ChevronDown className="w-5 h-5 shrink-0 text-steel-grey-400" />}
                 </button>
                 {isOpen && (
-                  <div className="px-5 pb-5 text-sm text-neutral-600 dark:text-neutral-400 leading-relaxed border-t border-neutral-100 dark:border-neutral-800 pt-3">
+                  <div className="px-5 pb-5 text-sm text-steel-grey-600 leading-relaxed border-t border-steel-grey-100 pt-3 font-normal">
                     {faq.a}
                   </div>
                 )}
@@ -469,20 +503,51 @@ export const LandingPage: React.FC = () => {
         </div>
       </section>
 
-      {/* Footer */}
-      <footer className="border-t border-neutral-200 dark:border-neutral-800 py-10 px-4 text-center text-xs text-neutral-700 dark:text-neutral-300 font-medium space-y-3">
-        <p className="font-semibold text-neutral-900 dark:text-neutral-100">
-          RESOLVE-ONE · Award-Grade Consumer Dispute Resolution for India · Offline-First PWA
+      {/* Pre-Footer Call to Action Banner - Plain Clean Card */}
+      <section className="px-4 md:px-8 py-16 bg-steel-grey-50/50 border-t border-steel-grey-200">
+        <div className="max-w-4xl mx-auto rounded-3xl bg-white p-8 sm:p-12 text-center space-y-6 shadow-sm border border-steel-grey-200">
+          <h2 className="text-3xl sm:text-4xl font-black tracking-tight text-charcoal font-sans">
+            Resolve Disputes Beyond <span className="text-coral">Limits</span>
+          </h2>
+          <p className="text-sm sm:text-base text-steel-grey-600 max-w-xl mx-auto leading-relaxed">
+            Zero signups required. 100% private and on-device. Turn order numbers and frustration into structured resolution in minutes.
+          </p>
+          <div className="pt-2 flex flex-col sm:flex-row items-center justify-center gap-3">
+            <Button
+              variant="primary"
+              size="lg"
+              onClick={() => router.push('/app/cases?new=true')}
+              className="w-full sm:w-auto bg-coral hover:bg-coral-600 text-white font-bold px-8 shadow-sm text-sm transition-all flex items-center justify-center gap-2"
+            >
+              <span>Start Your Case Now</span>
+              <ArrowRight className="w-4 h-4" />
+            </Button>
+            <Button
+              variant="secondary"
+              size="lg"
+              onClick={() => router.push('/app/overview')}
+              className="w-full sm:w-auto bg-steel-grey-50 hover:bg-steel-grey-100 text-charcoal border border-steel-grey-200 font-semibold px-7 text-sm transition-all"
+            >
+              Open Workspace
+            </Button>
+          </div>
+        </div>
+      </section>
+
+      {/* Footer - Clean Plain Footer */}
+      <footer className="bg-white border-t border-steel-grey-200 py-12 px-4 text-center text-xs text-steel-grey-600 font-medium space-y-4">
+        <p className="font-semibold text-charcoal">
+          <span className="text-charcoal font-bold">RESOLVE-ONE</span> · Award-Grade Consumer Dispute Resolution for India · Offline-First PWA
         </p>
-        <p className="max-w-xl mx-auto">
+        <p className="max-w-xl mx-auto text-steel-grey-500 leading-relaxed">
           General informational guidance only. Not legal advice. Direct all formal legal disputes through official Consumer Commissions under the Consumer Protection Act, 2019.
         </p>
-        <div className="pt-2 flex items-center justify-center gap-4 text-[11px] text-neutral-700 dark:text-neutral-300 font-semibold">
-          <button type="button" onClick={() => router.push('/app/overview')} className="hover:underline">
+        <div className="pt-2 flex items-center justify-center gap-4 text-[11px] text-steel-grey-600 font-semibold">
+          <button type="button" onClick={() => router.push('/app/overview')} className="hover:text-coral hover:underline transition-colors">
             Consumer Workspace
           </button>
-          <span>•</span>
-          <button type="button" onClick={() => router.push('/app/privacy')} className="hover:underline">
+          <span className="text-steel-grey-300">•</span>
+          <button type="button" onClick={() => router.push('/app/privacy')} className="hover:text-coral hover:underline transition-colors">
             Privacy & Trust
           </button>
         </div>

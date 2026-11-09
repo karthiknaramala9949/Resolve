@@ -17,22 +17,15 @@ interface AppState {
 }
 
 export const useAppStore = create<AppState>((set) => {
-  // Read initial theme from system or localStorage
-  const savedTheme = (typeof window !== 'undefined' && localStorage.getItem('resolve-one-theme')) as 'light' | 'dark' | null;
-  const initialTheme = savedTheme || (typeof window !== 'undefined' && window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
-
+  // Always default to light theme for clean white palette
   if (typeof document !== 'undefined') {
-    if (initialTheme === 'dark') {
-      document.documentElement.classList.add('dark');
-    } else {
-      document.documentElement.classList.remove('dark');
-    }
+    document.documentElement.classList.remove('dark');
   }
 
   const savedSimpleMode = typeof window !== 'undefined' && localStorage.getItem('resolve-one-simple-language') === 'true';
 
   return {
-    theme: initialTheme,
+    theme: 'light',
     setTheme: (theme) => {
       localStorage.setItem('resolve-one-theme', theme);
       if (theme === 'dark') {
@@ -65,7 +58,7 @@ export const useAppStore = create<AppState>((set) => {
     openCommandPalette: () => set({ isCommandPaletteOpen: true }),
     closeCommandPalette: () => set({ isCommandPaletteOpen: false }),
 
-    activeCaseCount: 2,
+    activeCaseCount: 0,
     setActiveCaseCount: (activeCaseCount) => set({ activeCaseCount }),
   };
 });

@@ -23,15 +23,15 @@ export const Header: React.FC = () => {
   };
 
   return (
-    <header className="sticky top-0 z-30 flex items-center justify-between px-4 md:px-8 py-3.5 bg-white/80 dark:bg-surface-dark/80 backdrop-blur-md border-b border-neutral-200/80 dark:border-neutral-800/80 select-none">
+    <header className="sticky top-0 z-30 flex items-center justify-between px-4 md:px-8 py-3.5 bg-white/95 backdrop-blur-md border-b border-steel-grey-200 select-none">
       {/* Left: Mobile Brand & Desktop Breadcrumbs */}
       <div className="flex items-center gap-3">
         <Link href="/" className="md:hidden flex items-center gap-2">
-          <div className="w-7 h-7 rounded-lg bg-brand-500 flex items-center justify-center text-white font-bold text-sm font-serif">
+          <div className="w-7 h-7 rounded-lg bg-coral flex items-center justify-center text-white font-bold text-sm font-serif">
             R
           </div>
         </Link>
-        <h1 className="text-lg md:text-xl font-semibold text-neutral-900 dark:text-neutral-100 font-serif">
+        <h1 className="text-lg md:text-xl font-bold text-charcoal font-sans tracking-tight">
           {getPageTitle()}
         </h1>
       </div>
@@ -41,11 +41,11 @@ export const Header: React.FC = () => {
         <button
           type="button"
           onClick={openCommandPalette}
-          className="flex items-center gap-2 px-3.5 py-1.5 rounded-full border border-neutral-300 dark:border-neutral-700 bg-surface-light-subtle dark:bg-surface-dark-subtle text-xs text-neutral-700 dark:text-neutral-300 hover:border-neutral-400 dark:hover:border-neutral-600 transition-colors shadow-2xs"
+          className="flex items-center gap-2 px-3.5 py-1.5 rounded-full border border-steel-grey-200 bg-steel-grey-50 text-xs text-steel-grey-600 hover:border-coral transition-colors shadow-2xs"
         >
-          <Search className="w-3.5 h-3.5 text-neutral-600 dark:text-neutral-400" />
+          <Search className="w-3.5 h-3.5 text-steel-grey-400" />
           <span>Search or jump to...</span>
-          <kbd className="ml-2 font-mono text-[10px] px-1.5 py-0.5 rounded bg-white dark:bg-neutral-800 border text-neutral-600 dark:text-neutral-300 font-semibold">
+          <kbd className="ml-2 font-mono text-[10px] px-1.5 py-0.5 rounded bg-white border border-steel-grey-200 text-charcoal font-semibold">
             ⌘K
           </kbd>
         </button>
@@ -57,15 +57,15 @@ export const Header: React.FC = () => {
         <button
           type="button"
           onClick={openCommandPalette}
-          className="sm:hidden p-2 text-neutral-500 hover:text-neutral-800 dark:hover:text-neutral-200 rounded-lg hover:bg-neutral-100 dark:hover:bg-neutral-800"
+          className="sm:hidden p-2 text-steel-grey-500 hover:text-charcoal rounded-lg hover:bg-steel-grey-100 transition-colors"
           aria-label="Open search palette"
         >
           <Search className="w-5 h-5" />
         </button>
 
         {/* Local Storage Trust Badge */}
-        <div className="hidden lg:inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-neutral-100 dark:bg-neutral-800 text-[11px] font-medium text-neutral-600 dark:text-neutral-300 border border-neutral-200 dark:border-neutral-700 leading-none select-none">
-          <Shield className="w-3 h-3 text-emerald-600 dark:text-emerald-400 shrink-0" />
+        <div className="hidden lg:inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-steel-grey-50 text-[11px] font-semibold text-steel-grey-600 border border-steel-grey-200 leading-none select-none">
+          <Shield className="w-3 h-3 text-emerald-600 shrink-0" />
           <span>On-device only</span>
         </div>
       </div>

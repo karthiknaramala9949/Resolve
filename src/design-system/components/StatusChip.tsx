@@ -23,37 +23,37 @@ const statusConfig: Record<
   action_required: {
     label: 'Action required',
     icon: AlertCircle,
-    bg: 'bg-amber-50 dark:bg-amber-950/40',
-    text: 'text-amber-800 dark:text-amber-300',
-    border: 'border-amber-200 dark:border-amber-800/60',
+    bg: 'bg-amber-50',
+    text: 'text-amber-900',
+    border: 'border-amber-300',
   },
   waiting_company: {
     label: 'Waiting for company',
     icon: Clock,
-    bg: 'bg-blue-50 dark:bg-blue-950/40',
-    text: 'text-blue-800 dark:text-blue-300',
-    border: 'border-blue-200 dark:border-blue-800/60',
+    bg: 'bg-blue-50',
+    text: 'text-blue-900',
+    border: 'border-blue-300',
   },
   response_received: {
     label: 'Reply received',
     icon: MessageSquare,
-    bg: 'bg-indigo-50 dark:bg-indigo-950/40',
-    text: 'text-indigo-800 dark:text-indigo-300',
-    border: 'border-indigo-200 dark:border-indigo-800/60',
+    bg: 'bg-purple-50',
+    text: 'text-purple-900',
+    border: 'border-purple-300',
   },
   resolved: {
     label: 'Outcome confirmed',
     icon: CheckCircle2,
-    bg: 'bg-emerald-50 dark:bg-emerald-950/40',
-    text: 'text-emerald-800 dark:text-emerald-300',
-    border: 'border-emerald-200 dark:border-emerald-800/60',
+    bg: 'bg-emerald-50',
+    text: 'text-emerald-900',
+    border: 'border-emerald-300',
   },
   closed: {
     label: 'Closed',
     icon: Archive,
-    bg: 'bg-neutral-100 dark:bg-neutral-800/60',
-    text: 'text-neutral-700 dark:text-neutral-300',
-    border: 'border-neutral-200 dark:border-neutral-700',
+    bg: 'bg-steel-grey-100',
+    text: 'text-steel-grey-700',
+    border: 'border-steel-grey-200',
   },
 };
 
@@ -66,9 +66,9 @@ export const StatusChip: React.FC<StatusChipProps> = ({
   const config = statusConfig[status as CaseStatus] || {
     label: status,
     icon: AlertCircle,
-    bg: 'bg-neutral-100 dark:bg-neutral-800',
-    text: 'text-neutral-700 dark:text-neutral-300',
-    border: 'border-neutral-200 dark:border-neutral-700',
+    bg: 'bg-steel-grey-100',
+    text: 'text-charcoal',
+    border: 'border-steel-grey-200',
   };
 
   const IconComponent = config.icon;
@@ -101,4 +101,3 @@ export const StatusChip: React.FC<StatusChipProps> = ({
     </span>
   );
 };
-

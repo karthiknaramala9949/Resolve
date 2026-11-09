@@ -12,21 +12,21 @@ export function generateProofPackPDF(caseData: Case): jsPDF {
   let y = 40;
 
   // Header Bar
-  doc.setFillColor(200, 55, 45); // Brand Coral Red #C8372D
+  doc.setFillColor(255, 75, 50); // Vibrant Coral Orange #FF4B32
   doc.rect(40, y, pageWidth - 80, 4, 'F');
   y += 24;
 
   // Title
   doc.setFont('helvetica', 'bold');
   doc.setFontSize(18);
-  doc.setTextColor(20, 20, 20);
+  doc.setTextColor(23, 25, 28); // Midnight Charcoal #17191C
   doc.text('RESOLVE-ONE · CONSUMER DISPUTE PROOF PACK', 40, y);
   y += 18;
 
   // Subtitle & Meta
   doc.setFont('helvetica', 'normal');
   doc.setFontSize(10);
-  doc.setTextColor(100, 100, 100);
+  doc.setTextColor(87, 98, 108); // Cool Steel Grey secondary text (WCAG AA)
   doc.text(
     `Case ID: ${caseData.id}  |  Generated: ${new Date().toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })}  |  Jurisdiction: India`,
     40,
@@ -35,24 +35,24 @@ export function generateProofPackPDF(caseData: Case): jsPDF {
   y += 25;
 
   // Horizontal divider
-  doc.setDrawColor(220, 220, 220);
+  doc.setDrawColor(220, 225, 229); // Cool Steel Grey border
   doc.line(40, y, pageWidth - 40, y);
   y += 20;
 
   // Section: Core Facts Summary Box
-  doc.setFillColor(248, 246, 240); // Warm surface subtle
+  doc.setFillColor(246, 248, 249); // Cool Steel Grey tint
   doc.rect(40, y, pageWidth - 80, 85, 'F');
-  doc.setDrawColor(230, 225, 215);
+  doc.setDrawColor(220, 225, 229);
   doc.rect(40, y, pageWidth - 80, 85, 'S');
 
   doc.setFont('helvetica', 'bold');
   doc.setFontSize(11);
-  doc.setTextColor(200, 55, 45);
+  doc.setTextColor(255, 75, 50); // Vibrant Coral Orange #FF4B32
   doc.text('DISPUTE SUMMARY', 52, y + 18);
 
   doc.setFont('helvetica', 'normal');
   doc.setFontSize(10);
-  doc.setTextColor(40, 40, 40);
+  doc.setTextColor(23, 25, 28); // Midnight Charcoal #17191C
 
   doc.text(`Company / Merchant: ${caseData.company || 'Not specified'}`, 52, y + 36);
   doc.text(`Product / Service: ${caseData.product || 'Not specified'}`, 52, y + 52);
@@ -67,13 +67,13 @@ export function generateProofPackPDF(caseData: Case): jsPDF {
   // Section: Consumer Statement
   doc.setFont('helvetica', 'bold');
   doc.setFontSize(12);
-  doc.setTextColor(20, 20, 20);
+  doc.setTextColor(23, 25, 28); // Midnight Charcoal #17191C
   doc.text('STATEMENT OF FACTS', 40, y);
   y += 14;
 
   doc.setFont('helvetica', 'normal');
   doc.setFontSize(9.5);
-  doc.setTextColor(60, 60, 60);
+  doc.setTextColor(87, 98, 108); // Cool Steel Grey secondary
 
   const splitDesc = doc.splitTextToSize(caseData.description || 'No description provided.', pageWidth - 80);
   doc.text(splitDesc, 40, y);
@@ -82,7 +82,7 @@ export function generateProofPackPDF(caseData: Case): jsPDF {
   // Section: Chronological Timeline
   doc.setFont('helvetica', 'bold');
   doc.setFontSize(12);
-  doc.setTextColor(20, 20, 20);
+  doc.setTextColor(23, 25, 28); // Midnight Charcoal #17191C
   doc.text('CHRONOLOGICAL EVENT LOG', 40, y);
   y += 16;
 
@@ -90,7 +90,7 @@ export function generateProofPackPDF(caseData: Case): jsPDF {
   if (events.length === 0) {
     doc.setFont('helvetica', 'italic');
     doc.setFontSize(9);
-    doc.setTextColor(120, 120, 120);
+    doc.setTextColor(146, 157, 167); // Cool Steel Grey
     doc.text('No timeline events recorded.', 40, y);
     y += 18;
   } else {
@@ -102,7 +102,7 @@ export function generateProofPackPDF(caseData: Case): jsPDF {
       }
 
       doc.setFont('helvetica', 'bold');
-      doc.setTextColor(40, 40, 40);
+      doc.setTextColor(23, 25, 28);
       const dateStr = new Date(ev.at || Date.now()).toLocaleDateString('en-IN', {
         day: '2-digit',
         month: 'short',
@@ -112,7 +112,7 @@ export function generateProofPackPDF(caseData: Case): jsPDF {
       y += 12;
 
       doc.setFont('helvetica', 'normal');
-      doc.setTextColor(90, 90, 90);
+      doc.setTextColor(87, 98, 108);
       const detailText = ev.detail || '';
       const splitDetail = doc.splitTextToSize(detailText, pageWidth - 100);
       if (splitDetail && splitDetail.length > 0) {
@@ -134,13 +134,13 @@ export function generateProofPackPDF(caseData: Case): jsPDF {
 
   doc.setFont('helvetica', 'bold');
   doc.setFontSize(12);
-  doc.setTextColor(20, 20, 20);
+  doc.setTextColor(23, 25, 28); // Midnight Charcoal #17191C
   doc.text('EVIDENCE INDEX & CRYPTOGRAPHIC VERIFICATION', 40, y);
   y += 8;
 
   doc.setFont('helvetica', 'normal');
   doc.setFontSize(8.5);
-  doc.setTextColor(100, 100, 100);
+  doc.setTextColor(87, 98, 108); // Cool Steel Grey
   doc.text(
     'Each evidence file is fingerprinted locally via SHA-256 hash. Matches prove the file content has not been altered.',
     40,
@@ -162,17 +162,17 @@ export function generateProofPackPDF(caseData: Case): jsPDF {
       }
 
       doc.setFillColor(255, 255, 255);
-      doc.setDrawColor(220, 220, 220);
+      doc.setDrawColor(220, 225, 229); // Cool Steel Grey border
       doc.rect(40, y, pageWidth - 80, 36, 'S');
 
       doc.setFont('helvetica', 'bold');
       doc.setFontSize(9);
-      doc.setTextColor(30, 30, 30);
+      doc.setTextColor(23, 25, 28);
       doc.text(`${ev.name || 'Unnamed file'} (${((ev.size || 0) / 1024).toFixed(1)} KB, ${ev.mime || 'application/octet-stream'})`, 50, y + 14);
 
       doc.setFont('courier', 'normal');
       doc.setFontSize(7.5);
-      doc.setTextColor(100, 100, 100);
+      doc.setTextColor(87, 98, 108);
       doc.text(`SHA-256: ${ev.sha256 || 'Hash not calculated'}`, 50, y + 26);
 
       y += 44;
@@ -181,11 +181,11 @@ export function generateProofPackPDF(caseData: Case): jsPDF {
 
   // Footer / Disclaimer
   const footerY = doc.internal.pageSize.getHeight() - 35;
-  doc.setDrawColor(230, 230, 230);
+  doc.setDrawColor(220, 225, 229);
   doc.line(40, footerY - 10, pageWidth - 40, footerY - 10);
   doc.setFont('helvetica', 'normal');
   doc.setFontSize(7.5);
-  doc.setTextColor(140, 140, 140);
+  doc.setTextColor(146, 157, 167); // Cool Steel Grey
   doc.text(
     'Self-generated consumer proof pack prepared via RESOLVE-ONE (resolve.one). Informational grievance dossier. Not legal representation.',
     40,

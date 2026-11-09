@@ -14,7 +14,7 @@ export const metadata: Metadata = {
 };
 
 export const viewport: Viewport = {
-  themeColor: '#C8372D',
+  themeColor: '#17191C',
   width: 'device-width',
   initialScale: 1,
 };
@@ -25,15 +25,15 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en" suppressHydrationWarning>
+    <html lang="en" className="light" suppressHydrationWarning>
       <head>
         <script
           dangerouslySetInnerHTML={{
-            __html: `if(typeof window!=='undefined'&&typeof window.__name==='undefined'){window.__name=function(t,v){try{Object.defineProperty(t,'name',{value:v,configurable:true})}catch(e){}return t;}};`,
+            __html: `document.documentElement.classList.remove('dark');if(typeof window!=='undefined'){try{localStorage.removeItem('resolve-one-theme');}catch(e){}}if(typeof window!=='undefined'&&typeof window.__name==='undefined'){window.__name=function(t,v){try{Object.defineProperty(t,'name',{value:v,configurable:true})}catch(e){}return t;}};`,
           }}
         />
       </head>
-      <body suppressHydrationWarning className="min-h-screen bg-surface-light-ground dark:bg-surface-dark-ground text-neutral-900 dark:text-neutral-100 font-sans antialiased selection:bg-brand-100 selection:text-brand-900">
+      <body suppressHydrationWarning className="min-h-screen bg-white text-charcoal font-sans antialiased selection:bg-coral-100 selection:text-coral-900">
         <ToastProvider>
           <DatabaseBootstrap>
             {children}

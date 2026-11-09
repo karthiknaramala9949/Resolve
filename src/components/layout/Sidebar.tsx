@@ -40,21 +40,21 @@ export const Sidebar: React.FC<SidebarProps> = ({ className }) => {
   return (
     <aside
       className={cn(
-        'w-64 shrink-0 flex flex-col justify-between border-r border-neutral-200 dark:border-neutral-800 bg-white dark:bg-surface-dark h-screen sticky top-0 px-4 py-5 select-none',
+        'w-64 shrink-0 flex flex-col justify-between border-r border-steel-grey-200 bg-white text-charcoal h-screen sticky top-0 px-4 py-5 select-none transition-colors duration-200 overflow-y-auto scroll-smooth',
         className
       )}
     >
       <div>
         {/* Brand / Logo */}
         <Link href="/" className="flex items-center gap-3 px-2 mb-6 group focus-visible:outline-none">
-          <div className="w-8 h-8 rounded-lg bg-brand-500 flex items-center justify-center text-white shadow-sm font-bold text-lg font-serif">
+          <div className="w-8 h-8 rounded-lg bg-coral flex items-center justify-center text-white shadow-xs font-bold text-lg font-serif">
             R
           </div>
           <div>
-            <span className="font-serif font-bold text-lg tracking-tight text-neutral-900 dark:text-neutral-100 group-hover:text-brand-600 dark:group-hover:text-brand-400 transition-colors">
+            <span className="font-serif font-bold text-lg tracking-tight text-charcoal group-hover:text-coral transition-colors">
               RESOLVE-ONE
             </span>
-            <span className="block text-[10px] uppercase tracking-wider text-neutral-600 dark:text-neutral-400 font-semibold">
+            <span className="block text-[10px] uppercase tracking-wider text-steel-grey-500 font-semibold">
               India Consumer Care
             </span>
           </div>
@@ -64,7 +64,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ className }) => {
         <div className="mb-6 px-1">
           <Link
             href="/app/cases?new=true"
-            className="inline-flex items-center justify-center gap-2 w-full py-2.5 px-4 rounded-xl bg-brand-500 hover:bg-brand-600 text-white font-medium text-sm shadow-sm transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500 active:scale-[0.98] leading-none min-h-[44px]"
+            className="inline-flex items-center justify-center gap-2 w-full py-2.5 px-4 rounded-xl bg-coral hover:bg-coral-600 text-white font-bold text-sm shadow-xs transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-coral active:scale-[0.98] leading-none min-h-[44px]"
           >
             <Plus className="w-4 h-4 shrink-0" />
             <span>Tell Us What Happened</span>
@@ -73,7 +73,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ className }) => {
 
         {/* Primary Navigation */}
         <div className="space-y-1">
-          <span className="px-3 text-[11px] font-semibold uppercase tracking-wider text-neutral-600 dark:text-neutral-400">
+          <span className="px-3 text-[11px] font-bold uppercase tracking-wider text-steel-grey-500">
             Core Workspace
           </span>
           <nav className="mt-2 space-y-1">
@@ -86,18 +86,18 @@ export const Sidebar: React.FC<SidebarProps> = ({ className }) => {
                   key={item.to}
                   href={item.to}
                   className={cn(
-                    'flex items-center justify-between px-3 py-2.5 rounded-lg text-sm font-medium transition-colors',
+                    'flex items-center justify-between px-3 py-2.5 rounded-xl text-sm font-medium transition-all group',
                     isActive
-                      ? 'bg-neutral-100 dark:bg-neutral-800 text-brand-600 dark:text-brand-400 font-semibold'
-                      : 'text-neutral-600 dark:text-neutral-400 hover:bg-neutral-50 dark:hover:bg-neutral-800/50 hover:text-neutral-900 dark:hover:text-neutral-100'
+                      ? 'bg-coral-50 text-coral font-bold border border-coral-200/60 shadow-2xs'
+                      : 'text-steel-grey-600 hover:bg-steel-grey-50 hover:text-charcoal'
                   )}
                 >
                   <div className="flex items-center gap-3">
-                    <Icon className="w-4 h-4 shrink-0" />
+                    <Icon className={cn('w-4 h-4 shrink-0 transition-colors', isActive ? 'text-coral' : 'text-steel-grey-400 group-hover:text-charcoal')} />
                     <span>{item.label}</span>
                   </div>
                   {item.badge !== undefined && item.badge > 0 && (
-                    <span className="text-[11px] font-mono font-semibold px-2 py-0.5 rounded-full bg-brand-50 dark:bg-brand-950/60 text-brand-700 dark:text-brand-300 border border-brand-200 dark:border-brand-800 leading-none shrink-0">
+                    <span className="text-[11px] font-mono font-bold px-2 py-0.5 rounded-full bg-coral text-white leading-none shrink-0 shadow-2xs">
                       {item.badge}
                     </span>
                   )}
@@ -108,8 +108,8 @@ export const Sidebar: React.FC<SidebarProps> = ({ className }) => {
         </div>
 
         {/* Secondary Navigation */}
-        <div className="mt-6 pt-4 border-t border-neutral-100 dark:border-neutral-800/80 space-y-1">
-          <span className="px-3 text-[11px] font-semibold uppercase tracking-wider text-neutral-600 dark:text-neutral-400">
+        <div className="mt-6 pt-4 border-t border-steel-grey-100 space-y-1">
+          <span className="px-3 text-[11px] font-bold uppercase tracking-wider text-steel-grey-500">
             Tools & Controls
           </span>
           <nav className="mt-2 space-y-1">
@@ -122,13 +122,13 @@ export const Sidebar: React.FC<SidebarProps> = ({ className }) => {
                   key={item.to}
                   href={item.to}
                   className={cn(
-                    'flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors',
+                    'flex items-center gap-3 px-3 py-2 rounded-xl text-sm font-medium transition-all group',
                     isActive
-                      ? 'bg-neutral-100 dark:bg-neutral-800 text-brand-600 dark:text-brand-400 font-semibold'
-                      : 'text-neutral-600 dark:text-neutral-400 hover:bg-neutral-50 dark:hover:bg-neutral-800/50 hover:text-neutral-900 dark:hover:text-neutral-100'
+                      ? 'bg-coral-50 text-coral font-bold border border-coral-200/60 shadow-2xs'
+                      : 'text-steel-grey-600 hover:bg-steel-grey-50 hover:text-charcoal'
                   )}
                 >
-                  <Icon className="w-4 h-4 shrink-0" />
+                  <Icon className={cn('w-4 h-4 shrink-0 transition-colors', isActive ? 'text-coral' : 'text-steel-grey-400 group-hover:text-charcoal')} />
                   <span>{item.label}</span>
                 </Link>
               );
@@ -138,8 +138,8 @@ export const Sidebar: React.FC<SidebarProps> = ({ className }) => {
       </div>
 
       {/* Footer: Storage Status */}
-      <div className="pt-4 border-t border-neutral-100 dark:border-neutral-800/80 space-y-3">
-        <div className="flex items-center justify-between px-2 text-xs text-neutral-500 dark:text-neutral-400">
+      <div className="pt-4 border-t border-steel-grey-100 space-y-3">
+        <div className="flex items-center justify-between px-2 text-xs text-steel-grey-600 font-medium">
           <div className="flex items-center gap-2">
             <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
             <span className="font-mono text-[11px]">IndexedDB Active</span>

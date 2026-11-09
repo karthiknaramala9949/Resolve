@@ -1,6 +1,6 @@
 /** @type {import('tailwindcss').Config} */
 export default {
-  darkMode: ['class'],
+  darkMode: false,
   content: [
     './src/**/*.{js,ts,jsx,tsx,mdx}',
   ],
@@ -14,71 +14,119 @@ export default {
     },
     extend: {
       colors: {
+        // Direct Core Palette Tokens
+        'steel-grey': {
+          DEFAULT: 'var(--color-steel-grey)',
+          50: '#F6F8F9',
+          100: '#EDF0F2',
+          200: '#DCE1E5',
+          300: '#BAC4CC',
+          400: '#929DA7',
+          500: '#717D88',
+          600: '#57626C',
+          700: '#424B53',
+          800: '#2E343A',
+          900: '#1D2226',
+        },
+        charcoal: {
+          DEFAULT: 'var(--color-charcoal)',
+          50: '#F3F4F4',
+          100: '#E3E4E6',
+          200: '#C2C5C9',
+          700: '#2C2F34',
+          800: '#1F2226',
+          900: '#17191C',
+          950: '#0E0F11',
+        },
+        coral: {
+          DEFAULT: 'var(--color-coral)',
+          50: '#FFF5F4',
+          100: '#FFEBE8',
+          200: '#FFD4CE',
+          300: '#FFAFA3',
+          400: '#FF7D6B',
+          500: '#FF4B32',
+          600: '#E63D25',
+          700: '#BF2B15',
+          800: '#992211',
+          900: '#7A1D0E',
+        },
+
+        // Brand maps directly to Vibrant Coral Orange
         brand: {
-          50: '#FDF3F2',
-          100: '#FBE4E2',
-          200: '#F6CCC8',
-          300: '#EEA69F',
-          400: '#E2766C',
-          500: '#C8372D', // Primary Brand Coral Red
-          600: '#B02920',
-          700: '#942018',
-          800: '#7B1D17',
-          900: '#671C17',
-          950: '#380B07',
+          DEFAULT: 'var(--color-coral)',
+          50: '#FFF5F4',
+          100: '#FFEBE8',
+          200: '#FFD4CE',
+          300: '#FFAFA3',
+          400: '#FF7D6B',
+          500: '#FF4B32', // Vibrant Coral Orange
+          600: '#E63D25',
+          700: '#BF2B15',
+          800: '#992211',
+          900: '#7A1D0E',
+          950: '#3D0B04',
         },
+
+        // Surface maps to clean white backgrounds & Cool Steel Grey borders
         surface: {
+          DEFAULT: '#FFFFFF',
           light: '#FFFFFF',
-          'light-subtle': '#F8F6F0',
-          'light-ground': '#FAF8F4',
-          'light-border': '#E7E2D8',
-          dark: '#1A1A1A',
-          'dark-subtle': '#242424',
-          'dark-ground': '#121212',
-          'dark-border': '#333333',
+          'light-subtle': '#F6F8F9',
+          'light-ground': '#FFFFFF',
+          'light-border': '#DCE1E5',
+          dark: '#FFFFFF', // Prevent black card blocks
+          'dark-subtle': '#F6F8F9',
+          'dark-ground': '#FFFFFF',
+          'dark-border': '#DCE1E5',
         },
+
+        // Neutral maps to Midnight Charcoal & Cool Steel Grey
+        neutral: {
+          50: '#F6F8F9',
+          100: '#EDF0F2',
+          200: '#DCE1E5',
+          300: '#BAC4CC',
+          400: '#929DA7', // Cool Steel Grey
+          500: '#57626C', // High-contrast secondary text (WCAG AA)
+          600: '#424B53', // Deep steel grey (> 7:1)
+          700: '#2E343A',
+          800: '#1F2226',
+          900: '#17191C', // Midnight Charcoal
+          950: '#0E0F11',
+        },
+
         semantic: {
           success: '#1B8755',
           'success-subtle': '#E8F5EE',
-          'success-dark': '#13623D',
           warning: '#B57700',
-          'warning-subtle': '#FEF7E6',
-          'warning-dark': '#8A5A00',
+          'warning-subtle': '#FEF7EA',
+          error: '#D32F2F',
+          'error-subtle': '#FDF2F2',
           info: '#1D70B8',
-          'info-subtle': '#EAF3FC',
-          'info-dark': '#155288',
+          'info-subtle': '#EDF4FC',
         }
       },
       fontFamily: {
-        serif: ['Instrument Serif', 'Fraunces', 'Georgia', 'serif'],
-        sans: ['Inter', 'system-ui', 'sans-serif'],
-        mono: ['JetBrains Mono', 'ui-monospace', 'monospace'],
-      },
-      fontSize: {
-        'micro': ['13px', '18px'],
-        'sm': ['14px', '20px'],
-        'base': ['16px', '24px'], // 16px minimum body
-        'lg': ['18px', '26px'],
-        'xl': ['20px', '28px'],
-        '2xl': ['24px', '32px'],
-        '3xl': ['32px', '40px'],
-        '4xl': ['48px', '56px'],
-        '5xl': ['72px', '80px'],
+        serif: ['var(--font-serif)', 'serif'],
+        sans: ['var(--font-sans)', 'sans-serif'],
+        mono: ['var(--font-mono)', 'monospace'],
       },
       borderRadius: {
+        '2xs': '2px',
+        'xs': '4px',
         'sm': '6px',
-        'md': '10px',
-        'lg': '14px',
-        'xl': '18px',
+        'md': '8px',
+        'lg': '12px',
+        'xl': '16px',
         '2xl': '24px',
       },
       boxShadow: {
-        'subtle': '0 1px 3px rgba(0, 0, 0, 0.05), 0 1px 2px rgba(0, 0, 0, 0.03)',
-        'elevated': '0 4px 14px rgba(0, 0, 0, 0.07), 0 2px 6px rgba(0, 0, 0, 0.04)',
-        'floating': '0 12px 32px rgba(0, 0, 0, 0.12), 0 4px 12px rgba(0, 0, 0, 0.06)',
+        'subtle': '0 1px 3px rgba(23, 25, 28, 0.05), 0 1px 2px rgba(23, 25, 28, 0.03)',
+        'elevated': '0 4px 14px rgba(23, 25, 28, 0.08), 0 2px 6px rgba(23, 25, 28, 0.04)',
+        'floating': '0 12px 32px rgba(23, 25, 28, 0.14), 0 4px 12px rgba(23, 25, 28, 0.06)',
       }
     },
   },
   plugins: [],
 }
-

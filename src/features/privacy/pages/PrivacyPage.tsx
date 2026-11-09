@@ -205,17 +205,17 @@ export const PrivacyPage: React.FC = () => {
           <ShieldCheck className="w-3.5 h-3.5" />
           <span>Zero-Telemetry & Absolute Local Ownership</span>
         </div>
-        <h2 className="text-2xl md:text-3xl font-bold font-serif text-neutral-900 dark:text-neutral-100">
-          Privacy & Data Trust
+        <h2 className="text-2xl md:text-3xl font-black font-sans text-charcoal tracking-tight">
+          Privacy & Data <span className="text-coral">Trust</span>
         </h2>
-        <p className="text-sm text-neutral-600 dark:text-neutral-400 mt-1 max-w-2xl">
+        <p className="text-sm text-steel-grey-600 mt-1 max-w-2xl font-normal">
           RESOLVE-ONE is local-first. We do not operate tracking trackers, remote customer databases, or telemetry. Your evidence and dispute data remain strictly on your device.
         </p>
       </div>
 
       {/* "What's Stored Where" Transparency Panel (Signature Feature #10) */}
       <Card variant="elevated" className="p-6 md:p-8 space-y-4">
-        <h3 className="text-lg font-bold font-serif text-neutral-900 dark:text-neutral-100">
+        <h3 className="text-lg font-bold font-serif text-charcoal">
           What is stored where?
         </h3>
 

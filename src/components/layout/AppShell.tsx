@@ -53,7 +53,7 @@ export const AppShell: React.FC<AppShellProps> = ({ children }) => {
   }, [isCommandPaletteOpen, openCommandPalette, closeCommandPalette]);
 
   return (
-    <div className="flex flex-col min-h-screen bg-surface-light-ground dark:bg-surface-dark-ground text-neutral-900 dark:text-neutral-100 selection:bg-brand-100 selection:text-brand-900">
+    <div className="flex flex-col min-h-screen bg-white text-charcoal selection:bg-coral-100 selection:text-coral-900 scroll-smooth">
       {/* Top Notification Banners in document flow */}
       <OfflineBanner />
       <StoragePersistenceBanner />
@@ -63,7 +63,7 @@ export const AppShell: React.FC<AppShellProps> = ({ children }) => {
         <Sidebar className="hidden md:flex" />
 
         {/* Main Content Area */}
-        <div className="flex-1 flex flex-col min-w-0 pb-20 md:pb-6">
+        <div className="flex-1 flex flex-col min-w-0 pb-20 md:pb-6 overflow-y-auto scroll-smooth">
           <Header />
           <main className="flex-1 p-4 md:p-8 max-w-7xl w-full mx-auto">
             {children}

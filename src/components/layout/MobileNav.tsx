@@ -37,7 +37,7 @@ export const MobileNav: React.FC = () => {
     <>
       <nav
         aria-label="Mobile Bottom Navigation"
-        className="md:hidden fixed bottom-0 left-0 right-0 z-40 bg-white/95 dark:bg-surface-dark/95 backdrop-blur-md border-t border-neutral-200 dark:border-neutral-800 px-2 py-1 flex items-center justify-around select-none pb-safe"
+        className="md:hidden fixed bottom-0 left-0 right-0 z-40 bg-white/95 dark:bg-surface-dark/95 backdrop-blur-md border-t border-neutral-200/90 dark:border-neutral-800 px-2 py-1 flex items-center justify-around select-none pb-safe"
       >
         {/* 1. Home */}
         <Link
@@ -45,8 +45,8 @@ export const MobileNav: React.FC = () => {
           className={cn(
             'flex flex-col items-center justify-center min-w-[56px] min-h-[48px] py-1 text-xs font-medium transition-colors',
             isHomeActive
-              ? 'text-brand-600 dark:text-brand-400 font-semibold'
-              : 'text-neutral-500 dark:text-neutral-400'
+              ? 'text-coral font-bold'
+              : 'text-neutral-500 hover:text-neutral-900 dark:text-neutral-400 dark:hover:text-white'
           )}
         >
           <Home className="w-5 h-5 mb-0.5" />
@@ -59,14 +59,14 @@ export const MobileNav: React.FC = () => {
           className={cn(
             'relative flex flex-col items-center justify-center min-w-[56px] min-h-[48px] py-1 text-xs font-medium transition-colors',
             isCasesActive
-              ? 'text-brand-600 dark:text-brand-400 font-semibold'
-              : 'text-neutral-500 dark:text-neutral-400'
+              ? 'text-coral font-bold'
+              : 'text-neutral-500 hover:text-neutral-900 dark:text-neutral-400 dark:hover:text-white'
           )}
         >
           <FolderKanban className="w-5 h-5 mb-0.5" />
           <span>Cases</span>
           {activeCaseCount > 0 && (
-            <span className="absolute top-1 right-2 w-4 h-4 rounded-full bg-brand-500 text-white text-[10px] font-bold inline-flex items-center justify-center leading-none select-none">
+            <span className="absolute top-1 right-2 w-4 h-4 rounded-full bg-coral text-white text-[10px] font-bold inline-flex items-center justify-center leading-none select-none">
               {activeCaseCount}
             </span>
           )}
@@ -76,7 +76,7 @@ export const MobileNav: React.FC = () => {
         <button
           type="button"
           onClick={() => router.push('/app/cases?new=true')}
-          className="flex flex-col items-center justify-center -mt-4 w-12 h-12 rounded-full bg-brand-500 text-white shadow-elevated hover:bg-brand-600 active:scale-95 transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500 shrink-0"
+          className="flex flex-col items-center justify-center -mt-4 w-12 h-12 rounded-full bg-coral text-white shadow-elevated hover:bg-coral-600 active:scale-95 transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-coral shrink-0"
           aria-label="Create new dispute case"
         >
           <Plus className="w-6 h-6 stroke-[2.5]" />
@@ -88,8 +88,8 @@ export const MobileNav: React.FC = () => {
           className={cn(
             'flex flex-col items-center justify-center min-w-[56px] min-h-[48px] py-1 text-xs font-medium transition-colors',
             isDocsActive
-              ? 'text-brand-600 dark:text-brand-400 font-semibold'
-              : 'text-neutral-500 dark:text-neutral-400'
+              ? 'text-coral font-bold'
+              : 'text-neutral-500 hover:text-neutral-900 dark:text-neutral-400 dark:hover:text-white'
           )}
         >
           <FileText className="w-5 h-5 mb-0.5" />
@@ -100,7 +100,7 @@ export const MobileNav: React.FC = () => {
         <button
           type="button"
           onClick={() => setIsMoreOpen(true)}
-          className="flex flex-col items-center justify-center min-w-[56px] min-h-[48px] py-1 text-xs font-medium text-neutral-500 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-neutral-100 transition-colors"
+          className="flex flex-col items-center justify-center min-w-[56px] min-h-[48px] py-1 text-xs font-medium text-neutral-500 hover:text-neutral-900 dark:text-neutral-400 dark:hover:text-white transition-colors"
         >
           <Menu className="w-5 h-5 mb-0.5" />
           <span>More</span>
@@ -118,9 +118,9 @@ export const MobileNav: React.FC = () => {
           <button
             type="button"
             onClick={() => handleMoreNavigation('/app/purchases')}
-            className="flex flex-col items-start p-4 rounded-xl border border-neutral-200 dark:border-neutral-800 bg-surface-light-subtle dark:bg-surface-dark-subtle hover:border-brand-300 text-left transition-colors"
+            className="flex flex-col items-start p-4 rounded-xl border border-neutral-200 dark:border-neutral-800 bg-neutral-50 dark:bg-surface-dark hover:border-coral text-left transition-colors"
           >
-            <ShoppingBag className="w-6 h-6 text-brand-500 mb-2" />
+            <ShoppingBag className="w-6 h-6 text-coral mb-2" />
             <span className="font-semibold text-sm text-neutral-900 dark:text-neutral-100">Purchases</span>
             <span className="text-xs text-neutral-500 dark:text-neutral-400 mt-0.5">Orders & return countdown</span>
           </button>
@@ -128,7 +128,7 @@ export const MobileNav: React.FC = () => {
           <button
             type="button"
             onClick={() => handleMoreNavigation('/app/help')}
-            className="flex flex-col items-start p-4 rounded-xl border border-neutral-200 dark:border-neutral-800 bg-surface-light-subtle dark:bg-surface-dark-subtle hover:border-brand-300 text-left transition-colors"
+            className="flex flex-col items-start p-4 rounded-xl border border-neutral-200 dark:border-neutral-800 bg-neutral-50 dark:bg-surface-dark hover:border-coral text-left transition-colors"
           >
             <HelpCircle className="w-6 h-6 text-blue-500 mb-2" />
             <span className="font-semibold text-sm text-neutral-900 dark:text-neutral-100">Help & Rights</span>
@@ -138,7 +138,7 @@ export const MobileNav: React.FC = () => {
           <button
             type="button"
             onClick={() => handleMoreNavigation('/app/reminders')}
-            className="flex flex-col items-start p-4 rounded-xl border border-neutral-200 dark:border-neutral-800 bg-surface-light-subtle dark:bg-surface-dark-subtle hover:border-brand-300 text-left transition-colors"
+            className="flex flex-col items-start p-4 rounded-xl border border-neutral-200 dark:border-neutral-800 bg-neutral-50 dark:bg-surface-dark hover:border-coral text-left transition-colors"
           >
             <Clock className="w-6 h-6 text-amber-500 mb-2" />
             <span className="font-semibold text-sm text-neutral-900 dark:text-neutral-100">Reminders</span>
@@ -148,7 +148,7 @@ export const MobileNav: React.FC = () => {
           <button
             type="button"
             onClick={() => handleMoreNavigation('/app/privacy')}
-            className="flex flex-col items-start p-4 rounded-xl border border-neutral-200 dark:border-neutral-800 bg-surface-light-subtle dark:bg-surface-dark-subtle hover:border-brand-300 text-left transition-colors"
+            className="flex flex-col items-start p-4 rounded-xl border border-neutral-200 dark:border-neutral-800 bg-neutral-50 dark:bg-surface-dark hover:border-coral text-left transition-colors"
           >
             <ShieldCheck className="w-6 h-6 text-emerald-500 mb-2" />
             <span className="font-semibold text-sm text-neutral-900 dark:text-neutral-100">Privacy & Data</span>

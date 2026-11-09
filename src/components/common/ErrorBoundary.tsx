@@ -73,8 +73,8 @@ export class ErrorBoundary extends Component<Props, State> {
   render() {
     if (this.state.hasError) {
       return (
-        <div className="min-h-screen bg-[#FAF8F4] dark:bg-[#121212] text-neutral-900 dark:text-neutral-100 flex items-center justify-center p-4">
-          <div className="max-w-xl w-full bg-white dark:bg-[#1E1E1E] rounded-2xl border border-neutral-200 dark:border-neutral-800 p-8 shadow-xl space-y-6">
+        <div className="min-h-screen bg-surface-light-ground dark:bg-surface-dark-ground text-neutral-900 dark:text-neutral-100 flex items-center justify-center p-4">
+          <div className="max-w-xl w-full bg-white dark:bg-surface-dark rounded-2xl border border-neutral-200 dark:border-neutral-800 p-8 shadow-xl space-y-6">
             <div className="flex items-center gap-3 text-red-600 dark:text-red-400">
               <div className="w-12 h-12 rounded-xl bg-red-100 dark:bg-red-950/60 flex items-center justify-center shrink-0">
                 <AlertOctagon className="w-6 h-6" />

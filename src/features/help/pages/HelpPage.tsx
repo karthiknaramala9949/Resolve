@@ -63,42 +63,42 @@ export const HelpPage: React.FC = () => {
   return (
     <div className="space-y-8 animate-in fade-in duration-300">
       <div>
-        <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-blue-100/60 dark:bg-blue-950/60 text-blue-800 dark:text-blue-300 text-xs font-semibold mb-2">
-          <BookOpen className="w-3.5 h-3.5" />
+        <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-steel-grey-50 text-steel-grey-700 border border-steel-grey-200 text-xs font-semibold mb-2">
+          <BookOpen className="w-3.5 h-3.5 text-coral" />
           <span>India Official Consumer Rights & Routes</span>
         </div>
-        <h2 className="text-2xl md:text-3xl font-bold font-serif text-neutral-900 dark:text-neutral-100">
-          Know Your Official Grievance Routes
+        <h2 className="text-2xl md:text-3xl font-black font-sans text-charcoal tracking-tight">
+          Know Your Official Grievance <span className="text-coral">Routes</span>
         </h2>
-        <p className="text-sm text-neutral-600 dark:text-neutral-400 mt-1 max-w-2xl">
+        <p className="text-sm text-steel-grey-600 mt-1 max-w-2xl font-normal">
           Plain-language verified guidance for Indian consumers. General informational starting points, not legal advice. Always check official government portals.
         </p>
       </div>
 
       {/* Decision Tree: Which Route Fits? (Signature Feature #8) */}
-      <Card variant="elevated" className="border-l-4 border-l-brand-500 p-6 space-y-4">
+      <Card variant="elevated" className="border border-steel-grey-200 border-l-4 border-l-coral bg-white p-6 rounded-2xl shadow-xs space-y-4">
         <div>
-          <span className="text-xs font-bold uppercase tracking-wider text-brand-600 dark:text-brand-400">
+          <span className="text-xs font-bold uppercase tracking-wider text-coral">
             Interactive Route Decision Tree
           </span>
-          <h3 className="text-lg font-bold text-neutral-900 dark:text-neutral-100 mt-1">
+          <h3 className="text-lg font-bold text-charcoal mt-1">
             Which route fits your problem?
           </h3>
-          <p className="text-sm text-neutral-600 dark:text-neutral-300 mt-0.5">
+          <p className="text-sm text-steel-grey-600 mt-0.5">
             Answer 2 quick factual questions to find whether company escalation, NCH 1915, RBI Ombudsman, or e-Jagriti is appropriate.
           </p>
         </div>
 
         {decisionStep === null && (
-          <Button variant="primary" size="md" onClick={() => setDecisionStep(1)}>
+          <Button variant="primary" size="md" onClick={() => setDecisionStep(1)} className="shadow-sm">
             <span>Start Decision Tree</span>
             <ArrowRight className="w-4 h-4 shrink-0" />
           </Button>
         )}
 
         {decisionStep === 1 && (
-          <div className="p-5 rounded-xl bg-white dark:bg-surface-dark border border-neutral-200 dark:border-neutral-800 space-y-4 animate-in fade-in">
-            <h4 className="text-sm font-semibold text-neutral-900 dark:text-neutral-100">
+          <div className="p-5 rounded-xl bg-steel-grey-50/50 border border-steel-grey-200 space-y-4 animate-in fade-in">
+            <h4 className="text-sm font-bold text-charcoal">
               Question 1: Have you already lodged a formal complaint with the company's customer care?
             </h4>
             <div className="flex flex-wrap gap-3">
@@ -113,12 +113,12 @@ export const HelpPage: React.FC = () => {
         )}
 
         {decisionStep === 101 && (
-          <div className="p-5 rounded-xl bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-900 space-y-3 animate-in fade-in">
-            <div className="flex items-center gap-2 text-amber-800 dark:text-amber-300 font-bold text-sm">
+          <div className="p-5 rounded-xl bg-amber-50 border border-amber-200 space-y-3 animate-in fade-in">
+            <div className="flex items-center gap-2 text-amber-800 font-bold text-sm">
               <ShieldCheck className="w-4 h-4" />
               <span>Recommended First Step: Lodge Formal Ticket with Merchant</span>
             </div>
-            <p className="text-xs text-amber-800 dark:text-amber-300 leading-relaxed">
+            <p className="text-xs text-amber-800 leading-relaxed font-normal">
               Under Indian consumer law and NCH rules, statutory commissions require proof that you first gave the merchant an opportunity to rectify the issue. Use our Proof Pack builder to generate a formal complaint letter and submit it via the merchant's support channel.
             </p>
             <Button variant="secondary" size="sm" onClick={() => setDecisionStep(null)}>
@@ -129,8 +129,8 @@ export const HelpPage: React.FC = () => {
         )}
 
         {decisionStep === 2 && (
-          <div className="p-5 rounded-xl bg-white dark:bg-surface-dark border border-neutral-200 dark:border-neutral-800 space-y-4 animate-in fade-in">
-            <h4 className="text-sm font-semibold text-neutral-900 dark:text-neutral-100">
+          <div className="p-5 rounded-xl bg-steel-grey-50/50 border border-steel-grey-200 space-y-4 animate-in fade-in">
+            <h4 className="text-sm font-bold text-charcoal">
               Question 2: What is the current status of the dispute?
             </h4>
             <div className="flex flex-wrap gap-2.5">
@@ -148,12 +148,12 @@ export const HelpPage: React.FC = () => {
         )}
 
         {decisionStep === 201 && (
-          <div className="p-5 rounded-xl bg-blue-50 dark:bg-blue-950/40 border border-blue-200 dark:border-blue-900 space-y-3 animate-in fade-in">
-            <div className="flex items-center gap-2 text-blue-900 dark:text-blue-200 font-bold text-sm">
+          <div className="p-5 rounded-xl bg-blue-50 border border-blue-200 space-y-3 animate-in fade-in">
+            <div className="flex items-center gap-2 text-blue-900 font-bold text-sm">
               <Phone className="w-4 h-4 text-blue-600" />
               <span>Best Route: National Consumer Helpline (NCH - 1915)</span>
             </div>
-            <p className="text-xs text-blue-800 dark:text-blue-300 leading-relaxed">
+            <p className="text-xs text-blue-800 leading-relaxed font-normal">
               NCH handles pre-litigation convergence for consumer durables and e-commerce. Call 1915 or register your docket online at consumerhelpline.gov.in. Include your order ID and invoice proof pack.
             </p>
             <div className="flex items-center gap-3 pt-1">
@@ -174,12 +174,12 @@ export const HelpPage: React.FC = () => {
         )}
 
         {decisionStep === 202 && (
-          <div className="p-5 rounded-xl bg-purple-50 dark:bg-purple-950/40 border border-purple-200 dark:border-purple-900 space-y-3 animate-in fade-in">
-            <div className="flex items-center gap-2 text-purple-900 dark:text-purple-200 font-bold text-sm">
+          <div className="p-5 rounded-xl bg-purple-50 border border-purple-200 space-y-3 animate-in fade-in">
+            <div className="flex items-center gap-2 text-purple-900 font-bold text-sm">
               <Scale className="w-4 h-4 text-purple-600" />
               <span>Best Route: Bank Grievance Officer & RBI Integrated Ombudsman</span>
             </div>
-            <p className="text-xs text-purple-800 dark:text-purple-300 leading-relaxed">
+            <p className="text-xs text-purple-800 leading-relaxed font-normal">
               If the store provided a 12-digit UTR/RRN number, request a Written Beneficiary Confirmation from your bank. If the bank fails to trace or credit the funds within 30 days, lodge a complaint with the RBI Ombudsman at cms.rbi.org.in or call 14448.
             </p>
             <div className="flex items-center gap-3 pt-1">
@@ -200,12 +200,12 @@ export const HelpPage: React.FC = () => {
         )}
 
         {decisionStep === 203 && (
-          <div className="p-5 rounded-xl bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-900 space-y-3 animate-in fade-in">
-            <div className="flex items-center gap-2 text-emerald-900 dark:text-emerald-200 font-bold text-sm">
+          <div className="p-5 rounded-xl bg-emerald-50 border border-emerald-200 space-y-3 animate-in fade-in">
+            <div className="flex items-center gap-2 text-emerald-900 font-bold text-sm">
               <FileCheck className="w-4 h-4 text-emerald-600" />
               <span>Best Route: e-Jagriti (District Consumer Commission)</span>
             </div>
-            <p className="text-xs text-emerald-800 dark:text-emerald-300 leading-relaxed">
+            <p className="text-xs text-emerald-800 leading-relaxed font-normal">
               When informal mediation via NCH fails, file a formal complaint under Section 35 of the Consumer Protection Act, 2019 via the official e-Jagriti portal. Consumers can file in their own district without hiring an advocate.
             </p>
             <div className="flex items-center gap-3 pt-1">
@@ -229,14 +229,14 @@ export const HelpPage: React.FC = () => {
       {/* Official Directory Cards with Cited, Dated Sources */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
         {officialRoutes.map((r) => (
-          <Card key={r.id} variant="default" className="p-6 flex flex-col justify-between space-y-4">
+          <Card key={r.id} variant="default" className="p-6 flex flex-col justify-between space-y-4 bg-white border border-steel-grey-200 rounded-2xl shadow-xs hover:border-steel-grey-300 hover:shadow-sm transition-all">
             <div>
               <div className="flex items-center justify-between text-xs mb-2">
-                <span className="font-semibold text-neutral-600 dark:text-neutral-300 uppercase tracking-wider text-[10px]">
+                <span className="font-bold text-steel-grey-600 uppercase tracking-wider text-[10px]">
                   {r.legalStatus}
                 </span>
                 {r.verifyBeforeLaunch && (
-                  <span className="px-1.5 py-0.5 rounded text-[10px] font-semibold bg-amber-100 dark:bg-amber-950 text-amber-800 dark:text-amber-300 border border-amber-300 dark:border-amber-800">
+                  <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-amber-50 text-amber-800 border border-amber-200">
                     Verify before launch
                   </span>
                 )}
@@ -244,31 +244,31 @@ export const HelpPage: React.FC = () => {
 
               <div className="text-[11px] mb-2">
                 {r.lastVerifiedAt ? (
-                  <span className="text-neutral-500">
+                  <span className="text-steel-grey-500">
                     Verified {new Date(r.lastVerifiedAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}
                   </span>
                 ) : (
-                  <span className="text-amber-800 dark:text-amber-300 font-medium">
+                  <span className="text-amber-800 font-medium">
                     Not yet verified: open the official site to confirm
                   </span>
                 )}
               </div>
 
-              <h3 className="text-lg font-bold text-neutral-900 dark:text-neutral-100">
+              <h3 className="text-lg font-bold text-charcoal">
                 {r.title}
               </h3>
-              <p className="text-xs font-semibold text-brand-600 dark:text-brand-400 mt-0.5">
+              <p className="text-xs font-medium text-steel-grey-500 mt-0.5">
                 {r.tagline}
               </p>
 
-              <p className="mt-3 text-sm text-neutral-600 dark:text-neutral-300 leading-relaxed">
+              <p className="mt-3 text-sm text-steel-grey-600 leading-relaxed font-normal">
                 {r.description}
               </p>
             </div>
 
-            <div className="pt-4 border-t border-neutral-100 dark:border-neutral-800 space-y-3">
-              <div className="flex items-center gap-2 text-xs font-medium text-neutral-800 dark:text-neutral-200">
-                <Phone className="w-3.5 h-3.5 text-neutral-400 shrink-0" />
+            <div className="pt-4 border-t border-steel-grey-100 space-y-3">
+              <div className="flex items-center gap-2 text-xs font-medium text-charcoal">
+                <Phone className="w-3.5 h-3.5 text-coral shrink-0" />
                 <span>{r.contact}</span>
               </div>
 
@@ -276,10 +276,10 @@ export const HelpPage: React.FC = () => {
                 href={r.sourceUrl || r.webUrl}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="inline-flex items-center justify-center gap-1.5 w-full py-2.5 px-3 rounded-lg border border-neutral-300 dark:border-neutral-700 text-xs font-semibold text-neutral-800 dark:text-neutral-200 hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-colors leading-none min-h-[44px]"
+                className="inline-flex items-center justify-center gap-1.5 w-full py-2.5 px-3 rounded-xl border border-steel-grey-200 bg-steel-grey-50 text-xs font-bold text-charcoal hover:border-coral hover:text-coral transition-all leading-none min-h-[44px]"
               >
                 <span>Visit Official Government Site</span>
-                <ExternalLink className="w-3.5 h-3.5 shrink-0" />
+                <ExternalLink className="w-3.5 h-3.5 shrink-0 text-coral" />
               </a>
             </div>
           </Card>

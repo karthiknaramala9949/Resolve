@@ -9,19 +9,19 @@ export const Card = React.forwardRef<HTMLDivElement, CardProps>(
   ({ className, variant = 'default', children, ...props }, ref) => {
     const variants = {
       default:
-        'bg-white dark:bg-surface-dark border border-neutral-200 dark:border-neutral-800 shadow-subtle',
+        'bg-white border border-steel-grey-200 shadow-xs',
       subtle:
-        'bg-surface-light-subtle dark:bg-surface-dark-subtle border border-neutral-200/80 dark:border-neutral-800/80',
+        'bg-steel-grey-50 border border-steel-grey-200',
       elevated:
-        'bg-white dark:bg-surface-dark border border-neutral-200/60 dark:border-neutral-800/60 shadow-elevated',
+        'bg-white border border-steel-grey-200 shadow-sm',
       interactive:
-        'bg-white dark:bg-surface-dark border border-neutral-200 dark:border-neutral-800 shadow-subtle hover:shadow-elevated hover:border-neutral-300 dark:hover:border-neutral-700 transition-all cursor-pointer',
+        'bg-white border border-steel-grey-200 shadow-xs hover:border-steel-grey-300 hover:shadow-sm transition-all cursor-pointer',
     };
 
     return (
       <div
         ref={ref}
-        className={cn('rounded-xl p-5 text-neutral-900 dark:text-neutral-100', variants[variant], className)}
+        className={cn('rounded-2xl p-5 text-charcoal', variants[variant], className)}
         {...props}
       >
         {children}
@@ -30,4 +30,3 @@ export const Card = React.forwardRef<HTMLDivElement, CardProps>(
   }
 );
 Card.displayName = 'Card';
-

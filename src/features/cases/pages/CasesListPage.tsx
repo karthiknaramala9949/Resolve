@@ -54,10 +54,10 @@ export const CasesListPage: React.FC = () => {
       {/* Top Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h2 className="text-2xl font-bold font-serif text-neutral-900 dark:text-neutral-100">
-            My Cases
+          <h2 className="text-2xl font-black font-sans text-charcoal tracking-tight">
+            Dispute <span className="text-coral">Cases</span>
           </h2>
-          <p className="text-sm text-neutral-600 dark:text-neutral-400 mt-1">
+          <p className="text-sm text-steel-grey-600 mt-1 font-normal">
             Track and resolve consumer disputes step-by-step.
           </p>
         </div>

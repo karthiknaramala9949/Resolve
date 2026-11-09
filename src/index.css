@@ -4,15 +4,54 @@
 
 @layer base {
   :root {
-    --background: 40 33% 97%; /* #FAF8F4 */
-    --surface: 0 0% 100%;
-    --surface-subtle: 42 22% 95%; /* #F5F2EB */
-    --surface-border: 38 18% 88%; /* #E7E2D8 */
-    --foreground: 0 0% 10%;
-    --foreground-muted: 0 0% 40%;
+    /* Central Color Palette Definition */
+    --color-steel-grey: #929DA7;
+    --color-charcoal: #17191C;
+    --color-coral: #FF4B32;
+
+    /* Cool Steel Grey Scale */
+    --color-steel-grey-50: #F6F8F9;
+    --color-steel-grey-100: #EDF0F2;
+    --color-steel-grey-200: #DCE1E5;
+    --color-steel-grey-300: #BAC4CC;
+    --color-steel-grey-400: #929DA7;
+    --color-steel-grey-500: #717D88;
+    --color-steel-grey-600: #57626C;
+    --color-steel-grey-700: #424B53;
+    --color-steel-grey-800: #2E343A;
+    --color-steel-grey-900: #1D2226;
+
+    /* Midnight Charcoal Scale */
+    --color-charcoal-50: #F3F4F4;
+    --color-charcoal-100: #E3E4E6;
+    --color-charcoal-200: #C2C5C9;
+    --color-charcoal-700: #2C2F34;
+    --color-charcoal-800: #1F2226;
+    --color-charcoal-900: #17191C;
+    --color-charcoal-950: #0E0F11;
+
+    /* Vibrant Coral Orange Scale */
+    --color-coral-50: #FFF5F4;
+    --color-coral-100: #FFEBE8;
+    --color-coral-200: #FFD4CE;
+    --color-coral-300: #FFAFA3;
+    --color-coral-400: #FF7D6B;
+    --color-coral-500: #FF4B32;
+    --color-coral-600: #E63D25;
+    --color-coral-700: #BF2B15;
+    --color-coral-800: #992211;
+    --color-coral-900: #7A1D0E;
+
+    /* Semantic CSS Variables mapped to new palette */
+    --background: 210 20% 98%; /* #F6F8F9 Cool Steel Grey tint */
+    --surface: 0 0% 100%; /* #FFFFFF */
+    --surface-subtle: 204 18% 97%; /* #EDF0F2 */
+    --surface-border: 206 14% 88%; /* #DCE1E5 */
+    --foreground: 216 10% 10%; /* #17191C Midnight Charcoal */
+    --foreground-muted: 210 11% 38%; /* #57626C WCAG AA Secondary Text */
     
-    --brand-primary: 5 63% 48%; /* #C8372D */
-    --brand-hover: 5 69% 41%;
+    --brand-primary: 8 100% 60%; /* #FF4B32 Vibrant Coral Orange */
+    --brand-hover: 8 85% 52%; /* #E63D25 */
     
     --success: 153 67% 32%; /* #1B8755 */
     --success-bg: 147 48% 95%;
@@ -25,31 +64,67 @@
   }
 
   .dark {
-    --background: 0 0% 7%; /* #121212 */
-    --surface: 0 0% 11%; /* #1C1C1C */
-    --surface-subtle: 0 0% 15%; /* #262626 */
-    --surface-border: 0 0% 21%; /* #353535 */
-    --foreground: 0 0% 95%;
-    --foreground-muted: 0 0% 65%;
+    --background: 210 20% 98%; /* #F6F8F9 */
+    --surface: 0 0% 100%; /* #FFFFFF */
+    --surface-subtle: 204 18% 97%; /* #EDF0F2 */
+    --surface-border: 206 14% 88%; /* #DCE1E5 */
+    --foreground: 216 10% 10%; /* #17191C Midnight Charcoal */
+    --foreground-muted: 210 11% 38%; /* #57626C WCAG AA Secondary Text */
     
-    --brand-primary: 5 72% 56%; /* #E04B40 */
-    --brand-hover: 5 75% 62%;
+    --brand-primary: 8 100% 60%; /* #FF4B32 */
+    --brand-hover: 8 85% 52%; /* #E63D25 */
     
-    --success: 153 60% 45%;
-    --success-bg: 153 50% 12%;
+    --success: 153 67% 32%;
+    --success-bg: 147 48% 95%;
     
-    --warning: 40 90% 50%;
-    --warning-bg: 40 50% 12%;
+    --warning: 40 100% 35%;
+    --warning-bg: 43 92% 95%;
     
-    --info: 208 75% 55%;
-    --info-bg: 208 50% 12%;
+    --info: 208 73% 42%;
+    --info-bg: 211 73% 96%;
+  }
+
+  html {
+    scroll-behavior: smooth;
   }
 
   body {
     font-feature-settings: "cv02", "cv03", "cv04", "cv11";
     font-size: 16px; /* 16px minimum body */
     line-height: 1.5;
+    background-color: #FFFFFF;
+    color: var(--color-charcoal);
+    scroll-behavior: smooth;
+    -webkit-overflow-scrolling: touch;
   }
+}
+
+/* Modern smooth scrollbar */
+::-webkit-scrollbar {
+  width: 7px;
+  height: 7px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #DCE1E5;
+  border-radius: 9999px;
+  transition: background-color 0.2s ease;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #BAC4CC;
+}
+
+.dark ::-webkit-scrollbar-thumb {
+  background: #2C2F34;
+}
+
+.dark ::-webkit-scrollbar-thumb:hover {
+  background: #424B53;
 }
 
 .tabular-nums {
@@ -65,4 +140,3 @@
     scroll-behavior: auto !important;
   }
 }
-
