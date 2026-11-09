@@ -23,9 +23,9 @@
 | **/** (Landing) | Situation Card: "Refund stuck" | Opens intake pre-filled with refund narrative | Yes | `tests/e2e/interactions.spec.ts` |
 | **/** (Landing) | Situation Card: "Damaged item" | Opens intake pre-filled with damaged item narrative | Yes | `tests/e2e/interactions.spec.ts` |
 | **/** (Landing) | Situation Card: "Rejected return" | Opens intake pre-filled with return dispute narrative | Yes | `tests/e2e/interactions.spec.ts` |
-| **/** (Landing) | NCH Official Site Link | Opens `https://consumerhelpline.gov.in` in new tab | Yes | `tests/verify_phase0.js` |
-| **/** (Landing) | e-Jagriti Official Site Link | Opens `https://e-jagriti.gov.in/` in new tab | Yes | `tests/verify_phase0.js` |
-| **/** (Landing) | RBI Ombudsman Site Link | Opens `https://cms.rbi.org.in` in new tab | Yes | `tests/verify_phase0.js` |
+| **/** (Landing) | NCH Official Site Link | Opens `https://consumerhelpline.gov.in` in new tab | Yes | `tests/e2e/interactions.spec.ts` |
+| **/** (Landing) | e-Jagriti Official Site Link | Opens `https://e-jagriti.gov.in/` in new tab | Yes | `tests/e2e/interactions.spec.ts` |
+| **/** (Landing) | RBI Ombudsman Site Link | Opens `https://cms.rbi.org.in` in new tab | Yes | `tests/e2e/interactions.spec.ts` |
 | **/** (Landing) | FAQ Accordion Question Toggles (8 items) | Expands / collapses accessible FAQ answers | Yes | `tests/e2e/interactions.spec.ts` |
 | **/** (Landing) | Bottom CTA ("Start in 60 Seconds") | Navigates to `/app/cases?new=true` | Yes | `tests/e2e/interactions.spec.ts` |
 | **/** (Landing) | Footer Links & Language Switcher | Smooth-scrolls or changes language | Yes | `tests/e2e/interactions.spec.ts` |
@@ -52,8 +52,8 @@
 | **Intake Modal** | Story Textarea | Live parser extracts chips as user types | Yes | `tests/e2e/interactions.spec.ts` |
 | **Intake Modal** | Sample Chip: "Refund not received" | Injects refund dispute sample narrative | Yes | `tests/e2e/interactions.spec.ts` |
 | **Intake Modal** | Sample Chip: "Defective item rejected" | Injects damaged goods sample narrative | Yes | `tests/e2e/interactions.spec.ts` |
-| **Intake Modal** | Microphone Button | Prompts explicit voice transcription opt-in notice | Yes | `tests/verify_phase0.js` |
-| **Intake Modal** | Voice Opt-in "Cancel, I will type" | Closes voice notice without enabling microphone | Yes | `tests/verify_phase0.js` |
+| **Intake Modal** | Microphone Button | Prompts explicit voice transcription opt-in notice | Yes | `tests/e2e/interactions.spec.ts` |
+| **Intake Modal** | Voice Opt-in "Cancel, I will type" | Closes voice notice without enabling microphone | Yes | `tests/e2e/interactions.spec.ts` |
 | **Intake Modal** | Voice Opt-in "I understand, start microphone" | Starts browser SpeechRecognition transcription | Yes | `tests/e2e/interactions.spec.ts` |
 | **Intake Modal** | Company Chip Edit Toggle | Opens inline editor to correct merchant name | Yes | `tests/e2e/interactions.spec.ts` |
 | **Intake Modal** | Issue Type Chip Edit Toggle | Opens dropdown to select dispute category | Yes | `tests/e2e/interactions.spec.ts` |
@@ -89,7 +89,7 @@
 | **/app/help** | "Start Decision Tree" Button | Starts interactive 2-step route evaluation | Yes | `tests/e2e/interactions.spec.ts` |
 | **/app/help** | Decision Tree Option Buttons | Navigates between factual triage steps | Yes | `tests/e2e/interactions.spec.ts` |
 | **/app/help** | Decision Tree "Back" / "Reset" Buttons | Resets decision evaluation state | Yes | `tests/e2e/interactions.spec.ts` |
-| **/app/help** | Guide Card "Visit Official Site" Links | Opens NCH, e-Jagriti, and RBI official portals | Yes | `tests/verify_phase0.js` |
+| **/app/help** | Guide Card "Visit Official Site" Links | Opens NCH, e-Jagriti, and RBI official portals | Yes | `tests/e2e/interactions.spec.ts` |
 | **/app/reminders** | "Enable Notifications" Button | Triggers browser `Notification.requestPermission()` | Yes | `tests/e2e/interactions.spec.ts` |
 | **/app/reminders** | "+ New Reminder" Button | Opens reminder scheduling drawer | Yes | `tests/e2e/interactions.spec.ts` |
 | **/app/reminders** | Smart Suggestion Chips ("+7 Days", "+3 Days") | Pre-fills turnaround dates and recommended action | Yes | `tests/e2e/interactions.spec.ts` |

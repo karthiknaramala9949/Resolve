@@ -10,7 +10,6 @@ import enPurchases from '@/locales/en/purchases.json';
 import enHelp from '@/locales/en/help.json';
 import enReminders from '@/locales/en/reminders.json';
 import enPrivacy from '@/locales/en/privacy.json';
-import enSettings from '@/locales/en/settings.json';
 
 // Hindi
 import hiCommon from '@/locales/hi/common.json';
@@ -21,7 +20,6 @@ import hiPurchases from '@/locales/hi/purchases.json';
 import hiHelp from '@/locales/hi/help.json';
 import hiReminders from '@/locales/hi/reminders.json';
 import hiPrivacy from '@/locales/hi/privacy.json';
-import hiSettings from '@/locales/hi/settings.json';
 
 // Telugu
 import teCommon from '@/locales/te/common.json';
@@ -32,7 +30,6 @@ import tePurchases from '@/locales/te/purchases.json';
 import teHelp from '@/locales/te/help.json';
 import teReminders from '@/locales/te/reminders.json';
 import tePrivacy from '@/locales/te/privacy.json';
-import teSettings from '@/locales/te/settings.json';
 
 export const resources = {
   en: {
@@ -45,7 +42,6 @@ export const resources = {
     help: enHelp,
     reminders: enReminders,
     privacy: enPrivacy,
-    settings: enSettings,
   },
   hi: {
     common: hiCommon,
@@ -57,7 +53,6 @@ export const resources = {
     help: hiHelp,
     reminders: hiReminders,
     privacy: hiPrivacy,
-    settings: hiSettings,
   },
   te: {
     common: teCommon,
@@ -69,7 +64,6 @@ export const resources = {
     help: teHelp,
     reminders: teReminders,
     privacy: tePrivacy,
-    settings: teSettings,
   },
 };
 
@@ -93,7 +87,6 @@ i18n.use(initReactI18next).init({
     'help',
     'reminders',
     'privacy',
-    'settings',
   ],
   interpolation: {
     escapeValue: false,

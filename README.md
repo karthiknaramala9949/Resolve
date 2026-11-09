@@ -110,8 +110,17 @@ Open [http://localhost:3000](http://localhost:3000) in your browser.
 # Run unit & accessibility tests (34 test cases)
 npm test
 
-# Run Playwright End-to-End user lifecycle verification
-node tests/run_e2e.js
+# Run Playwright End-to-End user interaction suite
+npx tsx tests/e2e/interactions.spec.ts
+
+# Run multilingual zero-leftover-English test
+npx tsx tests/e2e/language_switch.spec.ts
+
+# Run full WCAG 2.2 AA accessibility audit & harsh environment tests
+npx tsx tests/e2e/phase4_audit.ts
+
+# Run no-dead-click sweep across all interactive elements
+npx tsx tests/e2e/no_dead_clicks.ts
 ```
 
 ### Production Build

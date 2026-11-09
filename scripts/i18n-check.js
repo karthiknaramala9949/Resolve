@@ -13,7 +13,6 @@ const namespaces = [
   'help',
   'reminders',
   'privacy',
-  'settings',
 ];
 
 console.log('===========================================================');
