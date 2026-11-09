@@ -8,7 +8,6 @@
     "build": "next build",
     "start": "next start -H 0.0.0.0 -p 3000",
     "preview": "next start -H 0.0.0.0 -p 3000",
-    "i18n:check": "node scripts/i18n-check.js",
     "test": "vitest run",
     "test:watch": "vitest"
   },

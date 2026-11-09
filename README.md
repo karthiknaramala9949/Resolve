@@ -38,9 +38,8 @@ RESOLVE-ONE rebuilds the monolithic single-file prototype into a production-grad
   - `Purchases` (`/app/purchases`): Return window and warranty countdown rings, purchase vault, and 1-click case creation.
   - `Help & Rights` (`/app/help`): Official statutory avenues (NCH 1915, e-Jagriti, RBI CMS) + 2-question interactive decision tree.
 - **Secondary Utilities**:
-  - `Reminders` (`/app/reminders`): Smart statutory suggestion alerts with Web Notifications API fallback.
+  - `Reminders` (`/app/reminders`): Smart suggested follow-up alerts with Web Notifications API fallback.
   - `Privacy & Data Trust` (`/app/privacy`): Plain-language data ledger, 1-click JSON export, instant data wipe, and WebCrypto AES-GCM local passphrase encryption.
-  - `Settings` (`/app/settings`): Multilingual switch (English, हिन्दी, తెలుగు), simple language mode, and dark mode.
 - **Internal Register (`/internal`)**:
   - Quarantined behind feature-flagging; encapsulates the 150-feature capability register, access gates, and engine directory away from stressed consumers.
 
@@ -77,10 +76,14 @@ All features query abstract repository interfaces (`CaseRepository`, `EvidenceRe
 - **Runtime & Bundler**: Vite 6.x + TypeScript (Strict Mode)
 - **UI & Layout**: React 18, React Router v6, Tailwind CSS v4, Lucide React icons
 - **State & Local Storage**: Zustand (UI State), Dexie.js (IndexedDB with multi-object transactions)
+- **Framework**: Next.js 14 (App Router) + React 18 + TypeScript
+- **Styling**: Tailwind CSS + PostCSS + CSS Variables (warm paper aesthetic, dark ink mode)
+- **Local Database**: Dexie.js (IndexedDB wrapper)
+- **State Management**: Zustand (theme, palette, local case counts)
 - **Validation**: Zod (Case, Evidence, Purchase, Reminder schemas + legacy import validation)
 - **Motion**: Framer Motion (respects `prefers-reduced-motion`)
 - **Document Generation**: jsPDF (dynamic code-split chunking for optimal LCP)
-- **Internationalization**: i18next supporting English (`en`), Hindi (`hi`), and Telugu (`te`)
+- **Internationalization**: i18next
 - **Testing**: Vitest, React Testing Library, axe-core (automated WCAG 2.2 AA testing), Playwright (E2E browser automation)
 
 ---
@@ -100,7 +103,7 @@ cd resolve-one
 # Install dependencies
 npm install
 
-# Start Vite development server
+# Start Next.js development server
 npm run dev
 ```
 Open [http://localhost:3000](http://localhost:3000) in your browser.
@@ -112,9 +115,6 @@ npm test
 
 # Run Playwright End-to-End user interaction suite
 npx tsx tests/e2e/interactions.spec.ts
-
-# Run multilingual zero-leftover-English test
-npx tsx tests/e2e/language_switch.spec.ts
 
 # Run full WCAG 2.2 AA accessibility audit & harsh environment tests
 npx tsx tests/e2e/phase4_audit.ts
@@ -140,7 +140,7 @@ RESOLVE-ONE automatically detects legacy data from the v1 HTML prototype:
 - **`localStorage` key**: `resolve-one-prototype-v1`
 - **IndexedDB**: `resolve-one-evidence-v1`
 
-When detected, the built-in `v1Migrator` transforms legacy dispute records into strictly typed v2 Zod models (`resolve-one-v2`), computes SHA-256 hashes for un-hashed evidence files, and loads sample test disputes (Flipkart, Amazon, Swiggy) if the database is uninitialized. Users can also reset or re-seed sample data anytime via Settings or the Privacy panel.
+When detected, the built-in `v1Migrator` transforms legacy dispute records into strictly typed v2 Zod models (`resolve-one-v2`), computes SHA-256 hashes for un-hashed evidence files, and loads sample test disputes (Flipkart, Amazon, Swiggy) if the database is uninitialized. Users can also reset or re-seed sample data anytime via the Privacy panel.
 
 ---
 
@@ -148,5 +148,4 @@ When detected, the built-in `v1Migrator` transforms legacy dispute records into 
 
 - **Accessibility**: 0 critical or serious violations via `@axe-core/react` across all modal, stepper, form, and timeline views.
 - **Design Tokens**: Standardized 8px grid system, minimum 16px body font size, 44px+ touch targets for mobile accessibility.
-- **Multilingual Legal Consistency**: Documented translation register in [`TRANSLATION_REVIEW.md`](./TRANSLATION_REVIEW.md) ensuring statutory accuracy in English, हिन्दी, and తెలుగు.
 

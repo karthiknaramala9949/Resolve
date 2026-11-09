@@ -51,7 +51,7 @@ export const Header: React.FC = () => {
         </button>
       </div>
 
-      {/* Right: Storage pill, Language, Theme */}
+      {/* Right: Search trigger & Storage pill */}
       <div className="flex items-center gap-2">
         {/* Search trigger on mobile */}
         <button

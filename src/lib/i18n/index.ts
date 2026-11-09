@@ -1,7 +1,7 @@
 import i18n from 'i18next';
 import { initReactI18next } from 'react-i18next';
 
-// English
+// English Resource Bundles
 import enCommon from '@/locales/en/common.json';
 import enLanding from '@/locales/en/landing.json';
 import enCases from '@/locales/en/cases.json';
@@ -10,26 +10,6 @@ import enPurchases from '@/locales/en/purchases.json';
 import enHelp from '@/locales/en/help.json';
 import enReminders from '@/locales/en/reminders.json';
 import enPrivacy from '@/locales/en/privacy.json';
-
-// Hindi
-import hiCommon from '@/locales/hi/common.json';
-import hiLanding from '@/locales/hi/landing.json';
-import hiCases from '@/locales/hi/cases.json';
-import hiDocuments from '@/locales/hi/documents.json';
-import hiPurchases from '@/locales/hi/purchases.json';
-import hiHelp from '@/locales/hi/help.json';
-import hiReminders from '@/locales/hi/reminders.json';
-import hiPrivacy from '@/locales/hi/privacy.json';
-
-// Telugu
-import teCommon from '@/locales/te/common.json';
-import teLanding from '@/locales/te/landing.json';
-import teCases from '@/locales/te/cases.json';
-import teDocuments from '@/locales/te/documents.json';
-import tePurchases from '@/locales/te/purchases.json';
-import teHelp from '@/locales/te/help.json';
-import teReminders from '@/locales/te/reminders.json';
-import tePrivacy from '@/locales/te/privacy.json';
 
 export const resources = {
   en: {
@@ -43,38 +23,11 @@ export const resources = {
     reminders: enReminders,
     privacy: enPrivacy,
   },
-  hi: {
-    common: hiCommon,
-    translation: hiCommon,
-    landing: hiLanding,
-    cases: hiCases,
-    documents: hiDocuments,
-    purchases: hiPurchases,
-    help: hiHelp,
-    reminders: hiReminders,
-    privacy: hiPrivacy,
-  },
-  te: {
-    common: teCommon,
-    translation: teCommon,
-    landing: teLanding,
-    cases: teCases,
-    documents: teDocuments,
-    purchases: tePurchases,
-    help: teHelp,
-    reminders: teReminders,
-    privacy: tePrivacy,
-  },
 };
-
-const savedLocale =
-  typeof window !== 'undefined'
-    ? localStorage.getItem('resolve-one-locale') || 'en'
-    : 'en';
 
 i18n.use(initReactI18next).init({
   resources,
-  lng: savedLocale,
+  lng: 'en',
   fallbackLng: 'en',
   defaultNS: 'common',
   ns: [

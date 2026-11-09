@@ -51,7 +51,7 @@ export default {
       },
       fontFamily: {
         serif: ['Instrument Serif', 'Fraunces', 'Georgia', 'serif'],
-        sans: ['Inter', 'Noto Sans', 'Noto Sans Devanagari', 'Noto Sans Telugu', 'system-ui', 'sans-serif'],
+        sans: ['Inter', 'system-ui', 'sans-serif'],
         mono: ['JetBrains Mono', 'ui-monospace', 'monospace'],
       },
       fontSize: {

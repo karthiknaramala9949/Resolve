@@ -236,7 +236,7 @@ export const PrivacyPage: React.FC = () => {
               <span>Local UI Preferences</span>
             </div>
             <p className="text-xs text-neutral-600 dark:text-neutral-300 leading-relaxed">
-              Stored in localStorage: dark/light theme, active language (EN/HI/TE), and simple language mode toggle.
+              Stored in localStorage: dark/light theme and simple language mode toggle.
             </p>
           </div>
 

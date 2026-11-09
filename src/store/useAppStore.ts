@@ -1,13 +1,9 @@
 import { create } from 'zustand';
-import i18n from '@/lib/i18n';
 
 interface AppState {
   theme: 'light' | 'dark';
   setTheme: (theme: 'light' | 'dark') => void;
   toggleTheme: () => void;
-
-  locale: 'en' | 'hi' | 'te';
-  setLocale: (locale: 'en' | 'hi' | 'te') => void;
 
   simpleLanguageMode: boolean;
   setSimpleLanguageMode: (enabled: boolean) => void;
@@ -33,9 +29,6 @@ export const useAppStore = create<AppState>((set) => {
     }
   }
 
-  const savedLocale = (typeof window !== 'undefined' && localStorage.getItem('resolve-one-locale')) as 'en' | 'hi' | 'te' | null;
-  const initialLocale = savedLocale || 'en';
-
   const savedSimpleMode = typeof window !== 'undefined' && localStorage.getItem('resolve-one-simple-language') === 'true';
 
   return {
@@ -60,13 +53,6 @@ export const useAppStore = create<AppState>((set) => {
         }
         return { theme: next };
       });
-    },
-
-    locale: initialLocale,
-    setLocale: (locale) => {
-      localStorage.setItem('resolve-one-locale', locale);
-      i18n.changeLanguage(locale);
-      set({ locale });
     },
 
     simpleLanguageMode: savedSimpleMode,

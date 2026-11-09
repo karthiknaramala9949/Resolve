@@ -87,7 +87,6 @@ async function runNoDeadClickSweep() {
         url: window.location.href,
         htmlClass: document.documentElement.className,
         theme: localStorage.getItem('resolve-one-theme'),
-        locale: localStorage.getItem('resolve-one-locale'),
         simple: localStorage.getItem('resolve-one-simple-language'),
         hasDialog: document.querySelectorAll('[role="dialog"]').length,
         hasToast: document.querySelectorAll('aside[role="status"], div[role="status"]').length,
@@ -107,7 +106,6 @@ async function runNoDeadClickSweep() {
           url: window.location.href,
           htmlClass: document.documentElement.className,
           theme: localStorage.getItem('resolve-one-theme'),
-          locale: localStorage.getItem('resolve-one-locale'),
           simple: localStorage.getItem('resolve-one-simple-language'),
           hasDialog: document.querySelectorAll('[role="dialog"]').length,
           hasToast: document.querySelectorAll('aside[role="status"], div[role="status"]').length,
@@ -118,7 +116,6 @@ async function runNoDeadClickSweep() {
 
         const urlChanged = stateBefore.url !== stateAfter.url;
         const themeChanged = stateBefore.htmlClass !== stateAfter.htmlClass || stateBefore.theme !== stateAfter.theme;
-        const localeChanged = stateBefore.locale !== stateAfter.locale;
         const simpleChanged = stateBefore.simple !== stateAfter.simple;
         const dialogChanged = stateBefore.hasDialog !== stateAfter.hasDialog || stateAfter.hasDialog > 0;
         const toastChanged = stateBefore.hasToast !== stateAfter.hasToast || stateAfter.hasToast > 0;
@@ -126,15 +123,12 @@ async function runNoDeadClickSweep() {
         const href = await target.getAttribute('href');
 
         const isAlreadyActiveToggle = 
-          (text === 'EN' && (stateBefore.locale === 'en' || !stateBefore.locale)) ||
-          (text.includes('English') && (stateBefore.locale === 'en' || !stateBefore.locale)) ||
           (text.includes('Light Theme') && (stateBefore.theme === 'light' || !stateBefore.htmlClass.includes('dark'))) ||
           (text.includes('Dark Theme') && (stateBefore.theme === 'dark' || stateBefore.htmlClass.includes('dark')));
 
         if (
           urlChanged ||
           themeChanged ||
-          localeChanged ||
           simpleChanged ||
           dialogChanged ||
           toastChanged ||

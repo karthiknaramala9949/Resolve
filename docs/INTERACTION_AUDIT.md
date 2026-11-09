@@ -28,7 +28,7 @@
 | **/** (Landing) | RBI Ombudsman Site Link | Opens `https://cms.rbi.org.in` in new tab | Yes | `tests/e2e/interactions.spec.ts` |
 | **/** (Landing) | FAQ Accordion Question Toggles (8 items) | Expands / collapses accessible FAQ answers | Yes | `tests/e2e/interactions.spec.ts` |
 | **/** (Landing) | Bottom CTA ("Start in 60 Seconds") | Navigates to `/app/cases?new=true` | Yes | `tests/e2e/interactions.spec.ts` |
-| **/** (Landing) | Footer Links & Language Switcher | Smooth-scrolls or changes language | Yes | `tests/e2e/interactions.spec.ts` |
+| **/** (Landing) | Footer Links | Smooth-scrolls to anchor sections | Yes | `tests/e2e/interactions.spec.ts` |
 | **App Shell** | Sidebar Logo (`RESOLVE-ONE`) | Navigates to `/` landing page | Yes | `tests/e2e/interactions.spec.ts` |
 | **App Shell** | Sidebar Primary CTA ("Tell Us What Happened") | Opens `/app/cases?new=true` intake modal | Yes | `tests/e2e/interactions.spec.ts` |
 | **App Shell** | Sidebar Nav Link: "Overview" | Navigates to `/app/overview` | Yes | `tests/e2e/interactions.spec.ts` |
