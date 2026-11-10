@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { cn } from '@/lib/utils';
 import { useAppStore } from '@/store/useAppStore';
+import { useAuth } from '@/features/auth/context/AuthContext';
 import {
   Home,
   FolderKanban,
@@ -14,6 +15,8 @@ import {
   Clock,
   ShieldCheck,
   Plus,
+  LogOut,
+  User,
 } from 'lucide-react';
 
 interface SidebarProps {
@@ -22,6 +25,7 @@ interface SidebarProps {
 
 export const Sidebar: React.FC<SidebarProps> = ({ className }) => {
   const { activeCaseCount } = useAppStore();
+  const { user, isAuthenticated, logout } = useAuth();
   const pathname = usePathname();
 
   const primaryNav = [
@@ -137,8 +141,44 @@ export const Sidebar: React.FC<SidebarProps> = ({ className }) => {
         </div>
       </div>
 
-      {/* Footer: Storage Status */}
-      <div className="pt-4 border-t border-steel-grey-100 space-y-2">
+      {/* Footer: User Account & Storage Status */}
+      <div className="pt-4 border-t border-steel-grey-100 space-y-3">
+        {isAuthenticated && user ? (
+          <div className="flex items-center justify-between p-2 rounded-xl bg-steel-grey-50 border border-steel-grey-200">
+            <Link href="/auth/setup" className="flex items-center gap-2.5 min-w-0 hover:opacity-80 transition-opacity">
+              {user.image ? (
+                <img src={user.image} alt={user.name} className="w-7 h-7 rounded-full object-cover shrink-0" />
+              ) : (
+                <div className="w-7 h-7 rounded-full bg-coral text-white text-xs font-semibold flex items-center justify-center font-serif shrink-0">
+                  {(user.name || user.email || 'U')[0].toUpperCase()}
+                </div>
+              )}
+              <div className="min-w-0">
+                <p className="text-xs font-semibold text-charcoal truncate">{user.name}</p>
+                <p className="text-[10px] text-steel-grey-500 truncate">{user.email || user.phoneNumber}</p>
+              </div>
+            </Link>
+
+            <button
+              type="button"
+              onClick={logout}
+              title="Sign out"
+              className="p-1.5 text-steel-grey-400 hover:text-coral hover:bg-steel-grey-100 rounded-lg transition-colors shrink-0"
+              aria-label="Sign out"
+            >
+              <LogOut className="w-3.5 h-3.5" />
+            </button>
+          </div>
+        ) : (
+          <Link
+            href="/auth/signin"
+            className="flex items-center justify-center gap-2 w-full py-2 px-3 rounded-xl border border-steel-grey-200 bg-white hover:bg-steel-grey-50 text-xs font-semibold text-charcoal transition-colors shadow-2xs"
+          >
+            <User className="w-3.5 h-3.5 text-steel-grey-500" />
+            <span>Sign In to Sync</span>
+          </Link>
+        )}
+
         <div className="flex items-center justify-between px-2 text-xs text-steel-grey-500 font-normal">
           <div className="flex items-center gap-2">
             <span className="w-2 h-2 rounded-full bg-emerald-600" />

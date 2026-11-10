@@ -3,6 +3,7 @@ import React from 'react';
 import '@/index.css';
 import { ToastProvider } from '@/design-system';
 import { DatabaseBootstrap } from '@/components/providers/DatabaseBootstrap';
+import { AuthProvider } from '@/features/auth/context/AuthContext';
 
 export const metadata: Metadata = {
   title: 'RESOLVE-ONE — Consumer Dispute Resolution for India',
@@ -35,9 +36,11 @@ export default function RootLayout({
       </head>
       <body suppressHydrationWarning className="min-h-screen bg-[#FAF8F4] text-charcoal font-sans antialiased selection:bg-coral-100 selection:text-coral-900">
         <ToastProvider>
-          <DatabaseBootstrap>
-            {children}
-          </DatabaseBootstrap>
+          <AuthProvider>
+            <DatabaseBootstrap>
+              {children}
+            </DatabaseBootstrap>
+          </AuthProvider>
         </ToastProvider>
       </body>
     </html>

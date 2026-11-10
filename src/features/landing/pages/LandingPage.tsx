@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
+import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { Button, Card } from '@/design-system';
 import {
@@ -135,20 +136,19 @@ export const LandingPage: React.FC = () => {
           </nav>
 
           <div className="flex items-center gap-3">
-            <button
-              type="button"
-              onClick={() => router.push('/app/overview')}
-              className="hidden sm:inline-flex text-xs font-medium text-steel-grey-600 hover:text-charcoal transition-colors"
+            <Link
+              href="/auth/signin"
+              className="text-xs font-semibold text-steel-grey-700 hover:text-charcoal transition-colors px-2 py-1.5"
             >
-              Open workspace
-            </button>
+              Sign in
+            </Link>
             <Button
               variant="primary"
               size="sm"
-              onClick={() => router.push('/app/cases?new=true')}
+              onClick={() => router.push('/app/overview')}
               className="flex items-center gap-1.5"
             >
-              <span>Start a case</span>
+              <span>Get started</span>
               <ArrowRight className="w-3.5 h-3.5 shrink-0" />
             </Button>
           </div>

@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useAppStore } from '@/store/useAppStore';
 import { Search, Shield } from 'lucide-react';
+import { UserMenu } from './UserMenu';
 
 export const Header: React.FC = () => {
   const { openCommandPalette } = useAppStore();
@@ -68,6 +69,9 @@ export const Header: React.FC = () => {
           <Shield className="w-3 h-3 text-emerald-600 shrink-0" />
           <span>On-device only</span>
         </div>
+
+        {/* User Account Menu */}
+        <UserMenu />
       </div>
     </header>
   );
