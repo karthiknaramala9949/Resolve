@@ -1,6 +1,5 @@
 /** @type {import('tailwindcss').Config} */
 export default {
-  darkMode: false,
   content: [
     './src/**/*.{js,ts,jsx,tsx,mdx}',
   ],
@@ -14,103 +13,103 @@ export default {
     },
     extend: {
       colors: {
-        // Direct Core Palette Tokens
+        // Warm Paper Palette Tokens
         'steel-grey': {
           DEFAULT: 'var(--color-steel-grey)',
-          50: '#F6F8F9',
-          100: '#EDF0F2',
-          200: '#DCE1E5',
-          300: '#BAC4CC',
-          400: '#929DA7',
-          500: '#717D88',
-          600: '#57626C',
-          700: '#424B53',
-          800: '#2E343A',
-          900: '#1D2226',
+          50: '#FAF8F4',
+          100: '#F3EFE7',
+          200: '#E5DFD5',
+          300: '#D2C9BD',
+          400: '#B0A495',
+          500: '#8A847A',
+          600: '#5E554A',
+          700: '#433D35',
+          800: '#2E2A24',
+          900: '#1F1B16',
         },
         charcoal: {
-          DEFAULT: 'var(--color-charcoal)',
-          50: '#F3F4F4',
-          100: '#E3E4E6',
-          200: '#C2C5C9',
-          700: '#2C2F34',
-          800: '#1F2226',
-          900: '#17191C',
-          950: '#0E0F11',
+          DEFAULT: '#1F1B16',
+          50: '#FAF8F4',
+          100: '#F3EFE7',
+          200: '#E5DFD5',
+          700: '#433D35',
+          800: '#2E2A24',
+          900: '#1F1B16',
+          950: '#14110E',
         },
         coral: {
           DEFAULT: 'var(--color-coral)',
-          50: '#FFF5F4',
-          100: '#FFEBE8',
-          200: '#FFD4CE',
-          300: '#FFAFA3',
-          400: '#FF7D6B',
-          500: '#FF4B32',
-          600: '#E63D25',
-          700: '#BF2B15',
-          800: '#992211',
-          900: '#7A1D0E',
+          50: '#FDF5F4',
+          100: '#FBE9E7',
+          200: '#F6CCC7',
+          300: '#EFA39C',
+          400: '#E26D64',
+          500: '#C8372D', // Refined Seal Terracotta
+          600: '#AC2B22',
+          700: '#8E221B',
+          800: '#701B15',
+          900: '#551410',
         },
 
-        // Brand maps directly to Vibrant Coral Orange
+        // Brand maps directly to Seal Terracotta
         brand: {
           DEFAULT: 'var(--color-coral)',
-          50: '#FFF5F4',
-          100: '#FFEBE8',
-          200: '#FFD4CE',
-          300: '#FFAFA3',
-          400: '#FF7D6B',
-          500: '#FF4B32', // Vibrant Coral Orange
-          600: '#E63D25',
-          700: '#BF2B15',
-          800: '#992211',
-          900: '#7A1D0E',
-          950: '#3D0B04',
+          50: '#FDF5F4',
+          100: '#FBE9E7',
+          200: '#F6CCC7',
+          300: '#EFA39C',
+          400: '#E26D64',
+          500: '#C8372D',
+          600: '#AC2B22',
+          700: '#8E221B',
+          800: '#701B15',
+          900: '#551410',
+          950: '#380B07',
         },
 
-        // Surface maps to clean white backgrounds & Cool Steel Grey borders
+        // Warm paper surface
         surface: {
-          DEFAULT: '#FFFFFF',
-          light: '#FFFFFF',
-          'light-subtle': '#F6F8F9',
-          'light-ground': '#FFFFFF',
-          'light-border': '#DCE1E5',
-          dark: '#FFFFFF', // Prevent black card blocks
-          'dark-subtle': '#F6F8F9',
-          'dark-ground': '#FFFFFF',
-          'dark-border': '#DCE1E5',
+          DEFAULT: '#FAF8F4',
+          light: '#FAF8F4',
+          'light-subtle': '#F3EFE7',
+          'light-ground': '#FAF8F4',
+          'light-border': '#E5DFD5',
+          dark: '#FFFFFF',
+          'dark-subtle': '#F3EFE7',
+          'dark-ground': '#FAF8F4',
+          'dark-border': '#E5DFD5',
         },
 
-        // Neutral maps to Midnight Charcoal & Cool Steel Grey
+        // Neutral maps to Warm Slate & Stone
         neutral: {
-          50: '#F6F8F9',
-          100: '#EDF0F2',
-          200: '#DCE1E5',
-          300: '#BAC4CC',
-          400: '#929DA7', // Cool Steel Grey
-          500: '#57626C', // High-contrast secondary text (WCAG AA)
-          600: '#424B53', // Deep steel grey (> 7:1)
-          700: '#2E343A',
-          800: '#1F2226',
-          900: '#17191C', // Midnight Charcoal
-          950: '#0E0F11',
+          50: '#FAF8F4',
+          100: '#F3EFE7',
+          200: '#E5DFD5',
+          300: '#D2C9BD',
+          400: '#B0A495',
+          500: '#8A847A',
+          600: '#5E554A',
+          700: '#433D35',
+          800: '#2E2A24',
+          900: '#1F1B16',
+          950: '#14110E',
         },
 
         semantic: {
-          success: '#1B8755',
-          'success-subtle': '#E8F5EE',
+          success: '#16A34A',
+          'success-subtle': '#EBF7EE',
           warning: '#B57700',
           'warning-subtle': '#FEF7EA',
-          error: '#D32F2F',
-          'error-subtle': '#FDF2F2',
+          error: '#C8372D',
+          'error-subtle': '#FDF5F4',
           info: '#1D70B8',
           'info-subtle': '#EDF4FC',
         }
       },
       fontFamily: {
-        serif: ['var(--font-serif)', 'serif'],
-        sans: ['var(--font-sans)', 'sans-serif'],
-        mono: ['var(--font-mono)', 'monospace'],
+        serif: ['var(--font-serif)', 'Instrument Serif', 'Newsreader', 'Georgia', 'serif'],
+        sans: ['var(--font-sans)', 'Inter', '-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'Roboto', 'sans-serif'],
+        mono: ['var(--font-mono)', 'JetBrains Mono', 'IBM Plex Mono', 'Menlo', 'monospace'],
       },
       borderRadius: {
         '2xs': '2px',
@@ -119,12 +118,13 @@ export default {
         'md': '8px',
         'lg': '12px',
         'xl': '16px',
-        '2xl': '24px',
+        '2xl': '20px',
+        '3xl': '24px',
       },
       boxShadow: {
-        'subtle': '0 1px 3px rgba(23, 25, 28, 0.05), 0 1px 2px rgba(23, 25, 28, 0.03)',
-        'elevated': '0 4px 14px rgba(23, 25, 28, 0.08), 0 2px 6px rgba(23, 25, 28, 0.04)',
-        'floating': '0 12px 32px rgba(23, 25, 28, 0.14), 0 4px 12px rgba(23, 25, 28, 0.06)',
+        'subtle': '0 1px 2px rgba(31, 27, 22, 0.04)',
+        'elevated': '0 4px 12px rgba(31, 27, 22, 0.06), 0 1px 3px rgba(31, 27, 22, 0.03)',
+        'floating': '0 12px 28px rgba(31, 27, 22, 0.08), 0 2px 6px rgba(31, 27, 22, 0.04)',
       }
     },
   },

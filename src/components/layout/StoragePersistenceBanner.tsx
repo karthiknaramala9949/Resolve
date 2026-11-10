@@ -93,10 +93,10 @@ export const StoragePersistenceBanner: React.FC = () => {
         <button
           type="button"
           onClick={handleExport}
-          className="inline-flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-lg bg-charcoal hover:bg-charcoal-800 text-white font-bold text-xs transition-colors shadow-2xs leading-none shrink-0"
+          className="inline-flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-lg bg-charcoal hover:bg-steel-grey-800 text-white font-medium text-xs transition-colors shadow-2xs leading-none shrink-0"
         >
           <Download className="w-3.5 h-3.5 shrink-0" />
-          <span>Export Backup</span>
+          <span>Export backup</span>
         </button>
 
         <button

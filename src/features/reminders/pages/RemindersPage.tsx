@@ -16,8 +16,6 @@ import {
   Bell,
   CheckCircle2,
   Trash2,
-  BellRing,
-  Sparkles,
 } from 'lucide-react';
 import { reminderRepository, caseRepository } from '@/lib/db/repositories';
 import { Reminder, Case } from '@/lib/db/types';
@@ -120,14 +118,14 @@ export const RemindersPage: React.FC = () => {
   };
 
   return (
-    <div className="space-y-6 animate-in fade-in duration-300">
+    <div className="space-y-6 animate-in fade-in duration-150">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h2 className="text-2xl font-black font-sans text-charcoal tracking-tight">
-            Reminders & <span className="text-coral">Follow-Ups</span>
+          <h2 className="text-2xl font-serif font-medium text-charcoal tracking-tight">
+            Reminders & follow-ups
           </h2>
-          <p className="text-sm text-steel-grey-600 mt-1">
-            Track company response windows and suggested follow-ups. Stored on-device.
+          <p className="text-xs sm:text-sm text-steel-grey-600 mt-1 font-normal">
+            Track company response windows and suggested follow-ups stored on-device
           </p>
         </div>
 
@@ -139,7 +137,7 @@ export const RemindersPage: React.FC = () => {
               onClick={requestNotificationPermission}
             >
               <Bell className="w-4 h-4 shrink-0" />
-              <span>Enable Notifications</span>
+              <span>Enable notifications</span>
             </Button>
           )}
 
@@ -149,28 +147,28 @@ export const RemindersPage: React.FC = () => {
             onClick={() => setIsAddModalOpen(true)}
           >
             <Plus className="w-4 h-4 shrink-0" />
-            <span>New Reminder</span>
+            <span>New reminder</span>
           </Button>
         </div>
       </div>
 
       {/* Honest notice on suggested reminders */}
-      <div className="p-4 rounded-xl bg-surface-light-subtle dark:bg-surface-dark-subtle border border-neutral-200/80 dark:border-neutral-800 text-xs text-neutral-600 dark:text-neutral-400">
-        <span className="font-semibold text-neutral-900 dark:text-neutral-100">Notice: </span>
-        Follow-up dates are suggested follow-ups for your convenience, not legal deadlines. They are not attributed to any law, regulation, or official guideline.
+      <div className="p-4 rounded-xl bg-steel-grey-50 border border-steel-grey-200 text-xs text-steel-grey-600 font-normal">
+        <span className="font-medium text-charcoal">Notice: </span>
+        Follow-up dates are suggestions for your personal convenience, not legal deadlines. They are not statutory mandates.
       </div>
 
       {/* Reminders List */}
       {reminders.length === 0 ? (
         <EmptyState
+          illustration="reminders"
           title="No pending reminders"
           description="Schedule a follow-up date to check on company response or bank statement."
-          actionLabel="Add Reminder"
+          actionLabel="Add reminder"
           onAction={() => setIsAddModalOpen(true)}
-          illustration="reminders"
         />
       ) : (
-        <div className="space-y-3">
+        <div className="space-y-2.5">
           {reminders.map((r) => {
             const targetCase = cases.find((c) => c.id === r.caseId);
 
@@ -178,33 +176,33 @@ export const RemindersPage: React.FC = () => {
               <Card
                 key={r.id}
                 variant="default"
-                className="p-4 flex items-center justify-between gap-4 hover:border-neutral-300 transition-colors"
+                className="p-4 flex items-center justify-between gap-4 bg-white border border-steel-grey-200 hover:border-steel-grey-300 transition-colors"
               >
                 <div className="flex items-center gap-3.5">
                   <button
                     type="button"
                     onClick={() => handleToggleDone(r.id)}
-                    className={`w-6 h-6 rounded-full border-2 flex items-center justify-center transition-colors shrink-0 ${
+                    className={`w-5 h-5 rounded-full border flex items-center justify-center transition-colors shrink-0 ${
                       r.done
-                        ? 'bg-emerald-500 border-emerald-500 text-white'
-                        : 'border-neutral-300 dark:border-neutral-700 hover:border-brand-500'
+                        ? 'bg-emerald-600 border-emerald-600 text-white'
+                        : 'border-steel-grey-300 hover:border-coral'
                     }`}
                     aria-label={r.done ? 'Mark incomplete' : 'Mark completed'}
                   >
-                    {r.done && <CheckCircle2 className="w-4 h-4 stroke-[2.5]" />}
+                    {r.done && <CheckCircle2 className="w-3.5 h-3.5 stroke-[2]" />}
                   </button>
 
                   <div>
                     <h4
-                      className={`text-base font-medium ${
+                      className={`text-sm font-medium ${
                         r.done
-                          ? 'line-through text-neutral-400 dark:text-neutral-600'
-                          : 'text-neutral-900 dark:text-neutral-100'
+                          ? 'line-through text-steel-grey-400'
+                          : 'text-charcoal'
                       }`}
                     >
                       {r.title}
                     </h4>
-                    <div className="flex flex-wrap items-center gap-2 mt-0.5 text-xs text-neutral-500 dark:text-neutral-400">
+                    <div className="flex flex-wrap items-center gap-2 mt-0.5 text-xs text-steel-grey-500 font-normal">
                       {targetCase && (
                         <>
                           <span className="font-mono">{targetCase.id}</span>
@@ -221,7 +219,7 @@ export const RemindersPage: React.FC = () => {
                 <button
                   type="button"
                   onClick={() => handleDelete(r.id)}
-                  className="p-2 text-neutral-400 hover:text-red-600 rounded-lg hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-colors"
+                  className="p-1.5 text-steel-grey-400 hover:text-coral rounded-lg hover:bg-steel-grey-50 transition-colors"
                   aria-label="Delete reminder"
                 >
                   <Trash2 className="w-4 h-4" />
@@ -236,13 +234,13 @@ export const RemindersPage: React.FC = () => {
       <BottomSheet
         isOpen={isAddModalOpen}
         onClose={() => setIsAddModalOpen(false)}
-        title="Schedule Follow-Up Reminder"
-        description="Choose a date to compare records or escalate."
+        title="Schedule follow-up reminder"
+        description="Choose a date to compare records or escalate"
       >
         <div className="space-y-4">
           {cases.length > 0 && (
             <Select
-              label="Related Case"
+              label="Related case"
               value={targetCaseId}
               onChange={(e) => setTargetCaseId(e.target.value)}
               options={cases.map((c) => ({
@@ -254,21 +252,21 @@ export const RemindersPage: React.FC = () => {
 
           {/* Quick Smart Suggestions */}
           <div className="space-y-1.5">
-            <span className="text-xs font-semibold text-neutral-600 dark:text-neutral-300">
-              Smart Suggestions:
+            <span className="text-xs font-medium text-steel-grey-600">
+              Suggestions:
             </span>
             <div className="flex flex-wrap gap-2 text-xs">
               <button
                 type="button"
                 onClick={() => setQuickDate(7, 'Follow up with company care on ticket status')}
-                className="inline-flex items-center justify-center font-medium px-3 py-1.5 rounded-lg border border-neutral-300 dark:border-neutral-700 bg-surface-light-subtle dark:bg-surface-dark-subtle hover:border-brand-300 transition-colors leading-none"
+                className="inline-flex items-center justify-center font-normal px-2.5 py-1.5 rounded-lg border border-steel-grey-200 bg-steel-grey-50 text-steel-grey-700 hover:border-steel-grey-300 transition-colors leading-none"
               >
                 +7 Days (Customer care turnaround)
               </button>
               <button
                 type="button"
                 onClick={() => setQuickDate(3, 'Verify UPI / bank statement for refund credit')}
-                className="inline-flex items-center justify-center font-medium px-3 py-1.5 rounded-lg border border-neutral-300 dark:border-neutral-700 bg-surface-light-subtle dark:bg-surface-dark-subtle hover:border-brand-300 transition-colors leading-none"
+                className="inline-flex items-center justify-center font-normal px-2.5 py-1.5 rounded-lg border border-steel-grey-200 bg-steel-grey-50 text-steel-grey-700 hover:border-steel-grey-300 transition-colors leading-none"
               >
                 +3 Days (Banking settlement)
               </button>
@@ -276,14 +274,14 @@ export const RemindersPage: React.FC = () => {
           </div>
 
           <Input
-            label="Reminder Action"
+            label="Reminder action"
             value={title}
             onChange={(e) => setTitle(e.target.value)}
             placeholder="e.g. Check bank statement for ₹499 credit"
           />
 
           <Input
-            label="Due Date"
+            label="Due date"
             type="date"
             value={date}
             onChange={(e) => setDate(e.target.value)}
@@ -294,7 +292,7 @@ export const RemindersPage: React.FC = () => {
               Cancel
             </Button>
             <Button variant="primary" onClick={handleAddReminder}>
-              Set Reminder
+              Set reminder
             </Button>
           </div>
         </div>

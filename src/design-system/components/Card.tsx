@@ -15,7 +15,7 @@ export const Card = React.forwardRef<HTMLDivElement, CardProps>(
       elevated:
         'bg-white border border-steel-grey-200 shadow-sm',
       interactive:
-        'bg-white border border-steel-grey-200 shadow-xs hover:border-steel-grey-300 hover:shadow-sm transition-all cursor-pointer',
+        'bg-white border border-steel-grey-200 shadow-xs hover:border-steel-grey-300 hover:shadow-sm transition-[border-color,box-shadow] duration-150 cursor-pointer',
     };
 
     return (

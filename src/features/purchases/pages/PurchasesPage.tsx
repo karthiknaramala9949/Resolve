@@ -120,7 +120,7 @@ export const PurchasesPage: React.FC = () => {
       } else {
         const draft = parsePastedPurchaseText(content);
         setImportDraft(draft);
-        toast('Parsed text/EML purchase details successfully.', 'info');
+        toast('Parsed purchase details successfully.', 'info');
       }
     };
 
@@ -131,7 +131,7 @@ export const PurchasesPage: React.FC = () => {
     if (!editingPurchase) return;
     try {
       await purchaseRepository.save(editingPurchase);
-      toast('Purchase record updated successfully.', 'success');
+      toast('Purchase record updated.', 'success');
       setEditingPurchase(null);
       loadPurchases();
     } catch (err: any) {
@@ -212,14 +212,14 @@ export const PurchasesPage: React.FC = () => {
   };
 
   return (
-    <div className="space-y-6 animate-in fade-in duration-300">
+    <div className="space-y-6 animate-in fade-in duration-150">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h2 className="text-2xl font-black font-sans text-charcoal tracking-tight">
-            Purchases & <span className="text-coral">Protection</span>
+          <h2 className="text-2xl font-serif font-medium text-charcoal tracking-tight">
+            Purchases & protection
           </h2>
-          <p className="text-sm text-steel-grey-600 mt-1">
-            Track return windows, warranty countdowns, and start dispute cases with one tap.
+          <p className="text-xs sm:text-sm text-steel-grey-600 mt-1 font-normal">
+            Track return deadlines, warranty countdowns, and start dispute cases with one tap
           </p>
         </div>
 
@@ -230,7 +230,7 @@ export const PurchasesPage: React.FC = () => {
             onClick={() => setIsImportModalOpen(true)}
           >
             <Upload className="w-4 h-4 shrink-0" />
-            <span>Import Orders</span>
+            <span>Import orders</span>
           </Button>
 
           <Button
@@ -239,7 +239,7 @@ export const PurchasesPage: React.FC = () => {
             onClick={() => setIsAddModalOpen(true)}
           >
             <Plus className="w-4 h-4 shrink-0" />
-            <span>Add Purchase</span>
+            <span>Add purchase</span>
           </Button>
         </div>
       </div>
@@ -247,11 +247,11 @@ export const PurchasesPage: React.FC = () => {
       {/* Purchases Grid */}
       {purchases.length === 0 ? (
         <EmptyState
+          illustration="purchases"
           title="No purchases recorded yet"
           description="Keep track of your high-value gadgets, appliances, and return deadlines in one place."
-          actionLabel="Add Purchase"
+          actionLabel="Add purchase"
           onAction={() => setIsAddModalOpen(true)}
-          illustration="purchases"
         />
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -263,19 +263,19 @@ export const PurchasesPage: React.FC = () => {
               <Card
                 key={p.id}
                 variant="default"
-                className="p-5 flex flex-col justify-between space-y-4 hover:border-neutral-300 transition-colors"
+                className="p-5 flex flex-col justify-between space-y-4 bg-white border border-steel-grey-200 hover:border-steel-grey-300 transition-colors"
               >
                 <div>
                   <div className="flex items-center justify-between gap-2 mb-2">
-                    <span className="text-xs font-semibold uppercase tracking-wider text-neutral-500">
+                    <span className="text-xs font-medium text-steel-grey-600">
                       {p.store}
                     </span>
                     <div className="flex items-center gap-2">
-                      <span className="font-mono text-xs text-neutral-600 dark:text-neutral-400 font-medium">{p.orderRef || p.id}</span>
+                      <span className="font-mono text-xs text-steel-grey-500">{p.orderRef || p.id}</span>
                       <button
                         type="button"
                         onClick={() => setEditingPurchase(p)}
-                        className="p-1 text-neutral-400 hover:text-neutral-700 dark:hover:text-neutral-200 rounded transition-colors"
+                        className="p-1 text-steel-grey-400 hover:text-charcoal transition-colors"
                         title="Edit purchase record"
                       >
                         <Edit2 className="w-3.5 h-3.5" />
@@ -283,7 +283,7 @@ export const PurchasesPage: React.FC = () => {
                       <button
                         type="button"
                         onClick={() => handleDelete(p.id)}
-                        className="p-1 text-neutral-400 hover:text-red-600 rounded transition-colors"
+                        className="p-1 text-steel-grey-400 hover:text-coral transition-colors"
                         title="Delete record"
                       >
                         <Trash2 className="w-3.5 h-3.5" />
@@ -291,14 +291,14 @@ export const PurchasesPage: React.FC = () => {
                     </div>
                   </div>
 
-                  <h3 className="text-lg font-bold text-neutral-900 dark:text-neutral-100">
+                  <h3 className="text-base sm:text-lg font-medium text-charcoal">
                     {p.product}
                   </h3>
 
                   <div className="mt-2 flex items-center justify-between">
                     <MoneyDisplay amount={p.amount} size="md" />
                     {p.deliveryDate && (
-                      <span className="text-xs text-neutral-600 dark:text-neutral-300 font-medium">
+                      <span className="text-xs text-steel-grey-500 font-normal">
                         Delivered {new Date(p.deliveryDate).toLocaleDateString('en-IN')}
                       </span>
                     )}
@@ -307,26 +307,26 @@ export const PurchasesPage: React.FC = () => {
 
                 {/* Return window & warranty countdown badges */}
                 <div className="space-y-2">
-                  <div className="p-3 rounded-lg bg-surface-light-subtle dark:bg-surface-dark-subtle border border-neutral-200/80 dark:border-neutral-800 flex flex-wrap items-center justify-between gap-2 text-xs">
+                  <div className="p-3 rounded-xl bg-steel-grey-50 border border-steel-grey-200 flex flex-wrap items-center justify-between gap-2 text-xs">
                     <div className="inline-flex items-center gap-2 leading-none">
                       <Clock
-                        className={`w-4 h-4 shrink-0 ${
+                        className={`w-3.5 h-3.5 shrink-0 ${
                           retWindow.status === 'active' || retWindow.status === 'last_day'
-                            ? 'text-amber-600'
-                            : 'text-neutral-500'
+                            ? 'text-amber-700'
+                            : 'text-steel-grey-500'
                         }`}
                       />
                       <span
-                        className={`font-semibold leading-none ${
+                        className={`leading-none ${
                           retWindow.status === 'active' || retWindow.status === 'last_day'
-                            ? 'text-amber-700 dark:text-amber-400'
-                            : 'text-neutral-700 dark:text-neutral-300'
+                            ? 'text-amber-900 font-medium'
+                            : 'text-steel-grey-600'
                         }`}
                       >
                         {retWindow.label}
                       </span>
                     </div>
-                    <span className="text-neutral-600 dark:text-neutral-300 font-medium shrink-0 whitespace-nowrap leading-none">
+                    <span className="text-steel-grey-500 shrink-0 whitespace-nowrap leading-none">
                       {warranty.label}
                     </span>
                   </div>
@@ -343,7 +343,7 @@ export const PurchasesPage: React.FC = () => {
                       )}&orderRef=${encodeURIComponent(p.orderRef || '')}&amount=${p.amount || ''}`
                     )
                   }
-                  className="w-full text-brand-600 dark:text-brand-400"
+                  className="w-full"
                 >
                   <span>Start a case from this purchase</span>
                   <ArrowRight className="w-3.5 h-3.5 shrink-0" />
@@ -354,36 +354,36 @@ export const PurchasesPage: React.FC = () => {
         </div>
       )}
 
-      {/* Import / Paste Orders Modal with Diff Review */}
+      {/* Import Orders Modal */}
       <BottomSheet
         isOpen={isImportModalOpen}
         onClose={() => setIsImportModalOpen(false)}
-        title="Import Purchase Confirmation"
-        description="Paste email confirmation, invoice text, or order details. Local pattern extraction only."
+        title="Import purchase confirmation"
+        description="Paste email confirmation, invoice text, or order details. Local pattern extraction only"
         className="max-w-xl"
       >
         <div className="space-y-4">
           <Textarea
-            label="Paste Order Confirmation Text"
+            label="Order confirmation text"
             rows={4}
             value={importText}
             onChange={(e) => setImportText(e.target.value)}
-            placeholder="Paste your order confirmation email here (e.g. 'Thank you for your order on Flipkart...')"
+            placeholder="Paste your order confirmation text here (e.g. 'Thank you for your order on Flipkart...')"
           />
 
           <Button variant="secondary" size="sm" onClick={handlePreviewImport}>
-            Preview Extracted Fields
+            Preview extracted fields
           </Button>
 
           <div className="relative flex py-1 items-center">
-            <div className="flex-grow border-t border-neutral-200 dark:border-neutral-800"></div>
-            <span className="flex-shrink mx-3 text-xs text-neutral-400 font-medium">OR UPLOAD FILE</span>
-            <div className="flex-grow border-t border-neutral-200 dark:border-neutral-800"></div>
+            <div className="flex-grow border-t border-steel-grey-200"></div>
+            <span className="flex-shrink mx-3 text-xs text-steel-grey-400">or upload file</span>
+            <div className="flex-grow border-t border-steel-grey-200"></div>
           </div>
 
           <div className="flex items-center gap-3">
-            <label className="flex items-center justify-center gap-2 px-3 py-2 rounded-lg border border-neutral-300 dark:border-neutral-700 bg-surface-light-subtle dark:bg-surface-dark-subtle text-xs font-semibold cursor-pointer hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-colors">
-              <Upload className="w-4 h-4 text-neutral-500" />
+            <label className="flex items-center justify-center gap-2 px-3 py-2 rounded-lg border border-steel-grey-200 bg-steel-grey-50 text-xs font-medium cursor-pointer hover:bg-steel-grey-100 transition-colors">
+              <Upload className="w-4 h-4 text-steel-grey-500" />
               <span>Import CSV / JSON / EML file</span>
               <input
                 type="file"
@@ -395,11 +395,11 @@ export const PurchasesPage: React.FC = () => {
           </div>
 
           {importDraft && (
-            <div className="p-4 rounded-xl bg-surface-light-subtle dark:bg-surface-dark-subtle border border-neutral-200/80 dark:border-neutral-800 space-y-2 text-xs animate-in fade-in">
-              <div className="font-semibold text-neutral-900 dark:text-neutral-100 uppercase tracking-wider text-[11px]">
-                Review Extracted Information Before Saving
+            <div className="p-4 rounded-xl bg-steel-grey-50 border border-steel-grey-200 space-y-2 text-xs animate-in fade-in">
+              <div className="font-medium text-charcoal text-xs">
+                Review extracted information before saving
               </div>
-              <div className="grid grid-cols-2 gap-2 text-neutral-700 dark:text-neutral-300">
+              <div className="grid grid-cols-2 gap-2 text-steel-grey-700">
                 <div>Store: <strong>{importDraft.store}</strong></div>
                 <div>Product: <strong>{importDraft.product}</strong></div>
                 <div>Order Ref: <strong>{importDraft.orderRef || 'Not found'}</strong></div>
@@ -407,8 +407,8 @@ export const PurchasesPage: React.FC = () => {
                 <div>Delivery Date: <strong>{importDraft.deliveryDate || 'Not found'}</strong></div>
                 <div>Return Window: <strong>{importDraft.returnWindowDays} days</strong></div>
               </div>
-              <p className="text-[11px] text-neutral-400 pt-1">
-                Rule-based pattern extraction. No external AI or server OCR.
+              <p className="text-[11px] text-steel-grey-500 pt-1">
+                Rule-based pattern extraction. No external server OCR.
               </p>
             </div>
           )}
@@ -418,7 +418,7 @@ export const PurchasesPage: React.FC = () => {
               Cancel
             </Button>
             <Button variant="primary" onClick={handleSaveImport} disabled={!importDraft}>
-              Save to Purchases
+              Save to purchases
             </Button>
           </div>
         </div>
@@ -428,19 +428,19 @@ export const PurchasesPage: React.FC = () => {
       <BottomSheet
         isOpen={isAddModalOpen}
         onClose={() => setIsAddModalOpen(false)}
-        title="Add Purchase Record"
-        description="Record product and return policy to track warranty and return deadlines."
+        title="Add purchase record"
+        description="Record product and return policy to track warranty and return deadlines"
       >
         <div className="space-y-3">
           <Input
-            label="Store or Merchant"
+            label="Store or merchant"
             value={store}
             onChange={(e) => setStore(e.target.value)}
             placeholder="e.g. Amazon India, Flipkart, Croma"
           />
 
           <Input
-            label="Product Name"
+            label="Product name"
             value={product}
             onChange={(e) => setProduct(e.target.value)}
             placeholder="e.g. Mechanical Keyboard"
@@ -448,13 +448,13 @@ export const PurchasesPage: React.FC = () => {
 
           <div className="grid grid-cols-2 gap-3">
             <Input
-              label="Order Reference #"
+              label="Order reference #"
               value={orderRef}
               onChange={(e) => setOrderRef(e.target.value)}
               placeholder="e.g. OD4819201"
             />
             <Input
-              label="Amount Paid (₹)"
+              label="Amount paid (₹)"
               type="number"
               value={amount}
               onChange={(e) => setAmount(e.target.value)}
@@ -464,13 +464,13 @@ export const PurchasesPage: React.FC = () => {
 
           <div className="grid grid-cols-2 gap-3">
             <Input
-              label="Purchase Date"
+              label="Purchase date"
               type="date"
               value={purchaseDate}
               onChange={(e) => setPurchaseDate(e.target.value)}
             />
             <Input
-              label="Delivery Date"
+              label="Delivery date"
               type="date"
               value={deliveryDate}
               onChange={(e) => setDeliveryDate(e.target.value)}
@@ -479,14 +479,14 @@ export const PurchasesPage: React.FC = () => {
 
           <div className="grid grid-cols-2 gap-3">
             <Input
-              label="Return Window (Days)"
+              label="Return window (days)"
               type="number"
               value={returnDays}
               onChange={(e) => setReturnDays(e.target.value)}
               placeholder="7"
             />
             <Input
-              label="Warranty (Months)"
+              label="Warranty (months)"
               type="number"
               value={warrantyMonths}
               onChange={(e) => setWarrantyMonths(e.target.value)}
@@ -499,7 +499,7 @@ export const PurchasesPage: React.FC = () => {
               Cancel
             </Button>
             <Button variant="primary" onClick={handleManualAdd}>
-              Save Purchase
+              Save purchase
             </Button>
           </div>
         </div>
@@ -510,28 +510,28 @@ export const PurchasesPage: React.FC = () => {
         <BottomSheet
           isOpen={true}
           onClose={() => setEditingPurchase(null)}
-          title="Edit Purchase Record"
-          description="Update store, dates, warranty or return period."
+          title="Edit purchase record"
+          description="Update store, dates, warranty or return period"
         >
           <div className="space-y-3">
             <Input
-              label="Store or Merchant"
+              label="Store or merchant"
               value={editingPurchase.store}
               onChange={(e) => setEditingPurchase({ ...editingPurchase, store: e.target.value })}
             />
             <Input
-              label="Product Name"
+              label="Product name"
               value={editingPurchase.product}
               onChange={(e) => setEditingPurchase({ ...editingPurchase, product: e.target.value })}
             />
             <div className="grid grid-cols-2 gap-3">
               <Input
-                label="Order Reference #"
+                label="Order reference #"
                 value={editingPurchase.orderRef || ''}
                 onChange={(e) => setEditingPurchase({ ...editingPurchase, orderRef: e.target.value })}
               />
               <Input
-                label="Amount Paid (₹)"
+                label="Amount paid (₹)"
                 type="number"
                 value={editingPurchase.amount ? String(editingPurchase.amount) : ''}
                 onChange={(e) => setEditingPurchase({ ...editingPurchase, amount: parseFloat(e.target.value) || null })}
@@ -539,13 +539,13 @@ export const PurchasesPage: React.FC = () => {
             </div>
             <div className="grid grid-cols-2 gap-3">
               <Input
-                label="Purchase Date"
+                label="Purchase date"
                 type="date"
                 value={editingPurchase.purchaseDate || ''}
                 onChange={(e) => setEditingPurchase({ ...editingPurchase, purchaseDate: e.target.value })}
               />
               <Input
-                label="Delivery Date"
+                label="Delivery date"
                 type="date"
                 value={editingPurchase.deliveryDate || ''}
                 onChange={(e) => setEditingPurchase({ ...editingPurchase, deliveryDate: e.target.value })}
@@ -553,13 +553,13 @@ export const PurchasesPage: React.FC = () => {
             </div>
             <div className="grid grid-cols-2 gap-3">
               <Input
-                label="Return Window (Days)"
+                label="Return window (days)"
                 type="number"
                 value={String(editingPurchase.returnWindowDays || 7)}
                 onChange={(e) => setEditingPurchase({ ...editingPurchase, returnWindowDays: parseInt(e.target.value, 10) || 7 })}
               />
               <Input
-                label="Warranty (Months)"
+                label="Warranty (months)"
                 type="number"
                 value={String(editingPurchase.warrantyMonths || 12)}
                 onChange={(e) => setEditingPurchase({ ...editingPurchase, warrantyMonths: parseInt(e.target.value, 10) || 12 })}
@@ -570,7 +570,7 @@ export const PurchasesPage: React.FC = () => {
                 Cancel
               </Button>
               <Button variant="primary" onClick={handleUpdatePurchase}>
-                Save Changes
+                Save changes
               </Button>
             </div>
           </div>

@@ -24,7 +24,7 @@ import { caseRepository, evidenceRepository } from '@/lib/db/repositories';
 import { Case, EvidenceMeta } from '@/lib/db/types';
 import { formatComplaintLetter } from '@/lib/pdf/complaintLetter';
 import { detectSensitiveInfo } from '@/lib/rules/redactionChecker';
-import { validateUploadedFile, ALLOWED_EXTENSIONS } from '@/lib/rules/fileValidator';
+import { validateUploadedFile } from '@/lib/rules/fileValidator';
 
 export const DocumentsPage: React.FC = () => {
   const { toast } = useToast();
@@ -121,7 +121,7 @@ export const DocumentsPage: React.FC = () => {
         source: 'evidence',
       });
 
-      toast(`File uploaded and SHA-256 fingerprinted.`, 'success');
+      toast(`File uploaded and fingerprinted with SHA-256.`, 'success');
       setIsUploadModalOpen(false);
       setUploadFile(null);
       loadData();
@@ -138,11 +138,10 @@ export const DocumentsPage: React.FC = () => {
 
     setIsGeneratingPdf(true);
     try {
-      // Lazy load jsPDF code bundle on demand
       const { generateProofPackPDF } = await import('@/lib/pdf/proofPackGenerator');
       const doc = generateProofPackPDF(activeCase);
       doc.save(`RESOLVE-ONE-ProofPack-${activeCase.id}.pdf`);
-      toast('Proof Pack PDF exported cleanly.', 'success');
+      toast('Proof pack PDF exported.', 'success');
     } catch (err: any) {
       toast(`Error generating PDF: ${err.message}`, 'error');
     } finally {
@@ -154,7 +153,7 @@ export const DocumentsPage: React.FC = () => {
     if (!activeCase) return;
     const letter = formatComplaintLetter(activeCase);
     navigator.clipboard.writeText(letter);
-    toast('Formal complaint notice copied to clipboard!', 'success');
+    toast('Formal complaint letter copied to clipboard.', 'success');
   };
 
   const handleDownloadBlob = async (id: string, name: string) => {
@@ -182,18 +181,18 @@ export const DocumentsPage: React.FC = () => {
   };
 
   return (
-    <div className="space-y-6 animate-in fade-in duration-300">
+    <div className="space-y-6 animate-in fade-in duration-150">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h2 className="text-2xl font-black font-sans text-charcoal tracking-tight">
-            Evidence & <span className="text-coral">Proof</span>
+          <h2 className="text-2xl font-serif font-medium text-charcoal tracking-tight">
+            Documents & proof
           </h2>
-          <p className="text-sm text-steel-grey-600 mt-1">
-            Store unedited receipts and images. Fingerprinted with SHA-256 for tamper-proof dispute bundles.
+          <p className="text-xs sm:text-sm text-steel-grey-600 mt-1 font-normal">
+            Store unedited receipts and images. Fingerprinted with SHA-256 for tamper-proof dispute bundles
           </p>
         </div>
 
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2.5">
           <Button
             variant="outline"
             size="md"
@@ -201,7 +200,7 @@ export const DocumentsPage: React.FC = () => {
             disabled={cases.length === 0}
           >
             <Download className="w-4 h-4 shrink-0" />
-            <span>Build Proof Pack</span>
+            <span>Build proof pack</span>
           </Button>
 
           <Button
@@ -211,23 +210,23 @@ export const DocumentsPage: React.FC = () => {
             disabled={cases.length === 0}
           >
             <Plus className="w-4 h-4 shrink-0" />
-            <span>Add File</span>
+            <span>Add file</span>
           </Button>
         </div>
       </div>
 
-      {/* Proof Pack Builder Callout Card (Signature Feature #4) */}
-      <Card variant="subtle" className="p-6 border border-brand-200/60 dark:border-brand-900/40">
+      {/* Proof Pack Builder Callout Card */}
+      <Card variant="subtle" className="p-5 sm:p-6 bg-white border border-steel-grey-200 rounded-2xl shadow-xs">
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-          <div className="space-y-1 max-w-2xl">
+          <div className="space-y-1 max-w-2xl text-left">
             <div className="flex items-center gap-2">
-              <span className="w-2 h-2 rounded-full bg-brand-500" />
-              <h3 className="text-base font-bold text-neutral-900 dark:text-neutral-100">
-                Proof Pack Builder (Signature Feature #4)
+              <span className="w-2 h-2 rounded-full bg-coral shrink-0" />
+              <h3 className="text-base font-medium text-charcoal">
+                Proof pack compiler
               </h3>
             </div>
-            <p className="text-sm text-neutral-600 dark:text-neutral-300">
-              Auto-orders your statement of facts, timeline, and evidence with cryptographic SHA-256 digests. Ready for NCH 1915 or e-Jagriti filing.
+            <p className="text-xs sm:text-sm text-steel-grey-600 font-normal">
+              Orders your statement of facts, timeline, and evidence with cryptographic SHA-256 digests. Ready for NCH 1915 or e-Jagriti filing.
             </p>
           </div>
 
@@ -236,8 +235,9 @@ export const DocumentsPage: React.FC = () => {
             size="md"
             onClick={() => setIsPackModalOpen(true)}
             disabled={cases.length === 0}
+            className="shrink-0"
           >
-            <span>Open Proof Pack Builder</span>
+            <span>Open proof pack builder</span>
           </Button>
         </div>
       </Card>
@@ -245,14 +245,14 @@ export const DocumentsPage: React.FC = () => {
       {/* Evidence Grid */}
       {allEvidence.length === 0 ? (
         <EmptyState
+          illustration="documents"
           title="No evidence files uploaded yet"
           description="Upload invoices, delivery slips, rejection emails, or photos to build a bulletproof dispute pack."
-          actionLabel="Add First Evidence File"
+          actionLabel="Add evidence file"
           onAction={() => setIsUploadModalOpen(true)}
-          illustration="documents"
         />
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
           {allEvidence.map(({ caseId, caseTitle, item }) => (
             <div key={item.id} className="relative group">
               <EvidenceTile
@@ -260,7 +260,7 @@ export const DocumentsPage: React.FC = () => {
                 onDownload={() => handleDownloadBlob(item.id, item.name)}
                 onDelete={() => handleDeleteEvidence(caseId, item.id)}
               />
-              <div className="mt-1 text-[11px] text-neutral-700 dark:text-neutral-300 font-mono px-1 truncate font-medium">
+              <div className="mt-1 text-[11px] text-steel-grey-500 font-mono px-1 truncate font-normal">
                 Case: {caseId} · {caseTitle}
               </div>
             </div>
@@ -272,12 +272,12 @@ export const DocumentsPage: React.FC = () => {
       <BottomSheet
         isOpen={isUploadModalOpen}
         onClose={() => setIsUploadModalOpen(false)}
-        title="Add Supporting Evidence"
-        description="Attach PDF invoice, return receipt, unboxing photo, or chat screenshot."
+        title="Add supporting evidence"
+        description="Attach PDF invoice, return receipt, unboxing photo, or chat screenshot"
       >
         <div className="space-y-4">
           <Select
-            label="Link to Case"
+            label="Link to case"
             value={targetCaseId}
             onChange={(e) => setTargetCaseId(e.target.value)}
             options={cases.map((c) => ({
@@ -286,29 +286,29 @@ export const DocumentsPage: React.FC = () => {
             }))}
           />
 
-          <div className="p-6 border-2 border-dashed border-neutral-300 dark:border-neutral-700 rounded-xl text-center space-y-2">
-            <UploadCloud className="w-8 h-8 text-neutral-400 mx-auto" />
-            <div className="text-sm font-medium text-neutral-800 dark:text-neutral-200">
+          <div className="p-6 border border-dashed border-steel-grey-300 rounded-xl text-center space-y-2 bg-steel-grey-50">
+            <UploadCloud className="w-7 h-7 text-steel-grey-400 mx-auto" />
+            <div className="text-xs sm:text-sm font-medium text-charcoal">
               {uploadFile ? uploadFile.name : 'Choose a file from your device'}
             </div>
             <input
               type="file"
               accept=".pdf,.png,.jpg,.jpeg,.webp,.heic,.mp4,.txt,.eml,.csv,.json"
               onChange={handleFileChange}
-              className="text-xs text-neutral-500 file:mr-3 file:py-1.5 file:px-3 file:rounded-md file:border file:border-neutral-300 file:bg-surface-light-subtle file:text-xs file:font-semibold"
+              className="text-xs text-steel-grey-500 file:mr-2 file:py-1 file:px-2.5 file:rounded file:border file:border-steel-grey-200 file:bg-white file:text-xs"
             />
-            <p className="text-[11px] text-neutral-400">
-              Max file size: 15 MB. Allowed: PDF, PNG, JPG, WEBP, HEIC, MP4, TXT, EML, CSV, JSON.
+            <p className="text-[11px] text-steel-grey-500">
+              Max file size: 15 MB. Allowed: PDF, PNG, JPG, WEBP, MP4, TXT, CSV.
             </p>
           </div>
 
           {redactionNotices.length > 0 && (
-            <div className="p-3.5 rounded-lg bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-900 text-xs text-amber-800 dark:text-amber-300 space-y-1">
-              <div className="flex items-center gap-1.5 font-bold">
-                <ShieldAlert className="w-4 h-4 text-amber-600" />
+            <div className="p-3 rounded-lg bg-amber-50 border border-amber-200 text-xs text-amber-900 space-y-0.5">
+              <div className="flex items-center gap-1.5 font-medium">
+                <ShieldAlert className="w-3.5 h-3.5 text-amber-700" />
                 <span>{redactionNotices[0].label}</span>
               </div>
-              <p>{redactionNotices[0].warning}</p>
+              <p className="text-amber-800">{redactionNotices[0].warning}</p>
             </div>
           )}
 
@@ -327,14 +327,14 @@ export const DocumentsPage: React.FC = () => {
       <BottomSheet
         isOpen={isPackModalOpen}
         onClose={() => setIsPackModalOpen(false)}
-        title="Proof Pack Builder & Guided Handoff"
-        description="Review your compiled complaint package before taking external action."
+        title="Proof pack builder"
+        description="Review your compiled complaint package before taking external action"
         className="max-w-2xl"
       >
         {activeCase && (
-          <div className="space-y-5">
+          <div className="space-y-4">
             <Select
-              label="Select Case"
+              label="Select case"
               value={selectedCaseId}
               onChange={(e) => setSelectedCaseId(e.target.value)}
               options={cases.map((c) => ({
@@ -344,21 +344,21 @@ export const DocumentsPage: React.FC = () => {
             />
 
             {/* Pack Overview Checklist */}
-            <div className="p-4 rounded-xl bg-surface-light-subtle dark:bg-surface-dark-subtle border border-neutral-200/80 dark:border-neutral-800 space-y-2 text-xs">
-              <div className="font-semibold text-neutral-900 dark:text-neutral-100 uppercase tracking-wider text-[11px]">
-                Bundle Contents
+            <div className="p-4 rounded-xl bg-steel-grey-50 border border-steel-grey-200 space-y-2 text-xs">
+              <div className="font-medium text-charcoal text-xs">
+                Bundle contents
               </div>
-              <div className="flex items-center gap-2 text-neutral-700 dark:text-neutral-300">
-                <CheckCircle2 className="w-4 h-4 text-emerald-600" />
-                <span>Verified Statement of Facts & Claim Amount ({activeCase.amount ? `₹${activeCase.amount}` : 'N/A'})</span>
+              <div className="flex items-center gap-2 text-steel-grey-700">
+                <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
+                <span>Verified statement of facts & claim amount ({activeCase.amount ? `₹${activeCase.amount}` : 'N/A'})</span>
               </div>
-              <div className="flex items-center gap-2 text-neutral-700 dark:text-neutral-300">
-                <CheckCircle2 className="w-4 h-4 text-emerald-600" />
-                <span>Chronological Event Log ({(activeCase.timeline || []).length} events)</span>
+              <div className="flex items-center gap-2 text-steel-grey-700">
+                <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
+                <span>Chronological event log ({(activeCase.timeline || []).length} events)</span>
               </div>
-              <div className="flex items-center gap-2 text-neutral-700 dark:text-neutral-300">
-                <CheckCircle2 className="w-4 h-4 text-emerald-600" />
-                <span>Evidence Items with SHA-256 Hashes ({(activeCase.evidence || []).length} files)</span>
+              <div className="flex items-center gap-2 text-steel-grey-700">
+                <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
+                <span>Evidence items with SHA-256 hashes ({(activeCase.evidence || []).length} files)</span>
               </div>
             </div>
 
@@ -372,7 +372,7 @@ export const DocumentsPage: React.FC = () => {
                 className="w-full"
               >
                 <Download className="w-4 h-4 shrink-0" />
-                <span>{isGeneratingPdf ? 'Compiling PDF...' : 'Download PDF Proof Pack'}</span>
+                <span>{isGeneratingPdf ? 'Compiling PDF...' : 'Download PDF proof pack'}</span>
               </Button>
 
               <Button
@@ -382,14 +382,14 @@ export const DocumentsPage: React.FC = () => {
                 className="w-full"
               >
                 <Copy className="w-4 h-4 shrink-0" />
-                <span>Copy Complaint Letter</span>
+                <span>Copy complaint letter</span>
               </Button>
             </div>
 
             {/* Guided Handoff Notice: Never Auto-Sends */}
-            <div className="pt-3 border-t border-neutral-200 dark:border-neutral-800 space-y-2 text-xs text-neutral-600 dark:text-neutral-400">
-              <span className="font-semibold text-neutral-900 dark:text-neutral-100 block">
-                Guided Channel Handoff (You Approve & Send)
+            <div className="pt-3 border-t border-steel-grey-200 space-y-2 text-xs text-steel-grey-600">
+              <span className="font-medium text-charcoal block">
+                Guided channel handoff (You approve & send)
               </span>
               <p>
                 RESOLVE-ONE never transmits emails or files complaints automatically. Open an official portal below and paste your copied letter:
@@ -399,7 +399,7 @@ export const DocumentsPage: React.FC = () => {
                   href="https://consumerhelpline.gov.in"
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-neutral-300 dark:border-neutral-700 hover:bg-neutral-100 dark:hover:bg-neutral-800 text-neutral-900 dark:text-neutral-100 font-medium"
+                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-steel-grey-200 bg-white hover:bg-steel-grey-50 text-charcoal font-medium"
                 >
                   <span>National Consumer Helpline (NCH)</span>
                   <ExternalLink className="w-3.5 h-3.5" />
@@ -409,7 +409,7 @@ export const DocumentsPage: React.FC = () => {
                   href="https://e-jagriti.gov.in/"
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-neutral-300 dark:border-neutral-700 hover:bg-neutral-100 dark:hover:bg-neutral-800 text-neutral-900 dark:text-neutral-100 font-medium"
+                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-steel-grey-200 bg-white hover:bg-steel-grey-50 text-charcoal font-medium"
                 >
                   <span>e-Jagriti Portal</span>
                   <ExternalLink className="w-3.5 h-3.5" />

@@ -39,29 +39,29 @@ export const BottomSheet: React.FC<BottomSheetProps> = ({
       role="dialog"
       aria-modal="true"
       aria-labelledby={title ? 'bottom-sheet-title' : undefined}
-      className="fixed inset-0 z-50 flex items-end md:items-center justify-center bg-black/50 backdrop-blur-sm"
+      className="fixed inset-0 z-50 flex items-end md:items-center justify-center bg-charcoal/40 backdrop-blur-xs"
       onClick={onClose}
     >
       <div
         className={cn(
-          'w-full max-w-lg bg-white dark:bg-surface-dark border border-neutral-200 dark:border-neutral-800 rounded-t-2xl md:rounded-2xl p-6 shadow-floating max-h-[90vh] overflow-y-auto animate-in slide-in-from-bottom md:zoom-in-95 duration-200',
+          'w-full max-w-lg bg-white border border-steel-grey-200 rounded-t-2xl md:rounded-2xl p-6 shadow-floating max-h-[90vh] overflow-y-auto animate-in slide-in-from-bottom md:zoom-in-95 duration-150',
           className
         )}
         onClick={(e) => e.stopPropagation()}
       >
         {/* Handle for mobile */}
-        <div className="w-12 h-1.5 bg-neutral-300 dark:bg-neutral-700 rounded-full mx-auto mb-4 md:hidden" />
+        <div className="w-12 h-1 bg-steel-grey-300 rounded-full mx-auto mb-4 md:hidden" />
 
         {/* Header */}
         <div className="flex items-start justify-between gap-4 mb-4">
           <div>
             {title && (
-              <h3 id="bottom-sheet-title" className="text-xl font-semibold text-neutral-900 dark:text-neutral-100 font-serif">
+              <h3 id="bottom-sheet-title" className="text-lg font-serif font-medium text-charcoal">
                 {title}
               </h3>
             )}
             {description && (
-              <p className="mt-1 text-sm text-neutral-600 dark:text-neutral-400">
+              <p className="mt-1 text-xs sm:text-sm text-steel-grey-600">
                 {description}
               </p>
             )}
@@ -69,10 +69,10 @@ export const BottomSheet: React.FC<BottomSheetProps> = ({
           <button
             type="button"
             onClick={onClose}
-            className="p-2 text-neutral-400 hover:text-neutral-600 dark:hover:text-neutral-200 rounded-lg hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-colors inline-flex items-center justify-center shrink-0 min-h-[44px] min-w-[44px]"
+            className="p-1.5 text-steel-grey-400 hover:text-charcoal rounded-lg hover:bg-steel-grey-100 transition-colors inline-flex items-center justify-center shrink-0 min-h-[36px] min-w-[36px]"
             aria-label="Close modal"
           >
-            <X className="w-5 h-5 shrink-0" />
+            <X className="w-4 h-4 shrink-0" />
           </button>
         </div>
 
@@ -82,4 +82,3 @@ export const BottomSheet: React.FC<BottomSheetProps> = ({
     </div>
   );
 };
-

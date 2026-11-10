@@ -50,26 +50,26 @@ export const CasesListPage: React.FC = () => {
   };
 
   return (
-    <div className="space-y-6 animate-in fade-in duration-300">
+    <div className="space-y-6 animate-in fade-in duration-150">
       {/* Top Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h2 className="text-2xl font-black font-sans text-charcoal tracking-tight">
-            Dispute <span className="text-coral">Cases</span>
+          <h2 className="text-2xl font-serif font-medium text-charcoal tracking-tight">
+            Dispute cases
           </h2>
-          <p className="text-sm text-steel-grey-600 mt-1 font-normal">
-            Track and resolve consumer disputes step-by-step.
+          <p className="text-xs sm:text-sm text-steel-grey-600 mt-1 font-normal">
+            Track and resolve consumer disputes step by step
           </p>
         </div>
 
         <Button
           variant="primary"
           size="md"
-          className="w-full sm:w-auto shrink-0 shadow-sm"
+          className="w-full sm:w-auto shrink-0 shadow-2xs"
           onClick={() => setIsIntakeOpen(true)}
         >
           <Plus className="w-4 h-4" />
-          <span>Tell Us What Happened</span>
+          <span>Tell us what happened</span>
         </Button>
       </div>
 
@@ -77,12 +77,12 @@ export const CasesListPage: React.FC = () => {
       <div className="flex flex-col sm:flex-row items-center gap-3">
         <div className="relative flex-1 w-full">
           <Input
-            placeholder="Search by case ID, store, or product..."
+            placeholder="Search cases, stores, or products"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             className="pl-9"
           />
-          <Search className="w-4 h-4 text-neutral-400 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
+          <Search className="w-4 h-4 text-steel-grey-400 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
         </div>
 
         <div className="w-full sm:w-56">
@@ -91,11 +91,11 @@ export const CasesListPage: React.FC = () => {
             value={filter}
             onChange={(e) => setFilter(e.target.value)}
             options={[
-              { value: 'all', label: 'All Cases' },
-              { value: 'action_required', label: 'Action Required' },
-              { value: 'waiting_company', label: 'Waiting for Company' },
-              { value: 'response_received', label: 'Reply Received' },
-              { value: 'resolved', label: 'Confirmed Resolved' },
+              { value: 'all', label: 'All cases' },
+              { value: 'action_required', label: 'Action required' },
+              { value: 'waiting_company', label: 'Waiting for company' },
+              { value: 'response_received', label: 'Reply received' },
+              { value: 'resolved', label: 'Confirmed resolved' },
             ]}
           />
         </div>
@@ -104,11 +104,11 @@ export const CasesListPage: React.FC = () => {
       {/* Cases List */}
       {cases.length === 0 ? (
         <EmptyState
+          illustration="cases"
           title="No cases match your filter"
           description="Try clearing your search or tell us what happened to start a new dispute case."
-          actionLabel="Tell Us What Happened"
+          actionLabel="Tell us what happened"
           onAction={() => setIsIntakeOpen(true)}
-          illustration="cases"
         />
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">

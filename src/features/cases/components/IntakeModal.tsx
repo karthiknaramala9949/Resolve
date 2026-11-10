@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import { Button, Input, Select, Textarea, useToast, BottomSheet } from '@/design-system';
 import { parseComplaintText } from '@/lib/rules/intakeParser';
 import { caseRepository } from '@/lib/db/repositories';
-import { Sparkles, Mic, MicOff, Edit2, ArrowRight, Building2, Tag, IndianRupee, Hash } from 'lucide-react';
+import { SlidersHorizontal, Mic, MicOff, Edit2, ArrowRight, Building2, Tag, IndianRupee, Hash } from 'lucide-react';
 
 interface IntakeModalProps {
   isOpen: boolean;
@@ -98,55 +98,38 @@ export const IntakeModal: React.FC<IntakeModalProps> = ({
     recognition.onend = () => setIsRecording(false);
     recognition.onerror = () => {
       setIsRecording(false);
-      toast('Voice capture interrupted. You can type directly.', 'warning');
+      toast('Speech recognition error. Please type your complaint.', 'warning');
     };
+
     recognition.onresult = (event: any) => {
       const transcript = event.results[0][0].transcript;
       setStory((prev) => (prev ? `${prev} ${transcript}` : transcript));
-      toast('Voice transcribed via browser speech service.', 'info');
+      toast('Voice transcript added.', 'info');
     };
 
     recognitionRef.current = recognition;
-    try {
-      recognition.start();
-    } catch {
-      setIsRecording(false);
-    }
+    recognition.start();
   };
 
-  // Voice note capture via Web Speech API with explicit user opt-in
   const toggleVoice = () => {
-    if (!speechSupported) {
-      toast('Speech recognition is not supported in this browser.', 'warning');
-      return;
-    }
-
     if (isRecording) {
-      if (recognitionRef.current) {
-        try {
-          recognitionRef.current.stop();
-        } catch {
-          // ignore
-        }
-      }
+      recognitionRef.current?.stop();
       setIsRecording(false);
-      return;
+    } else {
+      if (!voiceConsentGiven) {
+        setShowVoiceNotice(true);
+      } else {
+        startListening();
+      }
     }
-
-    if (!voiceConsentGiven) {
-      setShowVoiceNotice(true);
-      return;
-    }
-
-    startListening();
   };
 
-  const handleSample = (sampleText: string) => {
-    setStory(sampleText);
-    const parsed = parseComplaintText(sampleText);
+  const handleSample = (text: string) => {
+    setStory(text);
+    const parsed = parseComplaintText(text);
     if (parsed.company) setCompany(parsed.company);
     if (parsed.issueType) setIssueType(parsed.issueType);
-    if (parsed.amount) setAmount(String(parsed.amount));
+    if (parsed.amount !== null) setAmount(String(parsed.amount));
     if (parsed.orderRef) setOrderRef(parsed.orderRef);
   };
 
@@ -177,7 +160,7 @@ export const IntakeModal: React.FC<IntakeModalProps> = ({
         evidence: [],
       });
 
-      toast(`Dispute case ${created.id} created successfully!`, 'success');
+      toast(`Dispute case ${created.id} created.`, 'success');
       onClose();
       router.push(`/app/cases/${created.id}`);
     } catch (err: any) {
@@ -190,13 +173,13 @@ export const IntakeModal: React.FC<IntakeModalProps> = ({
       isOpen={isOpen}
       onClose={onClose}
       title="Tell us what happened"
-      description="In plain words, what went wrong? We will organize the facts into an actionable case."
+      description="In plain words, what went wrong? We will organize the facts into an actionable case"
       className="max-w-2xl"
     >
-      <div className="space-y-5">
+      <div className="space-y-4">
         {/* Quick sample chips */}
-        <div className="flex items-center gap-1.5 overflow-x-auto pb-1 text-xs">
-          <span className="text-neutral-500 font-medium shrink-0">Try a sample:</span>
+        <div className="flex items-center gap-2 overflow-x-auto pb-1 text-xs">
+          <span className="text-steel-grey-500 font-normal shrink-0">Sample:</span>
           <button
             type="button"
             onClick={() =>
@@ -204,7 +187,7 @@ export const IntakeModal: React.FC<IntakeModalProps> = ({
                 'I ordered a phone case from Example Store for ₹499 on Oct 28. Order #EX-2048. I returned it via pickup on Oct 30 but refund has not arrived in my account.'
               )
             }
-            className="inline-flex items-center justify-center px-2.5 py-1 rounded-full bg-neutral-100 dark:bg-neutral-800 hover:bg-neutral-200 text-neutral-700 dark:text-neutral-300 shrink-0 transition-colors leading-none"
+            className="inline-flex items-center justify-center px-2.5 py-1 rounded-full bg-steel-grey-100 hover:bg-steel-grey-200 text-steel-grey-700 shrink-0 transition-colors leading-none"
           >
             Refund not received
           </button>
@@ -215,7 +198,7 @@ export const IntakeModal: React.FC<IntakeModalProps> = ({
                 'Bought wireless earbuds from Flipkart for ₹2,499. Order OD330192841. Arrived with left earbud defective and seller rejected my return request.'
               )
             }
-            className="inline-flex items-center justify-center px-2.5 py-1 rounded-full bg-neutral-100 dark:bg-neutral-800 hover:bg-neutral-200 text-neutral-700 dark:text-neutral-300 shrink-0 transition-colors leading-none"
+            className="inline-flex items-center justify-center px-2.5 py-1 rounded-full bg-steel-grey-100 hover:bg-steel-grey-200 text-steel-grey-700 shrink-0 transition-colors leading-none"
           >
             Defective item rejected
           </button>
@@ -228,7 +211,7 @@ export const IntakeModal: React.FC<IntakeModalProps> = ({
             value={story}
             onChange={(e) => setStory(e.target.value)}
             placeholder="e.g. I bought a shirt from Myntra for ₹1,299 on Order #MY-8821. It arrived torn, and customer support refused replacement..."
-            className="pr-12 text-base"
+            className="pr-12 text-sm"
           />
 
           {/* Voice trigger */}
@@ -236,10 +219,10 @@ export const IntakeModal: React.FC<IntakeModalProps> = ({
             <button
               type="button"
               onClick={toggleVoice}
-              className={`absolute right-3 top-3 p-2 rounded-lg transition-colors ${
+              className={`absolute right-3 top-3 p-1.5 rounded-lg transition-colors ${
                 isRecording
-                  ? 'bg-red-500 text-white animate-pulse'
-                  : 'text-neutral-400 hover:text-neutral-700 dark:hover:text-neutral-200 hover:bg-neutral-100 dark:hover:bg-neutral-800'
+                  ? 'bg-coral text-white'
+                  : 'text-steel-grey-400 hover:text-charcoal hover:bg-steel-grey-100'
               }`}
               title={isRecording ? 'Listening... click to stop' : 'Record voice note (in-browser Speech API)'}
             >
@@ -248,15 +231,15 @@ export const IntakeModal: React.FC<IntakeModalProps> = ({
           )}
         </div>
 
-        {/* Explicit Voice Transcription Opt-In Notice */}
+        {/* Voice Transcription Opt-In Notice */}
         {showVoiceNotice && (
-          <div className="p-4 rounded-xl bg-amber-50 dark:bg-amber-950/60 border border-amber-300 dark:border-amber-800 text-xs text-amber-900 dark:text-amber-200 space-y-3 animate-in fade-in">
-            <div className="flex items-start gap-2.5">
-              <Mic className="w-4 h-4 text-amber-600 dark:text-amber-400 mt-0.5 shrink-0" />
+          <div className="p-3.5 rounded-xl bg-amber-50 border border-amber-200 text-xs text-amber-900 space-y-2">
+            <div className="flex items-start gap-2">
+              <Mic className="w-4 h-4 text-amber-700 mt-0.5 shrink-0" />
               <div>
-                <p className="font-semibold text-sm">Microphone Transcription Notice</p>
-                <p className="mt-1 leading-relaxed text-xs">
-                  Your browser may send audio to its speech provider (for example Google in Chrome) to transcribe it. Use typing if you prefer.
+                <p className="font-medium">Microphone transcription notice</p>
+                <p className="mt-0.5 leading-relaxed text-xs text-amber-800">
+                  Your browser may send audio to its speech recognition engine (e.g. Google in Chrome) to transcribe it. Use manual typing if you prefer.
                 </p>
               </div>
             </div>
@@ -264,7 +247,7 @@ export const IntakeModal: React.FC<IntakeModalProps> = ({
               <button
                 type="button"
                 onClick={() => setShowVoiceNotice(false)}
-                className="inline-flex items-center justify-center px-3 py-2 rounded-lg border border-amber-300 dark:border-amber-700 bg-white dark:bg-neutral-900 text-neutral-700 dark:text-neutral-300 hover:bg-neutral-100 dark:hover:bg-neutral-800 leading-none"
+                className="inline-flex items-center justify-center px-3 py-1.5 rounded-lg border border-steel-grey-200 bg-white text-steel-grey-700 hover:bg-steel-grey-50 text-xs leading-none"
               >
                 Cancel, I will type
               </button>
@@ -275,29 +258,29 @@ export const IntakeModal: React.FC<IntakeModalProps> = ({
                   setShowVoiceNotice(false);
                   startListening();
                 }}
-                className="inline-flex items-center justify-center px-3 py-2 rounded-lg bg-coral text-white font-bold hover:bg-coral-600 transition-colors leading-none"
+                className="inline-flex items-center justify-center px-3 py-1.5 rounded-lg bg-coral text-white font-medium hover:bg-coral-600 transition-colors text-xs leading-none"
               >
-                I understand, start microphone
+                Start microphone
               </button>
             </div>
           </div>
         )}
 
         {isRecording && (
-          <p className="text-xs text-red-600 font-medium animate-pulse flex items-center gap-1.5">
-            <span className="w-2 h-2 rounded-full bg-red-600 inline-block animate-ping" />
-            <span>Listening... Speak clearly into your microphone. Tap microphone icon to stop.</span>
+          <p className="text-xs text-coral font-medium flex items-center gap-1.5">
+            <span className="w-2 h-2 rounded-full bg-coral inline-block" />
+            <span>Listening... Speak clearly. Tap microphone icon to finish.</span>
           </p>
         )}
 
         {/* Live Rule-based chips card */}
-        <div className="p-4 rounded-xl border border-steel-grey-200 bg-steel-grey-50/50 space-y-3">
+        <div className="p-4 rounded-xl border border-steel-grey-200 bg-steel-grey-50/50 space-y-2.5">
           <div className="flex items-center justify-between">
-            <div className="flex items-center gap-1.5 text-xs font-semibold text-coral">
-              <Sparkles className="w-3.5 h-3.5" />
-              <span>Suggested from your words (local rule-based parsing, not AI)</span>
+            <div className="flex items-center gap-1.5 text-xs font-medium text-coral">
+              <SlidersHorizontal className="w-3.5 h-3.5" />
+              <span>Extracted facts (in-browser regex rules)</span>
             </div>
-            <span className="text-[11px] text-steel-grey-400">Click any chip to edit</span>
+            <span className="text-[11px] text-steel-grey-500">Tap chip to edit</span>
           </div>
 
           <div className="flex flex-wrap gap-2">
@@ -305,14 +288,14 @@ export const IntakeModal: React.FC<IntakeModalProps> = ({
             <button
               type="button"
               onClick={() => setActiveChipEdit(activeChipEdit === 'company' ? null : 'company')}
-              className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border text-xs font-medium transition-all leading-none ${
+              className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border text-xs font-medium transition-colors leading-none ${
                 company
                   ? 'bg-white border-steel-grey-200 text-charcoal shadow-2xs'
                   : 'bg-steel-grey-50 border-dashed border-steel-grey-300 text-steel-grey-400'
               }`}
             >
               <Building2 className="w-3.5 h-3.5 text-steel-grey-400 shrink-0" />
-              <span>Company: {company || 'Add company'}</span>
+              <span>Store: {company || 'Add company'}</span>
               <Edit2 className="w-3 h-3 text-steel-grey-400 shrink-0" />
             </button>
 
@@ -331,13 +314,13 @@ export const IntakeModal: React.FC<IntakeModalProps> = ({
             <button
               type="button"
               onClick={() => setActiveChipEdit(activeChipEdit === 'amount' ? null : 'amount')}
-              className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border text-xs font-medium transition-all leading-none ${
+              className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border text-xs font-medium transition-colors leading-none ${
                 amount
                   ? 'bg-white border-steel-grey-200 text-charcoal shadow-2xs'
                   : 'bg-steel-grey-50 border-dashed border-steel-grey-300 text-steel-grey-400'
               }`}
             >
-              <IndianRupee className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
+              <IndianRupee className="w-3.5 h-3.5 text-coral shrink-0" />
               <span>Amount: {amount ? `₹${amount}` : 'Add amount'}</span>
               <Edit2 className="w-3 h-3 text-steel-grey-400 shrink-0" />
             </button>
@@ -346,14 +329,14 @@ export const IntakeModal: React.FC<IntakeModalProps> = ({
             <button
               type="button"
               onClick={() => setActiveChipEdit(activeChipEdit === 'order' ? null : 'order')}
-              className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border text-xs font-medium transition-all leading-none ${
+              className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border text-xs font-medium transition-colors leading-none ${
                 orderRef
                   ? 'bg-white border-steel-grey-200 text-charcoal shadow-2xs'
                   : 'bg-steel-grey-50 border-dashed border-steel-grey-300 text-steel-grey-400'
               }`}
             >
               <Hash className="w-3.5 h-3.5 text-steel-grey-400 shrink-0" />
-              <span>Order #: {orderRef || 'Add reference'}</span>
+              <span>Ref: {orderRef || 'Add reference'}</span>
               <Edit2 className="w-3 h-3 text-steel-grey-400 shrink-0" />
             </button>
           </div>
@@ -364,10 +347,10 @@ export const IntakeModal: React.FC<IntakeModalProps> = ({
               {activeChipEdit === 'company' && (
                 <div className="flex gap-2">
                   <Input
-                    label="Company or Seller Name"
+                    label="Company or seller name"
                     value={company}
                     onChange={(e) => setCompany(e.target.value)}
-                    placeholder="e.g. Flipkart, Amazon, Swiggy..."
+                    placeholder="e.g. Flipkart, Amazon, Swiggy"
                   />
                   <Button size="sm" variant="secondary" className="mt-7" onClick={() => setActiveChipEdit(null)}>
                     Done
@@ -377,7 +360,7 @@ export const IntakeModal: React.FC<IntakeModalProps> = ({
               {activeChipEdit === 'issue' && (
                 <div className="flex gap-2">
                   <Select
-                    label="Dispute Issue Category"
+                    label="Dispute category"
                     value={issueType}
                     onChange={(e) => {
                       setIssueType(e.target.value);
@@ -399,7 +382,7 @@ export const IntakeModal: React.FC<IntakeModalProps> = ({
               {activeChipEdit === 'amount' && (
                 <div className="flex gap-2">
                   <Input
-                    label="Claim Amount (₹)"
+                    label="Claim amount (₹)"
                     type="number"
                     value={amount}
                     onChange={(e) => setAmount(e.target.value)}
@@ -413,7 +396,7 @@ export const IntakeModal: React.FC<IntakeModalProps> = ({
               {activeChipEdit === 'order' && (
                 <div className="flex gap-2">
                   <Input
-                    label="Order / Booking Reference #"
+                    label="Order / booking reference #"
                     value={orderRef}
                     onChange={(e) => setOrderRef(e.target.value)}
                     placeholder="e.g. OD330192841"
@@ -429,17 +412,17 @@ export const IntakeModal: React.FC<IntakeModalProps> = ({
 
         {/* Footer Confirmation */}
         <div className="pt-2 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
-          <span className="text-xs text-neutral-500">
-            You will review every action before anything is sent.
+          <span className="text-xs text-steel-grey-500">
+            You review every filing before anything is sent.
           </span>
           <Button
             variant="primary"
-            size="lg"
+            size="md"
             onClick={handleCreateCase}
-            className="w-full sm:w-auto shrink-0 shadow-elevated px-6"
+            className="w-full sm:w-auto shrink-0 shadow-2xs px-5"
           >
-            <span>Confirm & Create Case</span>
-            <ArrowRight className="w-4 h-4 shrink-0" />
+            <span>Create dispute case</span>
+            <ArrowRight className="w-3.5 h-3.5 shrink-0" />
           </Button>
         </div>
       </div>

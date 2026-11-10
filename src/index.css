@@ -1,108 +1,96 @@
+@import url('https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap');
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
 @layer base {
   :root {
-    /* Central Color Palette Definition */
-    --color-steel-grey: #929DA7;
-    --color-charcoal: #17191C;
-    --color-coral: #FF4B32;
+    /* Central Color Palette: Direction A (Warm Paper & Terracotta) */
+    --color-steel-grey: #8A847A;
+    --color-charcoal: #1F1B16;
+    --color-coral: #C8372D;
 
-    /* Cool Steel Grey Scale */
-    --color-steel-grey-50: #F6F8F9;
-    --color-steel-grey-100: #EDF0F2;
-    --color-steel-grey-200: #DCE1E5;
-    --color-steel-grey-300: #BAC4CC;
-    --color-steel-grey-400: #929DA7;
-    --color-steel-grey-500: #717D88;
-    --color-steel-grey-600: #57626C;
-    --color-steel-grey-700: #424B53;
-    --color-steel-grey-800: #2E343A;
-    --color-steel-grey-900: #1D2226;
+    /* Warm Paper Ramp */
+    --color-steel-grey-50: #FAF8F4;
+    --color-steel-grey-100: #F3EFE7;
+    --color-steel-grey-200: #E5DFD5;
+    --color-steel-grey-300: #D2C9BD;
+    --color-steel-grey-400: #B0A495;
+    --color-steel-grey-500: #8A847A;
+    --color-steel-grey-600: #5E554A;
+    --color-steel-grey-700: #433D35;
+    --color-steel-grey-800: #2E2A24;
+    --color-steel-grey-900: #1F1B16;
 
-    /* Midnight Charcoal Scale */
-    --color-charcoal-50: #F3F4F4;
-    --color-charcoal-100: #E3E4E6;
-    --color-charcoal-200: #C2C5C9;
-    --color-charcoal-700: #2C2F34;
-    --color-charcoal-800: #1F2226;
-    --color-charcoal-900: #17191C;
-    --color-charcoal-950: #0E0F11;
+    /* Charcoal Scale */
+    --color-charcoal-50: #FAF8F4;
+    --color-charcoal-100: #F3EFE7;
+    --color-charcoal-200: #E5DFD5;
+    --color-charcoal-700: #433D35;
+    --color-charcoal-800: #2E2A24;
+    --color-charcoal-900: #1F1B16;
+    --color-charcoal-950: #14110E;
 
-    /* Vibrant Coral Orange Scale */
-    --color-coral-50: #FFF5F4;
-    --color-coral-100: #FFEBE8;
-    --color-coral-200: #FFD4CE;
-    --color-coral-300: #FFAFA3;
-    --color-coral-400: #FF7D6B;
-    --color-coral-500: #FF4B32;
-    --color-coral-600: #E63D25;
-    --color-coral-700: #BF2B15;
-    --color-coral-800: #992211;
-    --color-coral-900: #7A1D0E;
+    /* Refined Seal Terracotta / Vermilion */
+    --color-coral-50: #FDF5F4;
+    --color-coral-100: #FBE9E7;
+    --color-coral-200: #F6CCC7;
+    --color-coral-300: #EFA39C;
+    --color-coral-400: #E26D64;
+    --color-coral-500: #C8372D;
+    --color-coral-600: #AC2B22;
+    --color-coral-700: #8E221B;
+    --color-coral-800: #701B15;
+    --color-coral-900: #551410;
 
-    /* Semantic CSS Variables mapped to new palette */
-    --background: 210 20% 98%; /* #F6F8F9 Cool Steel Grey tint */
+    /* Semantic CSS Variables mapped to warm paper */
+    --background: 40 25% 97%; /* #FAF8F4 */
     --surface: 0 0% 100%; /* #FFFFFF */
-    --surface-subtle: 204 18% 97%; /* #EDF0F2 */
-    --surface-border: 206 14% 88%; /* #DCE1E5 */
-    --foreground: 216 10% 10%; /* #17191C Midnight Charcoal */
-    --foreground-muted: 210 11% 38%; /* #57626C WCAG AA Secondary Text */
+    --surface-subtle: 38 24% 93%; /* #F3EFE7 */
+    --surface-border: 36 18% 87%; /* #E5DFD5 */
+    --foreground: 30 18% 10%; /* #1F1B16 Deep Charcoal */
+    --foreground-muted: 33 12% 33%; /* #5E554A Legible Slate */
     
-    --brand-primary: 8 100% 60%; /* #FF4B32 Vibrant Coral Orange */
-    --brand-hover: 8 85% 52%; /* #E63D25 */
+    --brand-primary: 5 62% 48%; /* #C8372D Seal Terracotta */
+    --brand-hover: 5 67% 40%; /* #AC2B22 */
     
-    --success: 153 67% 32%; /* #1B8755 */
-    --success-bg: 147 48% 95%;
+    --success: 142 76% 36%; /* #16A34A */
+    --success-bg: 135 48% 95%;
     
-    --warning: 40 100% 35%; /* #B57700 */
+    --warning: 39 100% 35%; /* #B57700 */
     --warning-bg: 43 92% 95%;
     
     --info: 208 73% 42%; /* #1D70B8 */
     --info-bg: 211 73% 96%;
-  }
 
-  .dark {
-    --background: 210 20% 98%; /* #F6F8F9 */
-    --surface: 0 0% 100%; /* #FFFFFF */
-    --surface-subtle: 204 18% 97%; /* #EDF0F2 */
-    --surface-border: 206 14% 88%; /* #DCE1E5 */
-    --foreground: 216 10% 10%; /* #17191C Midnight Charcoal */
-    --foreground-muted: 210 11% 38%; /* #57626C WCAG AA Secondary Text */
-    
-    --brand-primary: 8 100% 60%; /* #FF4B32 */
-    --brand-hover: 8 85% 52%; /* #E63D25 */
-    
-    --success: 153 67% 32%;
-    --success-bg: 147 48% 95%;
-    
-    --warning: 40 100% 35%;
-    --warning-bg: 43 92% 95%;
-    
-    --info: 208 73% 42%;
-    --info-bg: 211 73% 96%;
+    /* Typography font variables */
+    --font-serif: 'Instrument Serif', 'Newsreader', Georgia, serif;
+    --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    --font-mono: 'JetBrains Mono', 'IBM Plex Mono', Menlo, Consolas, monospace;
   }
 
   html {
     scroll-behavior: smooth;
+    background-color: #FAF8F4;
   }
 
   body {
+    font-family: var(--font-sans);
     font-feature-settings: "cv02", "cv03", "cv04", "cv11";
-    font-size: 16px; /* 16px minimum body */
+    font-size: 15px;
     line-height: 1.5;
-    background-color: #FFFFFF;
+    background-color: #FAF8F4;
     color: var(--color-charcoal);
     scroll-behavior: smooth;
     -webkit-overflow-scrolling: touch;
   }
 }
 
-/* Modern smooth scrollbar */
+/* Quiet neutral scrollbar */
 ::-webkit-scrollbar {
-  width: 7px;
-  height: 7px;
+  width: 6px;
+  height: 6px;
 }
 
 ::-webkit-scrollbar-track {
@@ -110,21 +98,13 @@
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #DCE1E5;
+  background: #E5DFD5;
   border-radius: 9999px;
-  transition: background-color 0.2s ease;
+  transition: background-color 0.15s ease;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: #BAC4CC;
-}
-
-.dark ::-webkit-scrollbar-thumb {
-  background: #2C2F34;
-}
-
-.dark ::-webkit-scrollbar-thumb:hover {
-  background: #424B53;
+  background: #D2C9BD;
 }
 
 .tabular-nums {

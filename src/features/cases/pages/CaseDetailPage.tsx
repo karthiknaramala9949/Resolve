@@ -93,7 +93,7 @@ export const CaseDetailPage: React.FC = () => {
 
   if (loading) {
     return (
-      <div className="py-20 text-center text-neutral-500 animate-pulse">
+      <div className="py-20 text-center text-steel-grey-500 font-normal">
         Loading case details from device storage...
       </div>
     );
@@ -102,11 +102,11 @@ export const CaseDetailPage: React.FC = () => {
   if (!caseData) {
     return (
       <div className="py-20 text-center space-y-4">
-        <h2 className="text-xl font-bold font-serif">Case Not Found</h2>
-        <p className="text-sm text-neutral-500">
-          Case {id} does not exist in this browser's local database.
+        <h2 className="text-xl font-medium font-serif text-charcoal">Case not found</h2>
+        <p className="text-xs sm:text-sm text-steel-grey-600">
+          Case {id} does not exist in this browser&apos;s local database.
         </p>
-        <Button onClick={() => router.push('/app/cases')}>Return to Cases</Button>
+        <Button onClick={() => router.push('/app/cases')}>Return to cases</Button>
       </div>
     );
   }
@@ -142,11 +142,10 @@ export const CaseDetailPage: React.FC = () => {
     try {
       await caseRepository.update(caseData.id, {
         status: 'waiting_company',
-        updatedAt: new Date().toISOString(),
       });
       await caseRepository.addTimelineEvent(caseData.id, {
-        title: 'Formal complaint submitted to merchant/seller',
-        detail: `Sent through official support channel. Awaiting merchant written reply within 48-72h.`,
+        title: 'Formal complaint submitted to store',
+        detail: 'Dispute notice sent via official company grievance portal or email.',
         source: 'customer',
       });
       toast('Case status updated to Waiting for Company.', 'success');
@@ -192,13 +191,12 @@ export const CaseDetailPage: React.FC = () => {
     }
   };
 
-  // 5. Delete Case (with confirmation and undo toast)
+  // 5. Delete Case
   const handleDeleteCase = async () => {
     if (!window.confirm(`Are you sure you want to delete dispute ${caseData.id}? This will remove all local timeline logs from this device.`)) {
       return;
     }
 
-    const backupCopy = { ...caseData };
     try {
       await caseRepository.delete(caseData.id);
       toast(`Case ${caseData.id} deleted.`, 'info');
@@ -213,9 +211,9 @@ export const CaseDetailPage: React.FC = () => {
     try {
       const letter = formatComplaintLetter(caseData);
       await navigator.clipboard.writeText(letter);
-      toast('Formal CPA 2019 grievance letter copied to clipboard!', 'success');
+      toast('Formal grievance notice copied to clipboard.', 'success');
     } catch {
-      toast('Could not copy to clipboard. Please select and copy manually.', 'warning');
+      toast('Could not copy to clipboard. Please copy manually.', 'warning');
     }
   };
 
@@ -258,7 +256,7 @@ export const CaseDetailPage: React.FC = () => {
       const meta: EvidenceMeta = {
         id: newEvId,
         name: uploadFile.name,
-        mime: uploadFile.type || 'application/octet-stream',
+        mime: uploadFile.type,
         size: uploadFile.size,
         source: 'customer_upload',
         addedAt: new Date().toISOString(),
@@ -266,14 +264,15 @@ export const CaseDetailPage: React.FC = () => {
         redactionHint: redactionNotice || undefined,
       };
 
-      await caseRepository.addEvidenceMeta(caseData.id, meta);
+      const updatedEvidence = [...(caseData.evidence || []), meta];
+      await caseRepository.update(caseData.id, { evidence: updatedEvidence });
       await caseRepository.addTimelineEvent(caseData.id, {
-        title: `Evidence added: ${uploadFile.name}`,
-        detail: `SHA-256 fingerprint: ${savedBlob.sha256.slice(0, 16)}...`,
+        title: `Attached evidence: ${uploadFile.name}`,
+        detail: `File verified locally with SHA-256 fingerprint: ${savedBlob.sha256.slice(0, 16)}...`,
         source: 'evidence',
       });
 
-      toast('Evidence attached with SHA-256 fingerprint.', 'success');
+      toast('Evidence file attached to case.', 'success');
       setIsUploadEvidenceOpen(false);
       setUploadFile(null);
       setRedactionNotice(null);
@@ -368,7 +367,7 @@ export const CaseDetailPage: React.FC = () => {
           detail: `Customer checked bank account and confirmed ₹${numAmount} received. Case resolved.`,
           source: 'customer',
         });
-        toast('Congratulations! Case outcome verified and resolved.', 'success');
+        toast('Case outcome verified and resolved.', 'success');
       }
 
       setIsOutcomeModalOpen(false);
@@ -386,88 +385,90 @@ export const CaseDetailPage: React.FC = () => {
   const receivedAmt = caseData.threeStateOutcome?.customerConfirmed?.amountReceived ?? null;
 
   return (
-    <div className="space-y-8 animate-in fade-in duration-300">
+    <div className="space-y-6 animate-in fade-in duration-150">
       {/* Top Navigation & Action Toolbar */}
       <div className="flex flex-wrap items-center justify-between gap-4">
         <button
           type="button"
           onClick={() => router.push('/app/cases')}
-          className="inline-flex items-center gap-2 text-sm font-medium text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-neutral-100 transition-colors"
+          className="inline-flex items-center gap-2 text-xs font-medium text-steel-grey-600 hover:text-charcoal transition-colors"
         >
-          <ArrowLeft className="w-4 h-4" />
-          <span>Back to all cases</span>
+          <ArrowLeft className="w-3.5 h-3.5" />
+          <span>Back to cases</span>
         </button>
 
         <div className="flex flex-wrap items-center gap-2">
           <Button variant="outline" size="sm" onClick={handleCopyComplaint}>
             <Copy className="w-3.5 h-3.5" />
-            <span>Copy Complaint Notice</span>
+            <span>Copy complaint letter</span>
           </Button>
 
           <Button variant="outline" size="sm" onClick={() => setIsChannelModalOpen(true)}>
             <ExternalLink className="w-3.5 h-3.5" />
-            <span>Open Official Channel</span>
+            <span>Official routes</span>
           </Button>
 
           <Button variant="outline" size="sm" onClick={() => router.push('/app/documents')}>
             <Download className="w-3.5 h-3.5" />
-            <span>Export Proof Pack</span>
+            <span>Export proof pack</span>
           </Button>
         </div>
       </div>
 
       {/* Case Header Card */}
-      <Card variant="elevated" className="p-6 md:p-8 space-y-4">
-        <div className="flex flex-wrap items-center justify-between gap-4">
+      <Card variant="elevated" className="p-6 sm:p-7 space-y-4 bg-white border border-steel-grey-200">
+        <div className="flex flex-wrap items-center justify-between gap-3">
           <div className="flex items-center gap-2">
-            <span className="font-mono text-sm font-bold uppercase tracking-wider text-neutral-500 dark:text-neutral-400 bg-neutral-100 dark:bg-neutral-800 px-2.5 py-1 rounded-md leading-none inline-flex items-center">
+            <span className="font-mono text-xs text-steel-grey-600 bg-steel-grey-100 px-2 py-0.5 rounded leading-none">
               {caseData.id}
             </span>
-            <span className="text-xs text-neutral-400">•</span>
-            <span className="text-xs text-neutral-500 dark:text-neutral-400">
+            <span className="text-xs text-steel-grey-400">•</span>
+            <span className="text-xs text-steel-grey-500">
               Created {new Date(caseData.createdAt).toLocaleDateString('en-IN')}
             </span>
           </div>
 
-          <StatusChip status={caseData.status} size="md" />
+          <StatusChip status={caseData.status} size="sm" />
         </div>
 
         <div>
-          <h2 className="text-2xl md:text-3xl font-bold font-serif text-neutral-900 dark:text-neutral-100">
+          <h2 className="text-xl sm:text-2xl font-serif font-medium text-charcoal">
             {caseData.title}
           </h2>
 
-          <div className="mt-3 flex flex-wrap items-center gap-6 text-sm text-neutral-600 dark:text-neutral-300">
-            <div className="flex items-center gap-2">
-              <Building2 className="w-4 h-4 text-neutral-400" />
-              <span className="font-medium text-neutral-900 dark:text-neutral-100">{caseData.company}</span>
+          <div className="mt-2.5 flex flex-wrap items-center gap-5 text-xs sm:text-sm text-steel-grey-600">
+            <div className="flex items-center gap-1.5 font-normal">
+              <Building2 className="w-3.5 h-3.5 text-steel-grey-400" />
+              <span>{caseData.company}</span>
             </div>
 
             {caseData.orderRef && (
-              <div className="flex items-center gap-2 font-mono text-xs">
-                <span className="text-neutral-400">Ref:</span>
+              <div className="flex items-center gap-1.5 font-mono text-xs">
+                <span className="text-steel-grey-400">Ref:</span>
                 <span>{caseData.orderRef}</span>
               </div>
             )}
 
-            <div className="flex items-center gap-2">
-              <span className="text-neutral-400 font-medium">Claim Amount:</span>
-              <MoneyDisplay amount={caseData.amount} size="md" />
+            <div className="flex items-center gap-1.5">
+              <span className="text-steel-grey-500 font-normal">Claim amount:</span>
+              <MoneyDisplay amount={caseData.amount} size="sm" />
             </div>
           </div>
 
-          <p className="mt-4 text-sm text-neutral-600 dark:text-neutral-300 leading-relaxed bg-surface-light-subtle dark:bg-surface-dark-subtle p-3.5 rounded-xl border border-neutral-200/60 dark:border-neutral-800">
-            {caseData.description}
-          </p>
+          {caseData.description && (
+            <p className="mt-3.5 text-xs sm:text-sm text-steel-grey-600 leading-relaxed bg-steel-grey-50 p-3.5 rounded-xl border border-steel-grey-200 font-normal">
+              {caseData.description}
+            </p>
+          )}
         </div>
 
         {/* Quick Lifecycle Action Buttons */}
-        <div className="pt-3 border-t border-neutral-200 dark:border-neutral-800 flex flex-wrap items-center justify-between gap-3">
+        <div className="pt-3 border-t border-steel-grey-100 flex flex-wrap items-center justify-between gap-3">
           <div className="flex flex-wrap items-center gap-2">
             {caseData.status === 'action_required' && (
               <Button variant="secondary" size="sm" onClick={handleMarkSent}>
                 <Send className="w-3.5 h-3.5" />
-                <span>Mark Sent to Company</span>
+                <span>Mark sent to company</span>
               </Button>
             )}
 
@@ -480,7 +481,7 @@ export const CaseDetailPage: React.FC = () => {
               }}
             >
               <FileCheck className="w-3.5 h-3.5" />
-              <span>Record Company Reply</span>
+              <span>Record company reply</span>
             </Button>
 
             <Button
@@ -489,18 +490,18 @@ export const CaseDetailPage: React.FC = () => {
               onClick={() => setIsAddReminderOpen(true)}
             >
               <Clock className="w-3.5 h-3.5" />
-              <span>Add Follow-Up Reminder</span>
+              <span>Add follow-up reminder</span>
             </Button>
 
             {(caseData.status === 'resolved' || caseData.status === 'closed') ? (
               <Button variant="outline" size="sm" onClick={handleReopen}>
                 <RotateCcw className="w-3.5 h-3.5" />
-                <span>Reopen Case</span>
+                <span>Reopen case</span>
               </Button>
             ) : (
               <Button variant="outline" size="sm" onClick={handleArchive}>
                 <Archive className="w-3.5 h-3.5" />
-                <span>Archive Case</span>
+                <span>Archive case</span>
               </Button>
             )}
           </div>
@@ -509,51 +510,51 @@ export const CaseDetailPage: React.FC = () => {
             variant="outline"
             size="sm"
             onClick={handleDeleteCase}
-            className="text-red-600 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-950/40 border-red-200 dark:border-red-900"
+            className="text-coral-700 hover:text-coral-800 hover:bg-coral-50 border-coral-200"
           >
             <Trash2 className="w-3.5 h-3.5" />
-            <span>Delete Case</span>
+            <span>Delete case</span>
           </Button>
         </div>
       </Card>
 
-      {/* Dominant Next Step Card (Signature Feature #2) */}
+      {/* Dominant Next Step Card */}
       <Card
         variant="default"
-        className="border-2 border-brand-500/80 bg-brand-50/20 dark:bg-brand-950/20 p-6 space-y-3"
+        className="border border-steel-grey-200 bg-white p-5 sm:p-6 space-y-3 rounded-2xl shadow-xs"
       >
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <span className="w-2.5 h-2.5 rounded-full bg-brand-500 animate-ping" />
-            <h3 className="text-xs font-bold uppercase tracking-wider text-brand-700 dark:text-brand-300">
-              Next Step to Take
-            </h3>
+            <span className="w-2 h-2 rounded-full bg-coral shrink-0" />
+            <span className="text-xs font-medium text-coral">
+              Next step to take
+            </span>
           </div>
 
           <button
             type="button"
             onClick={() => setShowWhyNextStep(!showWhyNextStep)}
-            className="inline-flex items-center gap-1 text-xs font-medium text-neutral-500 hover:text-neutral-800 dark:hover:text-neutral-200"
+            className="inline-flex items-center gap-1 text-xs text-steel-grey-500 hover:text-charcoal transition-colors"
           >
             <HelpCircle className="w-3.5 h-3.5" />
             <span>Why am I seeing this?</span>
           </button>
         </div>
 
-        <p className="text-lg font-semibold text-neutral-900 dark:text-neutral-100">
+        <p className="text-base sm:text-lg font-medium text-charcoal">
           {nextStep.action}
         </p>
 
         {showWhyNextStep && (
-          <div className="p-3.5 rounded-lg bg-white dark:bg-surface-dark border border-neutral-200 dark:border-neutral-800 text-xs text-neutral-600 dark:text-neutral-300 leading-relaxed animate-in fade-in">
-            <span className="font-semibold text-neutral-900 dark:text-neutral-100 block mb-1">
-              Transparent Rule Engine Explanation:
+          <div className="p-3.5 rounded-xl bg-steel-grey-50 border border-steel-grey-200 text-xs text-steel-grey-600 leading-relaxed font-normal">
+            <span className="font-medium text-charcoal block mb-0.5">
+              Rule engine basis:
             </span>
             {nextStep.reason}
           </div>
         )}
 
-        <div className="pt-2 flex flex-wrap gap-3">
+        <div className="pt-2 flex flex-wrap gap-2.5">
           <Button
             variant="primary"
             size="md"
@@ -563,24 +564,24 @@ export const CaseDetailPage: React.FC = () => {
             }}
           >
             <CheckCircle className="w-4 h-4 shrink-0" />
-            <span>Update Resolution / Verify Bank Receipt</span>
+            <span>Verify bank receipt</span>
           </Button>
 
           <Button variant="outline" size="md" onClick={() => router.push('/app/help')}>
-            <span>Check Official Rights Guide</span>
+            <span>Check rights guide</span>
           </Button>
         </div>
       </Card>
 
-      {/* Refund Reality Check (Signature Feature #5) */}
-      <Card variant="subtle" className="p-6 space-y-4">
+      {/* Refund Reality Check */}
+      <Card variant="subtle" className="p-5 sm:p-6 space-y-4 bg-white border border-steel-grey-200 rounded-2xl shadow-xs">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
           <div>
-            <h3 className="text-sm font-bold uppercase tracking-wider text-neutral-700 dark:text-neutral-300">
-              Refund Reality Check
+            <h3 className="text-xs font-medium text-steel-grey-600">
+              Refund reality check
             </h3>
-            <p className="text-xs text-neutral-500 dark:text-neutral-400 mt-0.5">
-              Never confuse a company promise with money received. Always compare with your bank or UPI transaction statement.
+            <p className="text-xs text-steel-grey-500 mt-0.5 font-normal">
+              Never confuse a store promise with money received. Always compare with your bank or UPI statement.
             </p>
           </div>
 
@@ -593,50 +594,50 @@ export const CaseDetailPage: React.FC = () => {
               setIsOutcomeModalOpen(true);
             }}
           >
-            Record Company Claim
+            Record company claim
           </Button>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 pt-2">
-          <div className="p-4 rounded-xl bg-white dark:bg-surface-dark border border-neutral-200 dark:border-neutral-800">
-            <span className="text-xs text-neutral-500">Your Original Claim</span>
-            <div className="text-xl font-bold font-mono text-neutral-900 dark:text-neutral-100 mt-1 tabular-nums">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-3 pt-1">
+          <div className="p-3.5 rounded-xl bg-steel-grey-50 border border-steel-grey-200">
+            <span className="text-xs text-steel-grey-500 font-normal">Original claim</span>
+            <div className="text-lg font-medium font-mono text-charcoal mt-1 tabular-nums">
               ₹{claimedAmt.toFixed(2)}
             </div>
-            <span className="text-[11px] text-neutral-400 font-medium">Recorded at case intake</span>
+            <span className="text-[11px] text-steel-grey-500 font-normal">Recorded at intake</span>
           </div>
 
-          <div className="p-4 rounded-xl bg-white dark:bg-surface-dark border border-neutral-200 dark:border-neutral-800">
-            <span className="text-xs text-neutral-500">Company Promised Refund</span>
-            <div className="text-xl font-bold font-mono text-blue-600 dark:text-blue-400 mt-1 tabular-nums">
+          <div className="p-3.5 rounded-xl bg-steel-grey-50 border border-steel-grey-200">
+            <span className="text-xs text-steel-grey-500 font-normal">Company promised refund</span>
+            <div className="text-lg font-medium font-mono text-blue-800 mt-1 tabular-nums">
               {companyAmt !== null ? `₹${companyAmt.toFixed(2)}` : 'Not recorded'}
             </div>
-            <span className="text-[11px] text-blue-600 dark:text-blue-400 font-medium">
+            <span className="text-[11px] text-steel-grey-500 font-normal truncate block">
               {caseData.threeStateOutcome?.companyStated?.note || 'Store has not sent written refund amount'}
             </span>
           </div>
 
-          <div className="p-4 rounded-xl bg-white dark:bg-surface-dark border border-neutral-200 dark:border-neutral-800">
-            <span className="text-xs text-neutral-500">Confirmed in Your Bank</span>
-            <div className="text-xl font-bold font-mono text-emerald-600 dark:text-emerald-400 mt-1 tabular-nums">
-              {receivedAmt !== null ? `₹${receivedAmt.toFixed(2)}` : 'Pending Verification'}
+          <div className="p-3.5 rounded-xl bg-steel-grey-50 border border-steel-grey-200">
+            <span className="text-xs text-steel-grey-500 font-normal">Confirmed in bank</span>
+            <div className="text-lg font-medium font-mono text-emerald-800 mt-1 tabular-nums">
+              {receivedAmt !== null ? `₹${receivedAmt.toFixed(2)}` : 'Pending verification'}
             </div>
-            <span className="text-[11px] text-emerald-600 dark:text-emerald-400 font-medium">
+            <span className="text-[11px] text-steel-grey-500 font-normal truncate block">
               {caseData.threeStateOutcome?.customerConfirmed ? 'Confirmed credited in bank' : 'Check bank before closing'}
             </span>
           </div>
         </div>
       </Card>
 
-      {/* Case Timeline as a Living Story (Signature Feature #3) */}
+      {/* Case Timeline */}
       <div className="space-y-4">
         <div className="flex items-center justify-between">
-          <h3 className="text-xl font-bold font-serif text-neutral-900 dark:text-neutral-100">
-            Case Timeline
+          <h3 className="text-lg font-serif font-medium text-charcoal">
+            Case timeline
           </h3>
           <Button variant="secondary" size="sm" onClick={() => setIsAddEventOpen(true)}>
-            <Plus className="w-4 h-4 shrink-0" />
-            <span>Add Event</span>
+            <Plus className="w-3.5 h-3.5 shrink-0" />
+            <span>Add event</span>
           </Button>
         </div>
 
@@ -649,21 +650,21 @@ export const CaseDetailPage: React.FC = () => {
       {/* Evidence Section */}
       <div className="space-y-4">
         <div className="flex items-center justify-between">
-          <h3 className="text-xl font-bold font-serif text-neutral-900 dark:text-neutral-100">
-            Supporting Evidence ({(caseData.evidence || []).length})
+          <h3 className="text-lg font-serif font-medium text-charcoal">
+            Supporting evidence ({(caseData.evidence || []).length})
           </h3>
           <div className="flex items-center gap-2">
             <Button variant="primary" size="sm" onClick={() => setIsUploadEvidenceOpen(true)}>
-              <Plus className="w-4 h-4 shrink-0" />
-              <span>Attach Evidence</span>
+              <Plus className="w-3.5 h-3.5 shrink-0" />
+              <span>Attach evidence</span>
             </Button>
             <Button variant="outline" size="sm" onClick={() => router.push('/app/documents')}>
-              <span>View Documents</span>
+              <span>View all documents</span>
             </Button>
           </div>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
           {(caseData.evidence || []).map((item) => (
             <EvidenceTile
               key={item.id}
@@ -681,30 +682,30 @@ export const CaseDetailPage: React.FC = () => {
       <BottomSheet
         isOpen={isAddEventOpen}
         onClose={() => setIsAddEventOpen(false)}
-        title="Add Timeline Event"
-        description="Record a call, message, store email, or action taken."
+        title="Add timeline event"
+        description="Record a call, message, store email, or action taken"
       >
         <div className="space-y-4">
           <Input
-            label="Event Title"
+            label="Event title"
             value={eventTitle}
             onChange={(e) => setEventTitle(e.target.value)}
             placeholder="e.g. Spoke with customer care representative"
           />
 
           <Select
-            label="Event Source"
+            label="Event source"
             value={eventSource}
             onChange={(e) => setEventSource(e.target.value)}
             options={[
               { value: 'customer', label: 'You (Action taken)' },
-              { value: 'company', label: 'Company Statement or Email' },
-              { value: 'evidence', label: 'Evidence / Document Update' },
+              { value: 'company', label: 'Company statement or email' },
+              { value: 'evidence', label: 'Evidence / document update' },
             ]}
           />
 
           <Textarea
-            label="Details & Notes"
+            label="Details & notes"
             rows={3}
             value={eventDetail}
             onChange={(e) => setEventDetail(e.target.value)}
@@ -716,7 +717,7 @@ export const CaseDetailPage: React.FC = () => {
               Cancel
             </Button>
             <Button variant="primary" onClick={handleAddEvent}>
-              Save Event
+              Save event
             </Button>
           </div>
         </div>
@@ -726,13 +727,13 @@ export const CaseDetailPage: React.FC = () => {
       <BottomSheet
         isOpen={isUploadEvidenceOpen}
         onClose={() => setIsUploadEvidenceOpen(false)}
-        title="Attach Evidence to Case"
-        description="Upload photos of defective product, invoice, or unboxing video."
+        title="Attach evidence to case"
+        description="Upload photos of defective product, invoice, or unboxing clip"
       >
         <div className="space-y-4">
-          <div className="p-6 border-2 border-dashed border-neutral-300 dark:border-neutral-700 rounded-xl text-center space-y-2">
-            <UploadCloud className="w-8 h-8 text-neutral-400 mx-auto" />
-            <div className="text-sm font-medium text-neutral-800 dark:text-neutral-200">
+          <div className="p-6 border border-dashed border-steel-grey-300 rounded-xl text-center space-y-2 bg-steel-grey-50">
+            <UploadCloud className="w-7 h-7 text-steel-grey-400 mx-auto" />
+            <div className="text-xs sm:text-sm font-medium text-charcoal">
               {uploadFile ? uploadFile.name : 'Choose a file from your device'}
             </div>
             <input
@@ -755,16 +756,16 @@ export const CaseDetailPage: React.FC = () => {
                   }
                 }
               }}
-              className="text-xs text-neutral-500 file:mr-3 file:py-1.5 file:px-3 file:rounded-md file:border file:border-neutral-300 file:bg-surface-light-subtle file:text-xs file:font-semibold"
+              className="text-xs text-steel-grey-500 file:mr-2 file:py-1 file:px-2.5 file:rounded file:border file:border-steel-grey-200 file:bg-white file:text-xs"
             />
-            <p className="text-[11px] text-neutral-400">
-              Max file size: 15 MB. Allowed: PDF, PNG, JPG, WEBP, HEIC, MP4, TXT, EML, CSV, JSON.
+            <p className="text-[11px] text-steel-grey-500 font-normal">
+              Max file size: 15 MB. Allowed: PDF, PNG, JPG, WEBP, MP4, TXT, CSV.
             </p>
           </div>
 
           {redactionNotice && (
-            <div className="p-3.5 rounded-lg bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-900 text-xs text-amber-800 dark:text-amber-300">
-              <span className="font-bold block mb-1">Sensitive Data Warning:</span>
+            <div className="p-3 rounded-lg bg-amber-50 border border-amber-200 text-xs text-amber-900">
+              <span className="font-medium block mb-0.5">Sensitive data check:</span>
               {redactionNotice}
             </div>
           )}
@@ -774,7 +775,7 @@ export const CaseDetailPage: React.FC = () => {
               Cancel
             </Button>
             <Button variant="primary" onClick={handleDirectEvidenceUpload} disabled={!uploadFile}>
-              Attach File
+              Attach file
             </Button>
           </div>
         </div>
@@ -784,8 +785,8 @@ export const CaseDetailPage: React.FC = () => {
       <BottomSheet
         isOpen={isAddReminderOpen}
         onClose={() => setIsAddReminderOpen(false)}
-        title="Schedule Follow-Up Reminder"
-        description="Set a date to compare bank records or follow up on merchant commitments."
+        title="Schedule follow-up reminder"
+        description="Set a date to compare bank records or follow up on merchant commitments"
       >
         <div className="space-y-4">
           <div className="flex flex-wrap gap-2 text-xs">
@@ -797,7 +798,7 @@ export const CaseDetailPage: React.FC = () => {
                 setReminderDate(d.toISOString().slice(0, 10));
                 setReminderTitle(`Follow up with ${caseData.company} care on resolution`);
               }}
-              className="px-2.5 py-1 rounded-lg border border-neutral-200 dark:border-neutral-800 bg-surface-light-subtle dark:bg-surface-dark-subtle hover:border-brand-300"
+              className="px-2.5 py-1 rounded-lg border border-steel-grey-200 bg-steel-grey-50 text-steel-grey-700 hover:border-steel-grey-300"
             >
               +7 Days (Customer care turnaround)
             </button>
@@ -809,21 +810,21 @@ export const CaseDetailPage: React.FC = () => {
                 setReminderDate(d.toISOString().slice(0, 10));
                 setReminderTitle(`Verify bank account for ₹${caseData.amount || 0} credit`);
               }}
-              className="px-2.5 py-1 rounded-lg border border-neutral-200 dark:border-neutral-800 bg-surface-light-subtle dark:bg-surface-dark-subtle hover:border-brand-300"
+              className="px-2.5 py-1 rounded-lg border border-steel-grey-200 bg-steel-grey-50 text-steel-grey-700 hover:border-steel-grey-300"
             >
               +3 Days (Banking settlement)
             </button>
           </div>
 
           <Input
-            label="Reminder Action"
+            label="Reminder action"
             value={reminderTitle}
             onChange={(e) => setReminderTitle(e.target.value)}
             placeholder="e.g. Check bank statement for refund credit"
           />
 
           <Input
-            label="Due Date"
+            label="Due date"
             type="date"
             value={reminderDate}
             onChange={(e) => setReminderDate(e.target.value)}
@@ -834,7 +835,7 @@ export const CaseDetailPage: React.FC = () => {
               Cancel
             </Button>
             <Button variant="primary" onClick={handleSaveReminder}>
-              Schedule Reminder
+              Schedule reminder
             </Button>
           </div>
         </div>
@@ -844,59 +845,59 @@ export const CaseDetailPage: React.FC = () => {
       <BottomSheet
         isOpen={isChannelModalOpen}
         onClose={() => setIsChannelModalOpen(false)}
-        title="Official Grievance Channels"
-        description="Select a verified avenue to file or escalate your dispute."
+        title="Official grievance channels"
+        description="Select a verified avenue to file or escalate your dispute"
       >
         <div className="space-y-3">
           <a
             href="https://consumerhelpline.gov.in"
             target="_blank"
             rel="noopener noreferrer"
-            className="flex items-center justify-between p-4 rounded-xl border border-neutral-200 dark:border-neutral-800 hover:border-brand-500 transition-colors"
+            className="flex items-center justify-between p-4 rounded-xl border border-steel-grey-200 hover:border-steel-grey-300 bg-steel-grey-50/50 transition-colors"
           >
             <div>
-              <h4 className="font-bold text-sm text-neutral-900 dark:text-neutral-100">
+              <h4 className="font-medium text-sm text-charcoal">
                 National Consumer Helpline (NCH)
               </h4>
-              <p className="text-xs text-neutral-500 mt-0.5">
+              <p className="text-xs text-steel-grey-500 mt-0.5">
                 Toll-free 1915 / WhatsApp 8800001915. First-line pre-litigation convergence.
               </p>
             </div>
-            <ExternalLink className="w-4 h-4 text-brand-600 shrink-0 ml-2" />
+            <ExternalLink className="w-4 h-4 text-coral shrink-0 ml-2" />
           </a>
 
           <a
             href="https://e-jagriti.gov.in/"
             target="_blank"
             rel="noopener noreferrer"
-            className="flex items-center justify-between p-4 rounded-xl border border-neutral-200 dark:border-neutral-800 hover:border-brand-500 transition-colors"
+            className="flex items-center justify-between p-4 rounded-xl border border-steel-grey-200 hover:border-steel-grey-300 bg-steel-grey-50/50 transition-colors"
           >
             <div>
-              <h4 className="font-bold text-sm text-neutral-900 dark:text-neutral-100">
+              <h4 className="font-medium text-sm text-charcoal">
                 e-Jagriti Portal (Consumer Commission)
               </h4>
-              <p className="text-xs text-neutral-500 mt-0.5">
+              <p className="text-xs text-steel-grey-500 mt-0.5">
                 Official digital filing before District, State, and National Consumer Commissions.
               </p>
             </div>
-            <ExternalLink className="w-4 h-4 text-brand-600 shrink-0 ml-2" />
+            <ExternalLink className="w-4 h-4 text-coral shrink-0 ml-2" />
           </a>
 
           <a
             href="https://cms.rbi.org.in"
             target="_blank"
             rel="noopener noreferrer"
-            className="flex items-center justify-between p-4 rounded-xl border border-neutral-200 dark:border-neutral-800 hover:border-brand-500 transition-colors"
+            className="flex items-center justify-between p-4 rounded-xl border border-steel-grey-200 hover:border-steel-grey-300 bg-steel-grey-50/50 transition-colors"
           >
             <div>
-              <h4 className="font-bold text-sm text-neutral-900 dark:text-neutral-100">
+              <h4 className="font-medium text-sm text-charcoal">
                 RBI Integrated Ombudsman
               </h4>
-              <p className="text-xs text-neutral-500 mt-0.5">
+              <p className="text-xs text-steel-grey-500 mt-0.5">
                 Toll-free 14448. For failed UPI refunds or bank reversal discrepancies.
               </p>
             </div>
-            <ExternalLink className="w-4 h-4 text-brand-600 shrink-0 ml-2" />
+            <ExternalLink className="w-4 h-4 text-coral shrink-0 ml-2" />
           </a>
 
           <div className="flex justify-end pt-2">
@@ -911,18 +912,18 @@ export const CaseDetailPage: React.FC = () => {
       <BottomSheet
         isOpen={isOutcomeModalOpen}
         onClose={() => setIsOutcomeModalOpen(false)}
-        title="Update Resolution Status"
-        description="Record company promises or confirm money received in your bank."
+        title="Update resolution status"
+        description="Record company promises or confirm money received in your bank"
       >
         <div className="space-y-4">
           <Select
-            label="Resolution Stage"
+            label="Resolution stage"
             value={outcomeStage}
             onChange={(e) => setOutcomeStage(e.target.value as any)}
             options={[
-              { value: 'customer', label: 'Stage 3: Confirm Funds Received in Bank (Resolved)' },
-              { value: 'company', label: 'Stage 1: Store Stated Refund Initiated' },
-              { value: 'evidence', label: 'Stage 2: Payment Proof / UTR Number Logged' },
+              { value: 'customer', label: 'Stage 3: Confirm funds received in bank (Resolved)' },
+              { value: 'company', label: 'Stage 1: Store stated refund initiated' },
+              { value: 'evidence', label: 'Stage 2: Payment proof / UTR number logged' },
             ]}
           />
 
@@ -935,22 +936,22 @@ export const CaseDetailPage: React.FC = () => {
           />
 
           <Textarea
-            label={outcomeStage === 'evidence' ? 'UTR / RRN Reference Number' : 'Notes / Transaction Details'}
+            label={outcomeStage === 'evidence' ? 'UTR / RRN reference number' : 'Notes / transaction details'}
             rows={2}
             value={outcomeNote}
             onChange={(e) => setOutcomeNote(e.target.value)}
             placeholder={
               outcomeStage === 'customer'
-                ? 'e.g. Verified ₹499 credit via HDFC UPI on Nov 8.'
+                ? 'e.g. Verified ₹499 credit via bank UPI statement on Nov 8'
                 : outcomeStage === 'evidence'
                 ? 'e.g. UTR: 432109876543'
-                : 'e.g. Support email received stating refund issued.'
+                : 'e.g. Support email received stating refund issued'
             }
           />
 
           {outcomeStage === 'customer' && (
-            <div className="p-3 rounded-lg bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-900 text-xs text-emerald-800 dark:text-emerald-300">
-              <span className="font-semibold block mb-0.5">Three-State Outcome Guarantee:</span>
+            <div className="p-3 rounded-lg bg-emerald-50 border border-emerald-200 text-xs text-emerald-900">
+              <span className="font-medium block mb-0.5">Verification note:</span>
               Marking this confirms you have physically verified the money in your account. The case will be marked as Confirmed Resolved.
             </div>
           )}
@@ -960,7 +961,7 @@ export const CaseDetailPage: React.FC = () => {
               Cancel
             </Button>
             <Button variant="primary" onClick={handleConfirmOutcome}>
-              Save Outcome Status
+              Save outcome status
             </Button>
           </div>
         </div>

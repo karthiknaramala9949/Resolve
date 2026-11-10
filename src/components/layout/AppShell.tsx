@@ -53,7 +53,7 @@ export const AppShell: React.FC<AppShellProps> = ({ children }) => {
   }, [isCommandPaletteOpen, openCommandPalette, closeCommandPalette]);
 
   return (
-    <div className="flex flex-col min-h-screen bg-white text-charcoal selection:bg-coral-100 selection:text-coral-900 scroll-smooth">
+    <div className="flex flex-col min-h-screen bg-[#FAF8F4] text-charcoal selection:bg-coral-100 selection:text-coral-900 scroll-smooth">
       {/* Top Notification Banners in document flow */}
       <OfflineBanner />
       <StoragePersistenceBanner />

@@ -14,7 +14,7 @@ export const metadata: Metadata = {
 };
 
 export const viewport: Viewport = {
-  themeColor: '#17191C',
+  themeColor: '#FAF8F4',
   width: 'device-width',
   initialScale: 1,
 };
@@ -33,7 +33,7 @@ export default function RootLayout({
           }}
         />
       </head>
-      <body suppressHydrationWarning className="min-h-screen bg-white text-charcoal font-sans antialiased selection:bg-coral-100 selection:text-coral-900">
+      <body suppressHydrationWarning className="min-h-screen bg-[#FAF8F4] text-charcoal font-sans antialiased selection:bg-coral-100 selection:text-coral-900">
         <ToastProvider>
           <DatabaseBootstrap>
             {children}

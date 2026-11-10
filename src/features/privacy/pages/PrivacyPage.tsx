@@ -12,7 +12,6 @@ import {
   EyeOff,
   AlertTriangle,
   KeyRound,
-  FileCheck,
 } from 'lucide-react';
 import { db } from '@/lib/db/db';
 import { caseRepository, purchaseRepository, reminderRepository } from '@/lib/db/repositories';
@@ -57,7 +56,7 @@ export const PrivacyPage: React.FC = () => {
       a.download = `RESOLVE-ONE-Export-${new Date().toISOString().slice(0, 10)}.json`;
       a.click();
       URL.revokeObjectURL(url);
-      toast('Full JSON data package exported successfully.', 'success');
+      toast('JSON backup exported.', 'success');
     } catch (err: any) {
       toast(`Export failed: ${err.message}`, 'error');
     }
@@ -106,7 +105,7 @@ export const PrivacyPage: React.FC = () => {
       a.click();
       document.body.removeChild(a);
       URL.revokeObjectURL(url);
-      toast('Complete ZIP archive (records + evidence) exported successfully.', 'success');
+      toast('ZIP archive exported.', 'success');
     } catch (err: any) {
       toast(`ZIP export failed: ${err.message}`, 'error');
     }
@@ -126,7 +125,7 @@ export const PrivacyPage: React.FC = () => {
         await db.evidenceBlobs.clear();
         localStorage.clear();
 
-        toast('All local records and storage wiped completely.', 'info');
+        toast('All local records wiped.', 'info');
         setTimeout(() => {
           window.location.href = '/';
         }, 1000);
@@ -160,7 +159,7 @@ export const PrivacyPage: React.FC = () => {
 
       setIsEncrypted(true);
       setPassphrase('');
-      toast('WebCrypto AES-256-GCM encryption enabled on this device.', 'success');
+      toast('AES-256-GCM encryption enabled.', 'success');
     } catch (err: any) {
       toast(`Encryption error: ${err.message}`, 'error');
     }
@@ -199,53 +198,53 @@ export const PrivacyPage: React.FC = () => {
   };
 
   return (
-    <div className="space-y-8 animate-in fade-in duration-300">
+    <div className="space-y-6 animate-in fade-in duration-150">
       <div>
-        <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-100/60 dark:bg-emerald-950/60 text-emerald-800 dark:text-emerald-300 text-xs font-semibold mb-2">
-          <ShieldCheck className="w-3.5 h-3.5" />
-          <span>Zero-Telemetry & Absolute Local Ownership</span>
+        <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-50 text-emerald-900 border border-emerald-200 text-xs font-normal mb-2">
+          <ShieldCheck className="w-3.5 h-3.5 text-emerald-700" />
+          <span>Zero telemetry & local device ownership</span>
         </div>
-        <h2 className="text-2xl md:text-3xl font-black font-sans text-charcoal tracking-tight">
-          Privacy & Data <span className="text-coral">Trust</span>
+        <h2 className="text-2xl font-serif font-medium text-charcoal tracking-tight">
+          Privacy & data trust
         </h2>
-        <p className="text-sm text-steel-grey-600 mt-1 max-w-2xl font-normal">
-          RESOLVE-ONE is local-first. We do not operate tracking trackers, remote customer databases, or telemetry. Your evidence and dispute data remain strictly on your device.
+        <p className="text-xs sm:text-sm text-steel-grey-600 mt-1 max-w-2xl font-normal">
+          RESOLVE-ONE is local-first. We do not operate tracking trackers, customer accounts, or cloud databases. Your evidence and dispute data remain strictly on your device.
         </p>
       </div>
 
-      {/* "What's Stored Where" Transparency Panel (Signature Feature #10) */}
-      <Card variant="elevated" className="p-6 md:p-8 space-y-4">
-        <h3 className="text-lg font-bold font-serif text-charcoal">
-          What is stored where?
+      {/* Transparency Panel */}
+      <Card variant="elevated" className="p-6 sm:p-7 space-y-4 bg-white border border-steel-grey-200">
+        <h3 className="text-base sm:text-lg font-serif font-medium text-charcoal">
+          What is stored where
         </h3>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 pt-2">
-          <div className="p-4 rounded-xl bg-surface-light-subtle dark:bg-surface-dark-subtle border border-neutral-200/80 dark:border-neutral-800 space-y-2">
-            <div className="flex items-center gap-2 text-brand-600 dark:text-brand-400 font-semibold text-sm">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-3 pt-1">
+          <div className="p-4 rounded-xl bg-steel-grey-50 border border-steel-grey-200 space-y-1.5">
+            <div className="flex items-center gap-2 text-coral font-medium text-xs sm:text-sm">
               <HardDrive className="w-4 h-4" />
-              <span>Browser IndexedDB (Dexie)</span>
+              <span>Browser IndexedDB</span>
             </div>
-            <p className="text-xs text-neutral-600 dark:text-neutral-300 leading-relaxed">
+            <p className="text-xs text-steel-grey-600 leading-relaxed font-normal">
               Holds your dispute cases, chronological facts, timeline logs, return records, and actual PDF/image evidence binary files.
             </p>
           </div>
 
-          <div className="p-4 rounded-xl bg-surface-light-subtle dark:bg-surface-dark-subtle border border-neutral-200/80 dark:border-neutral-800 space-y-2">
-            <div className="flex items-center gap-2 text-blue-700 dark:text-blue-400 font-semibold text-sm">
+          <div className="p-4 rounded-xl bg-steel-grey-50 border border-steel-grey-200 space-y-1.5">
+            <div className="flex items-center gap-2 text-blue-800 font-medium text-xs sm:text-sm">
               <EyeOff className="w-4 h-4" />
-              <span>Local UI Preferences</span>
+              <span>Local preferences</span>
             </div>
-            <p className="text-xs text-neutral-600 dark:text-neutral-300 leading-relaxed">
-              Stored in localStorage: dark/light theme and simple language mode toggle.
+            <p className="text-xs text-steel-grey-600 leading-relaxed font-normal">
+              Stored in localStorage: theme and interface preferences. Never transmitted externally.
             </p>
           </div>
 
-          <div className="p-4 rounded-xl bg-surface-light-subtle dark:bg-surface-dark-subtle border border-neutral-200/80 dark:border-neutral-800 space-y-2">
-            <div className="flex items-center gap-2 text-emerald-700 dark:text-emerald-400 font-semibold text-sm">
+          <div className="p-4 rounded-xl bg-steel-grey-50 border border-steel-grey-200 space-y-1.5">
+            <div className="flex items-center gap-2 text-emerald-800 font-medium text-xs sm:text-sm">
               <ShieldCheck className="w-4 h-4" />
-              <span>Remote Cloud Servers</span>
+              <span>Remote cloud servers</span>
             </div>
-            <p className="text-xs text-neutral-600 dark:text-neutral-300 leading-relaxed">
+            <p className="text-xs text-steel-grey-600 leading-relaxed font-normal">
               <strong>Zero.</strong> No personal data, case details, or uploaded receipts are ever transmitted to remote cloud servers.
             </p>
           </div>
@@ -253,42 +252,42 @@ export const PrivacyPage: React.FC = () => {
       </Card>
 
       {/* Optional Client-Side AES-256-GCM Encryption */}
-      <Card variant="default" className="p-6 md:p-8 space-y-4">
+      <Card variant="default" className="p-6 sm:p-7 space-y-4 bg-white border border-steel-grey-200">
         <div className="flex items-start justify-between gap-4">
           <div className="space-y-1">
             <div className="flex items-center gap-2">
-              <KeyRound className="w-4 h-4 text-brand-500" />
-              <h3 className="text-base font-bold text-neutral-900 dark:text-neutral-100">
-                Client-Side Passphrase Encryption (WebCrypto AES-256-GCM)
+              <KeyRound className="w-4 h-4 text-coral" />
+              <h3 className="text-base font-medium text-charcoal">
+                Client-side passphrase encryption
               </h3>
             </div>
-            <p className="text-xs text-neutral-600 dark:text-neutral-400 max-w-xl">
-              Optionally secure your local storage with an AES-GCM 256-bit encryption key derived via PBKDF2 (100,000 rounds).
+            <p className="text-xs text-steel-grey-600 max-w-xl font-normal">
+              Optionally secure your local storage with an AES-GCM 256-bit key derived via PBKDF2 (100,000 rounds).
             </p>
           </div>
 
           <span
-            className={`shrink-0 inline-flex items-center justify-center px-3 py-1 rounded-full text-xs font-semibold whitespace-nowrap leading-none ${
+            className={`shrink-0 inline-flex items-center justify-center px-2.5 py-1 rounded-full text-xs font-normal leading-none ${
               isEncrypted
-                ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950/60 dark:text-emerald-300'
-                : 'bg-neutral-100 text-neutral-600 dark:bg-neutral-800 dark:text-neutral-400'
+                ? 'bg-emerald-50 text-emerald-900 border border-emerald-200'
+                : 'bg-steel-grey-100 text-steel-grey-600 border border-steel-grey-200'
             }`}
           >
-            {isEncrypted ? 'Active on Device' : 'Unencrypted Storage'}
+            {isEncrypted ? 'Active on device' : 'Unencrypted storage'}
           </span>
         </div>
 
         {/* Trade-off Warning */}
-        <div className="p-4 rounded-xl bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-900 text-xs text-amber-800 dark:text-amber-300 flex items-start gap-2.5">
-          <AlertTriangle className="w-4 h-4 shrink-0 text-amber-600 mt-0.5" />
-          <div>
-            <span className="font-semibold block mb-0.5">Crucial Passphrase Trade-off:</span>
+        <div className="p-3.5 rounded-xl bg-amber-50 border border-amber-200 text-xs text-amber-900 flex items-start gap-2.5">
+          <AlertTriangle className="w-4 h-4 shrink-0 text-amber-700 mt-0.5" />
+          <div className="font-normal">
+            <span className="font-medium block mb-0.5">Crucial passphrase note:</span>
             Because RESOLVE-ONE has zero backend servers or user accounts, if you forget your passphrase, your encrypted dispute records cannot be decrypted or recovered by anyone.
           </div>
         </div>
 
         {!isEncrypted ? (
-          <div className="flex flex-col sm:flex-row gap-3 pt-2">
+          <div className="flex flex-col sm:flex-row gap-3 pt-1">
             <Input
               type="password"
               placeholder="Enter master passphrase (min 6 characters)"
@@ -297,12 +296,12 @@ export const PrivacyPage: React.FC = () => {
               className="max-w-md"
             />
             <Button variant="primary" className="w-full sm:w-auto shrink-0" onClick={handleEnableEncryption}>
-              <Lock className="w-4 h-4" />
-              <span>Enable Encryption</span>
+              <Lock className="w-3.5 h-3.5" />
+              <span>Enable encryption</span>
             </Button>
           </div>
         ) : (
-          <div className="flex flex-col sm:flex-row gap-3 pt-2">
+          <div className="flex flex-col sm:flex-row gap-3 pt-1">
             <Input
               type="password"
               placeholder="Enter passphrase to unlock & disable"
@@ -311,8 +310,8 @@ export const PrivacyPage: React.FC = () => {
               className="max-w-md"
             />
             <Button variant="outline" className="w-full sm:w-auto shrink-0" onClick={handleDisableEncryption}>
-              <Unlock className="w-4 h-4" />
-              <span>Disable Encryption</span>
+              <Unlock className="w-3.5 h-3.5" />
+              <span>Disable encryption</span>
             </Button>
           </div>
         )}
@@ -320,36 +319,36 @@ export const PrivacyPage: React.FC = () => {
 
       {/* Export & Data Wipe Actions */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <Card variant="default" className="p-6 space-y-3">
-          <h3 className="text-base font-semibold text-neutral-900 dark:text-neutral-100 flex items-center gap-2">
-            <Download className="w-4 h-4 text-neutral-500 shrink-0" />
-            <span>Export Full Data Package</span>
+        <Card variant="default" className="p-5 sm:p-6 space-y-3 bg-white border border-steel-grey-200">
+          <h3 className="text-base font-medium text-charcoal flex items-center gap-2">
+            <Download className="w-4 h-4 text-steel-grey-500 shrink-0" />
+            <span>Export data package</span>
           </h3>
-          <p className="text-xs text-neutral-600 dark:text-neutral-400">
+          <p className="text-xs text-steel-grey-600 font-normal">
             Download a portable, unencrypted JSON backup of all your cases, timeline logs, and evidence records.
           </p>
           <div className="flex flex-col sm:flex-row flex-wrap gap-2.5 pt-1">
             <Button variant="secondary" size="md" className="w-full sm:w-auto" onClick={handleExportAll}>
-              <Download className="w-4 h-4" />
-              <span>Download JSON Backup</span>
+              <Download className="w-3.5 h-3.5" />
+              <span>Download JSON</span>
             </Button>
             <Button variant="outline" size="md" className="w-full sm:w-auto" onClick={handleExportZip}>
-              <Download className="w-4 h-4" />
-              <span>Export ZIP Archive (JSON + Evidence)</span>
+              <Download className="w-3.5 h-3.5" />
+              <span>Export ZIP archive</span>
             </Button>
           </div>
         </Card>
 
-        <Card variant="default" className="p-6 space-y-3 border-red-200 dark:border-red-950/60">
-          <h3 className="text-base font-semibold text-red-600 dark:text-red-400 flex items-center gap-2">
+        <Card variant="default" className="p-5 sm:p-6 space-y-3 bg-white border border-coral-200">
+          <h3 className="text-base font-medium text-coral-700 flex items-center gap-2">
             <Trash2 className="w-4 h-4" />
-            <span>Delete All Local Data</span>
+            <span>Delete local data</span>
           </h3>
-          <p className="text-xs text-neutral-600 dark:text-neutral-400">
-            Immediately purges all IndexedDB records, evidence files, purchases, and localStorage settings from this browser.
+          <p className="text-xs text-steel-grey-600 font-normal">
+            Immediately purges all IndexedDB records, evidence files, purchases, and settings from this browser.
           </p>
           <Button variant="danger" size="md" onClick={handleWipeAll}>
-            <span>Wipe All Records</span>
+            <span>Wipe all records</span>
           </Button>
         </Card>
       </div>

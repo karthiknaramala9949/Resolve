@@ -35,8 +35,8 @@ export const Stepper: React.FC<StepperProps> = ({
               className={cn(
                 'relative flex-1 flex flex-col items-center group',
                 index !== steps.length - 1 &&
-                  'after:content-[""] after:w-full after:h-0.5 after:bg-neutral-200 dark:after:bg-neutral-800 after:absolute after:top-4 after:left-1/2 after:-z-10',
-                index < currentStep && 'after:bg-brand-500 dark:after:bg-brand-600'
+                  'after:content-[""] after:w-full after:h-0.5 after:bg-steel-grey-200 after:absolute after:top-4 after:left-1/2 after:-z-10',
+                index < currentStep && 'after:bg-coral'
               )}
             >
               <button
@@ -45,31 +45,38 @@ export const Stepper: React.FC<StepperProps> = ({
                 onClick={() => onStepClick?.(index)}
                 aria-label={`Step ${index + 1}: ${step.label}${isCompleted ? ' (completed)' : isCurrent ? ' (current)' : ''}`}
                 className={cn(
-                  'w-8 h-8 rounded-full flex items-center justify-center font-semibold text-xs transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500 focus-visible:ring-offset-2',
+                  'w-8 h-8 rounded-full flex items-center justify-center font-medium text-xs transition-colors duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-coral/40 focus-visible:ring-offset-1',
                   isCompleted
-                    ? 'bg-brand-500 text-white shadow-sm'
+                    ? 'bg-coral text-white shadow-2xs'
                     : isCurrent
-                    ? 'bg-white dark:bg-surface-dark border-2 border-brand-500 text-brand-600 dark:text-brand-400 shadow-sm ring-4 ring-brand-50 dark:ring-brand-950/40'
-                    : 'bg-neutral-100 dark:bg-neutral-800 text-neutral-500 dark:text-neutral-400 border border-neutral-300 dark:border-neutral-700',
-                  isClickable ? 'cursor-pointer hover:scale-105' : 'cursor-default'
+                    ? 'bg-white border-2 border-coral text-coral shadow-2xs'
+                    : 'bg-steel-grey-100 text-steel-grey-600 border border-steel-grey-200',
+                  isClickable ? 'cursor-pointer hover:bg-steel-grey-200' : 'cursor-default'
                 )}
                 aria-current={isCurrent ? 'step' : undefined}
               >
-                {isCompleted ? <Check className="w-4 h-4 stroke-[2.5]" aria-hidden="true" /> : index + 1}
+                {isCompleted ? <Check className="w-3.5 h-3.5 stroke-[2]" aria-hidden="true" /> : index + 1}
               </button>
 
-              <span
-                className={cn(
-                  'mt-2 text-xs font-medium text-center transition-colors line-clamp-1 max-w-[90px]',
-                  isCurrent
-                    ? 'text-brand-600 dark:text-brand-400 font-semibold'
-                    : isCompleted
-                    ? 'text-neutral-800 dark:text-neutral-200'
-                    : 'text-neutral-400 dark:text-neutral-500'
+              <div className="mt-2 text-center">
+                <span
+                  className={cn(
+                    'block text-xs transition-colors',
+                    isCurrent
+                      ? 'font-medium text-charcoal'
+                      : isCompleted
+                      ? 'text-steel-grey-700'
+                      : 'text-steel-grey-500'
+                  )}
+                >
+                  {step.label}
+                </span>
+                {step.description && (
+                  <span className="hidden sm:block text-[11px] text-steel-grey-500 mt-0.5">
+                    {step.description}
+                  </span>
                 )}
-              >
-                {step.label}
-              </span>
+              </div>
             </li>
           );
         })}
