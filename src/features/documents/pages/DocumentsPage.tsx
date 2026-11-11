@@ -25,6 +25,7 @@ import { Case, EvidenceMeta } from '@/lib/db/types';
 import { formatComplaintLetter } from '@/lib/pdf/complaintLetter';
 import { detectSensitiveInfo } from '@/lib/rules/redactionChecker';
 import { validateUploadedFile } from '@/lib/rules/fileValidator';
+import { uploadEncryptedDocument, downloadAndDecryptDocument } from '@/lib/crypto/documentManager';
 
 export const DocumentsPage: React.FC = () => {
   const { toast } = useToast();
@@ -95,33 +96,31 @@ export const DocumentsPage: React.FC = () => {
     }
 
     try {
-      const newEvId = `EV-${Date.now().toString().slice(-4)}`;
-      const savedBlob = await evidenceRepository.saveBlob(uploadFile, {
-        id: newEvId,
-        name: uploadFile.name,
-        type: uploadFile.type,
-        size: uploadFile.size,
+      const uploadRes = await uploadEncryptedDocument({
+        file: uploadFile,
+        caseId: targetCaseId,
+        redactionHint: redactionNotices.length > 0 ? redactionNotices[0].warning : undefined,
       });
 
       const meta: EvidenceMeta = {
-        id: newEvId,
+        id: uploadRes.evidenceId,
         name: uploadFile.name,
         mime: uploadFile.type || 'application/octet-stream',
         size: uploadFile.size,
         source: 'customer_upload',
         addedAt: new Date().toISOString(),
-        sha256: savedBlob.sha256,
+        sha256: uploadRes.sha256,
         redactionHint: redactionNotices.length > 0 ? redactionNotices[0].warning : undefined,
       };
 
       await caseRepository.addEvidenceMeta(targetCaseId, meta);
       await caseRepository.addTimelineEvent(targetCaseId, {
         title: `Evidence uploaded: ${uploadFile.name}`,
-        detail: `Fingerprinted with SHA-256: ${savedBlob.sha256.slice(0, 16)}...`,
+        detail: `Encrypted client-side with SHA-256 fingerprint: ${uploadRes.sha256.slice(0, 16)}...`,
         source: 'evidence',
       });
 
-      toast(`File uploaded and fingerprinted with SHA-256.`, 'success');
+      toast(`File encrypted and stored securely.`, 'success');
       setIsUploadModalOpen(false);
       setUploadFile(null);
       loadData();
@@ -157,19 +156,18 @@ export const DocumentsPage: React.FC = () => {
   };
 
   const handleDownloadBlob = async (id: string, name: string) => {
-    const record = await evidenceRepository.getBlob(id);
-    if (!record || !record.blob) {
-      toast('Binary file not found in local IndexedDB storage.', 'warning');
-      return;
+    try {
+      const blob = await downloadAndDecryptDocument(id, name);
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = name;
+      a.click();
+      URL.revokeObjectURL(url);
+      toast(`Downloading ${name}`, 'info');
+    } catch (err: any) {
+      toast(`Download error: ${err.message}`, 'error');
     }
-
-    const url = URL.createObjectURL(record.blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = name;
-    a.click();
-    URL.revokeObjectURL(url);
-    toast(`Downloading ${name}`, 'info');
   };
 
   const handleDeleteEvidence = async (caseId: string, evId: string) => {

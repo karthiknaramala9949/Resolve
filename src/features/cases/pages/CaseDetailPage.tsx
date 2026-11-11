@@ -43,6 +43,7 @@ import { computeNextStep } from '@/lib/rules/nextStepEngine';
 import { formatComplaintLetter } from '@/lib/pdf/complaintLetter';
 import { validateUploadedFile } from '@/lib/rules/fileValidator';
 import { detectSensitiveInfo } from '@/lib/rules/redactionChecker';
+import { uploadEncryptedDocument, downloadAndDecryptDocument } from '@/lib/crypto/documentManager';
 
 export const CaseDetailPage: React.FC = () => {
   const params = useParams<{ id: string }>();
@@ -245,22 +246,20 @@ export const CaseDetailPage: React.FC = () => {
     }
 
     try {
-      const newEvId = `EV-${Date.now().toString().slice(-4)}`;
-      const savedBlob = await evidenceRepository.saveBlob(uploadFile, {
-        id: newEvId,
-        name: uploadFile.name,
-        type: uploadFile.type,
-        size: uploadFile.size,
+      const uploadRes = await uploadEncryptedDocument({
+        file: uploadFile,
+        caseId: caseData.id,
+        redactionHint: redactionNotice || undefined,
       });
 
       const meta: EvidenceMeta = {
-        id: newEvId,
+        id: uploadRes.evidenceId,
         name: uploadFile.name,
         mime: uploadFile.type,
         size: uploadFile.size,
         source: 'customer_upload',
         addedAt: new Date().toISOString(),
-        sha256: savedBlob.sha256,
+        sha256: uploadRes.sha256,
         redactionHint: redactionNotice || undefined,
       };
 
@@ -268,11 +267,11 @@ export const CaseDetailPage: React.FC = () => {
       await caseRepository.update(caseData.id, { evidence: updatedEvidence });
       await caseRepository.addTimelineEvent(caseData.id, {
         title: `Attached evidence: ${uploadFile.name}`,
-        detail: `File verified locally with SHA-256 fingerprint: ${savedBlob.sha256.slice(0, 16)}...`,
+        detail: `Client-side encrypted with SHA-256 fingerprint: ${uploadRes.sha256.slice(0, 16)}...`,
         source: 'evidence',
       });
 
-      toast('Evidence file attached to case.', 'success');
+      toast('Evidence file encrypted and attached to case.', 'success');
       setIsUploadEvidenceOpen(false);
       setUploadFile(null);
       setRedactionNotice(null);
@@ -669,8 +668,20 @@ export const CaseDetailPage: React.FC = () => {
             <EvidenceTile
               key={item.id}
               item={item}
-              onDownload={() => {
-                toast(`Downloading ${item.name}`, 'info');
+              onDownload={async () => {
+                try {
+                  toast(`Preparing download for ${item.name}...`, 'info');
+                  const blob = await downloadAndDecryptDocument(item.id, item.name);
+                  const url = URL.createObjectURL(blob);
+                  const a = document.createElement('a');
+                  a.href = url;
+                  a.download = item.name;
+                  a.click();
+                  URL.revokeObjectURL(url);
+                  toast(`Downloaded ${item.name}`, 'success');
+                } catch (err: any) {
+                  toast(`Download error: ${err.message}`, 'error');
+                }
               }}
               onDelete={() => handleRemoveEvidence(item.id)}
             />

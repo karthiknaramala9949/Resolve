@@ -3,6 +3,7 @@
 import React, { createContext, useContext, useEffect, useState, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { UserProfile, LoginFormData, RegisterFormData } from '../types';
+import { syncEngine } from '@/lib/sync/syncEngine';
 
 interface AuthContextValue {
   user: UserProfile | null;
@@ -37,11 +38,18 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       if (res.ok) {
         const data = await res.json();
         setUser(data.user || null);
+        if (data.sessionToken) {
+          syncEngine.setSessionToken(data.sessionToken);
+        } else {
+          syncEngine.setSessionToken(null);
+        }
       } else {
         setUser(null);
+        syncEngine.setSessionToken(null);
       }
     } catch {
       setUser(null);
+      syncEngine.setSessionToken(null);
     } finally {
       setIsLoading(false);
     }
@@ -105,6 +113,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const logout = async () => {
     try {
+      syncEngine.setSessionToken(null);
       await fetch('/api/auth/logout', { method: 'POST' });
     } catch {
       // Ignore

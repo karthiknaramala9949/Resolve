@@ -9,7 +9,9 @@
     "start": "next start -H 0.0.0.0 -p 3000",
     "preview": "next start -H 0.0.0.0 -p 3000",
     "test": "vitest run",
-    "test:watch": "vitest"
+    "test:watch": "vitest",
+    "convex:dev": "convex dev",
+    "convex:deploy": "convex deploy"
   },
   "dependencies": {
     "@radix-ui/react-dialog": "^1.1.2",
@@ -20,6 +22,7 @@
     "@radix-ui/react-tabs": "^1.1.1",
     "@radix-ui/react-tooltip": "^1.1.4",
     "clsx": "^2.1.1",
+    "convex": "^1.49.0",
     "dexie": "^4.0.10",
     "dexie-react-hooks": "^1.1.7",
     "framer-motion": "^11.11.17",

@@ -140,3 +140,17 @@ export const EvidenceBlobRecordSchema = z.object({
   at: z.string(),
 });
 export type EvidenceBlobRecord = z.infer<typeof EvidenceBlobRecordSchema>;
+
+export const SyncQueueItemSchema = z.object({
+  id: z.string(),
+  entity: z.enum(['cases', 'purchases', 'reminders']),
+  operation: z.enum(['create', 'update', 'delete']),
+  clientGeneratedId: z.string(),
+  data: z.any(),
+  timestamp: z.string(),
+  status: z.enum(['pending', 'syncing', 'synced', 'failed']).default('pending'),
+  retryCount: z.number().default(0),
+  lastError: z.string().optional(),
+});
+export type SyncQueueItem = z.infer<typeof SyncQueueItemSchema>;
+

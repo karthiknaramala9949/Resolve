@@ -1,6 +1,7 @@
 import { ICaseRepository } from './ICaseRepository';
 import { db, ResolveOneDB } from '../db';
 import { Case, TimelineEvent, EvidenceMeta } from '../types';
+import { syncEngine } from '@/lib/sync/syncEngine';
 
 export class DexieCaseRepository implements ICaseRepository {
   private database: ResolveOneDB;
@@ -55,6 +56,23 @@ export class DexieCaseRepository implements ICaseRepository {
     };
 
     await this.database.cases.put(newCase);
+
+    try {
+      await this.database.syncQueue.put({
+        id: `SQ-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`,
+        entity: 'cases',
+        operation: 'create',
+        clientGeneratedId: newCase.id,
+        data: newCase,
+        timestamp: now,
+        status: 'pending',
+        retryCount: 0,
+      });
+      if (typeof window !== 'undefined') {
+        syncEngine.triggerSync();
+      }
+    } catch {}
+
     return newCase;
   }
 
@@ -71,6 +89,23 @@ export class DexieCaseRepository implements ICaseRepository {
     };
 
     await this.database.cases.put(updated);
+
+    try {
+      await this.database.syncQueue.put({
+        id: `SQ-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`,
+        entity: 'cases',
+        operation: 'update',
+        clientGeneratedId: updated.id,
+        data: updated,
+        timestamp: updated.updatedAt,
+        status: 'pending',
+        retryCount: 0,
+      });
+      if (typeof window !== 'undefined') {
+        syncEngine.triggerSync();
+      }
+    } catch {}
+
     return updated;
   }
 
@@ -83,6 +118,22 @@ export class DexieCaseRepository implements ICaseRepository {
       }
     }
     await this.database.cases.delete(id);
+
+    try {
+      await this.database.syncQueue.put({
+        id: `SQ-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`,
+        entity: 'cases',
+        operation: 'delete',
+        clientGeneratedId: id,
+        data: {},
+        timestamp: new Date().toISOString(),
+        status: 'pending',
+        retryCount: 0,
+      });
+      if (typeof window !== 'undefined') {
+        syncEngine.triggerSync();
+      }
+    } catch {}
   }
 
   async addTimelineEvent(
@@ -99,10 +150,30 @@ export class DexieCaseRepository implements ICaseRepository {
     };
 
     const updatedTimeline = [newEvent, ...(existing.timeline || [])];
+    const now = new Date().toISOString();
     await this.database.cases.update(caseId, {
       timeline: updatedTimeline,
-      updatedAt: new Date().toISOString(),
+      updatedAt: now,
     });
+
+    try {
+      const full = await this.database.cases.get(caseId);
+      if (full) {
+        await this.database.syncQueue.put({
+          id: `SQ-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`,
+          entity: 'cases',
+          operation: 'update',
+          clientGeneratedId: caseId,
+          data: full,
+          timestamp: now,
+          status: 'pending',
+          retryCount: 0,
+        });
+        if (typeof window !== 'undefined') {
+          syncEngine.triggerSync();
+        }
+      }
+    } catch {}
 
     return newEvent;
   }
@@ -112,10 +183,30 @@ export class DexieCaseRepository implements ICaseRepository {
     if (!existing) throw new Error(`Case ${caseId} not found.`);
 
     const updatedEvidence = [...(existing.evidence || []), evidenceMeta];
+    const now = new Date().toISOString();
     await this.database.cases.update(caseId, {
       evidence: updatedEvidence,
-      updatedAt: new Date().toISOString(),
+      updatedAt: now,
     });
+
+    try {
+      const full = await this.database.cases.get(caseId);
+      if (full) {
+        await this.database.syncQueue.put({
+          id: `SQ-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`,
+          entity: 'cases',
+          operation: 'update',
+          clientGeneratedId: caseId,
+          data: full,
+          timestamp: now,
+          status: 'pending',
+          retryCount: 0,
+        });
+        if (typeof window !== 'undefined') {
+          syncEngine.triggerSync();
+        }
+      }
+    } catch {}
   }
 
   async removeEvidenceMeta(caseId: string, evidenceId: string): Promise<void> {
@@ -123,13 +214,32 @@ export class DexieCaseRepository implements ICaseRepository {
     if (!existing) return;
 
     const updatedEvidence = (existing.evidence || []).filter((e) => e.id !== evidenceId);
+    const now = new Date().toISOString();
     await this.database.cases.update(caseId, {
       evidence: updatedEvidence,
-      updatedAt: new Date().toISOString(),
+      updatedAt: now,
     });
 
     // Also delete binary blob
     await this.database.evidenceBlobs.delete(evidenceId);
+
+    try {
+      const full = await this.database.cases.get(caseId);
+      if (full) {
+        await this.database.syncQueue.put({
+          id: `SQ-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`,
+          entity: 'cases',
+          operation: 'update',
+          clientGeneratedId: caseId,
+          data: full,
+          timestamp: now,
+          status: 'pending',
+          retryCount: 0,
+        });
+        if (typeof window !== 'undefined') {
+          syncEngine.triggerSync();
+        }
+      }
+    } catch {}
   }
 }
-
