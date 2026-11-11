@@ -5,15 +5,30 @@ const KEY_LEN = 64; // 64 bytes = 512 bits
 const DIGEST = 'sha512';
 const SALT_BYTES = 32;
 
+let devFallbackSecret: string | null = null;
+
 /**
  * Returns the secret key used for signing session cookies and tokens.
- * Falls back to a deterministic development key if not specified in environment.
+ * Throws in production if AUTH_SECRET is missing or < 32 chars.
+ * In development, generates a random per-process secret and logs a warning.
  */
 export function getAuthSecret(): string {
-  return (
-    process.env.AUTH_SECRET ||
-    'resolve_default_secure_secret_at_least_32_characters_long_for_signing'
-  );
+  const secret = process.env.AUTH_SECRET;
+  if (!secret || secret.length < 32) {
+    if (process.env.NODE_ENV === 'production') {
+      throw new Error(
+        'AUTH_SECRET environment variable is missing or shorter than 32 characters.'
+      );
+    }
+    if (!devFallbackSecret) {
+      devFallbackSecret = crypto.randomBytes(32).toString('hex');
+      console.warn(
+        '[RESOLVE-ONE AUTH WARNING] AUTH_SECRET is not set or shorter than 32 characters. Generated a random per-process secret for development.'
+      );
+    }
+    return devFallbackSecret;
+  }
+  return secret;
 }
 
 /**
