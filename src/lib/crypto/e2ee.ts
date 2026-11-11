@@ -43,7 +43,7 @@ export function bufferToHex(buffer: ArrayBuffer | Uint8Array): string {
 /**
  * Utility: Convert hexadecimal string to Uint8Array
  */
-export function hexToBuffer(hex: string): Uint8Array {
+export function hexToBuffer(hex: string): Uint8Array<ArrayBuffer> {
   const match = hex.match(/.{1,2}/g);
   if (!match) return new Uint8Array(0);
   return new Uint8Array(match.map((byte) => parseInt(byte, 16)));
@@ -121,7 +121,7 @@ export async function setupUserMasterKey(passphrase: string): Promise<{
   crypto.getRandomValues(iv);
   const wrappedMasterKey = await crypto.subtle.wrapKey('raw', masterKey, kek, {
     name: 'AES-GCM',
-    iv: iv.buffer as ArrayBuffer,
+    iv: iv,
   });
 
   // 4. Generate recovery key and derive recovery KEK
@@ -136,7 +136,7 @@ export async function setupUserMasterKey(passphrase: string): Promise<{
     'raw',
     masterKey,
     recoveryKek,
-    { name: 'AES-GCM', iv: recoveryIv.buffer as ArrayBuffer }
+    { name: 'AES-GCM', iv: recoveryIv }
   );
 
   const enc = new TextEncoder();
@@ -172,9 +172,9 @@ export async function unlockMasterKeyWithPassphrase(
 
   return await crypto.subtle.unwrapKey(
     'raw',
-    wrappedKeyBytes.buffer as ArrayBuffer,
+    wrappedKeyBytes,
     kek,
-    { name: 'AES-GCM', iv: iv.buffer as ArrayBuffer },
+    { name: 'AES-GCM', iv: iv },
     { name: 'AES-GCM', length: AES_KEY_LENGTH },
     false,
     ['encrypt', 'decrypt', 'wrapKey', 'unwrapKey']
@@ -201,9 +201,9 @@ export async function unlockMasterKeyWithRecoveryKey(
 
   return await crypto.subtle.unwrapKey(
     'raw',
-    wrappedKeyBytes.buffer as ArrayBuffer,
+    wrappedKeyBytes,
     recoveryKek,
-    { name: 'AES-GCM', iv: iv.buffer as ArrayBuffer },
+    { name: 'AES-GCM', iv: iv },
     { name: 'AES-GCM', length: AES_KEY_LENGTH },
     false,
     ['encrypt', 'decrypt', 'wrapKey', 'unwrapKey']
@@ -247,7 +247,7 @@ export async function encryptDocument(
   crypto.getRandomValues(iv);
 
   const ciphertext = await crypto.subtle.encrypt(
-    { name: 'AES-GCM', iv: iv.buffer as ArrayBuffer },
+    { name: 'AES-GCM', iv: iv },
     dek,
     data
   );
@@ -258,7 +258,7 @@ export async function encryptDocument(
 
   const wrappedDek = await crypto.subtle.wrapKey('raw', dek, masterKey, {
     name: 'AES-GCM',
-    iv: dekIv.buffer as ArrayBuffer,
+    iv: dekIv,
   });
 
   return {
@@ -294,9 +294,9 @@ export async function decryptDocument(
 
   const dek = await crypto.subtle.unwrapKey(
     'raw',
-    wrappedDek.buffer as ArrayBuffer,
+    wrappedDek,
     activeKey,
-    { name: 'AES-GCM', iv: dekIv.buffer as ArrayBuffer },
+    { name: 'AES-GCM', iv: dekIv },
     { name: 'AES-GCM', length: AES_KEY_LENGTH },
     false,
     ['decrypt']
@@ -305,7 +305,7 @@ export async function decryptDocument(
   // 2. Decrypt ciphertext with DEK and IV
   const iv = hexToBuffer(ivHex);
   const decrypted = await crypto.subtle.decrypt(
-    { name: 'AES-GCM', iv: iv.buffer as ArrayBuffer },
+    { name: 'AES-GCM', iv: iv },
     dek,
     ciphertext
   );
