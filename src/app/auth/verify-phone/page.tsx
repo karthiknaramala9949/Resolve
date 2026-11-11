@@ -79,9 +79,6 @@ function VerifyPhoneContent() {
     if (!res.ok) {
       throw new Error(data.error || 'Failed to resend code');
     }
-    if (data.debugOtp) {
-      setOtp(data.debugOtp);
-    }
   };
 
   return (

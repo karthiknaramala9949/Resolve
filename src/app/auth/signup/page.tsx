@@ -72,14 +72,12 @@ function SignUpContent() {
           phone: phoneNumber.trim(),
           next: returnTo,
         });
-        if (res.debugOtp) query.set('code', res.debugOtp);
         router.push(`/auth/verify-phone?${query.toString()}`);
       } else {
         const query = new URLSearchParams({
           email: email.trim(),
           next: returnTo,
         });
-        if (res.debugVerificationToken) query.set('token', res.debugVerificationToken);
         router.push(`/auth/verify-email?${query.toString()}`);
       }
     } catch {

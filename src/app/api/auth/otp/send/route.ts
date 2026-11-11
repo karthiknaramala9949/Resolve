@@ -63,15 +63,16 @@ export async function POST(req: NextRequest) {
     const otp = generateNumericOtp(6);
     await authStore.createToken(cleanPhone, otp, type, 10); // 10 minutes
 
-    console.log(
-      `[RESOLVE-ONE AUTH] 📲 SMS OTP for ${cleanPhone} (${type}): ${otp} (expires in 10 minutes)`
-    );
+    if (process.env.NODE_ENV === 'development') {
+      console.log(
+        `[RESOLVE-ONE AUTH] 📲 SMS OTP for ${cleanPhone} (${type}): ${otp} (expires in 10 minutes)`
+      );
+    }
 
     return NextResponse.json({
       success: true,
       message: `Verification code sent to ${cleanPhone}.`,
       expiresInMinutes: 10,
-      debugOtp: otp, // surfaced for automated tests & smooth local evaluation
     });
   } catch (err) {
     console.error('[Send OTP Error]:', err);

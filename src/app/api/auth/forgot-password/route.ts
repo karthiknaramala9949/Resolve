@@ -41,43 +41,33 @@ export async function POST(req: NextRequest) {
     }
 
     const isEmail = cleanId.includes('@');
-    let user = null;
-    let type: 'email' | 'phone' = 'email';
-    let debugToken: string | undefined;
-    let debugOtp: string | undefined;
 
     if (isEmail) {
-      user = await authStore.findUserByEmail(cleanId);
-      type = 'email';
+      const user = await authStore.findUserByEmail(cleanId);
       if (user) {
         const token = generateRandomToken(32);
         await authStore.createToken(user.email!, token, 'password_reset_email', 60); // 1 hour
-        debugToken = token;
-        console.log(
-          `[RESOLVE-ONE AUTH] Password reset link for ${user.email}: /auth/reset-password?token=${token}&email=${encodeURIComponent(user.email!)}`
-        );
+        if (process.env.NODE_ENV === 'development') {
+          console.log(
+            `[RESOLVE-ONE AUTH] Password reset link for ${user.email}: /auth/reset-password?token=${token}&email=${encodeURIComponent(user.email!)}`
+          );
+        }
       }
     } else {
-      user = await authStore.findUserByPhone(identifier);
-      type = 'phone';
+      const user = await authStore.findUserByPhone(identifier);
       if (user && user.phoneNumber) {
         const otp = generateNumericOtp(6);
         await authStore.createToken(user.phoneNumber, otp, 'password_reset_phone', 10); // 10 minutes
-        debugOtp = otp;
-        console.log(`[RESOLVE-ONE AUTH] 📲 Password reset OTP for ${user.phoneNumber}: ${otp}`);
+        if (process.env.NODE_ENV === 'development') {
+          console.log(`[RESOLVE-ONE AUTH] 📲 Password reset OTP for ${user.phoneNumber}: ${otp}`);
+        }
       }
     }
 
     // Always return generic response to prevent account enumeration
     return NextResponse.json({
       success: true,
-      message:
-        type === 'email'
-          ? 'If an account exists with that email address, password reset instructions have been sent.'
-          : 'If an account exists with that phone number, a 6-digit recovery code has been sent.',
-      type,
-      debugToken,
-      debugOtp,
+      message: 'If an account exists, we have sent instructions.',
     });
   } catch (err) {
     console.error('[Forgot Password Error]:', err);

@@ -1,6 +1,6 @@
 import { mutation, query } from './_generated/server';
 import { v } from 'convex/values';
-import { Doc } from './_generated/dataModel';
+import { Doc, DataModel } from './_generated/dataModel';
 import {
   hashPassword,
   verifyPassword,
@@ -8,6 +8,93 @@ import {
   generateOtp,
 } from './crypto';
 import { getAuthenticatedUser, toSafeUserProfile } from './authHelper';
+import { createClient } from '@convex-dev/better-auth';
+import { convex } from '@convex-dev/better-auth/plugins';
+import { betterAuth } from 'better-auth';
+import { componentsGeneric } from 'convex/server';
+
+const components = componentsGeneric() as unknown as { betterAuth: any };
+import type { GenericCtx } from '@convex-dev/better-auth';
+import authConfig from './auth.config';
+
+/**
+ * Better Auth Component Client for Convex
+ */
+export const authComponent = createClient<DataModel>(components.betterAuth);
+
+/**
+ * Validates Better Auth environment configuration and fail-safe defaults
+ */
+export const validateAuthConfig = (config?: { secret?: string; siteUrl?: string }) => {
+  const secret =
+    config?.secret ||
+    process.env.BETTER_AUTH_SECRET ||
+    process.env.AUTH_SECRET;
+
+  if (process.env.NODE_ENV === 'production') {
+    if (!secret) {
+      throw new Error('BETTER_AUTH_SECRET or AUTH_SECRET environment variable is required in production.');
+    }
+    if (secret.length < 32) {
+      throw new Error('BETTER_AUTH_SECRET must be at least 32 characters long in production.');
+    }
+  }
+
+  return {
+    secret: secret || 'dev_better_auth_secret_must_be_at_least_32_characters_long_for_security',
+    siteUrl:
+      config?.siteUrl ||
+      process.env.SITE_URL ||
+      process.env.BETTER_AUTH_URL ||
+      process.env.NEXT_PUBLIC_APP_URL ||
+      'http://localhost:3000',
+  };
+};
+
+/**
+ * Create Better Auth server instance bound to Convex database adapter
+ */
+export const createAuth = (ctx: GenericCtx<DataModel>) => {
+  const config = validateAuthConfig();
+  const siteUrl = config.siteUrl;
+  const secret = config.secret;
+
+  const googleClientId = process.env.GOOGLE_CLIENT_ID || '';
+  const googleClientSecret = process.env.GOOGLE_CLIENT_SECRET || '';
+  const isGoogleEnabled = Boolean(googleClientId && googleClientSecret);
+
+  return betterAuth({
+    baseURL: siteUrl,
+    database: authComponent.adapter(ctx),
+    secret,
+    emailAndPassword: {
+      enabled: true,
+      requireEmailVerification: false,
+      minPasswordLength: 8,
+      maxPasswordLength: 128,
+    },
+    socialProviders: {
+      google: {
+        clientId: googleClientId,
+        clientSecret: googleClientSecret,
+        enabled: isGoogleEnabled,
+      },
+    },
+    session: {
+      expiresIn: 60 * 60 * 24 * 30, // 30 days
+      updateAge: 60 * 60 * 24, // 1 day
+    },
+    account: {
+      accountLinking: {
+        enabled: true,
+        trustedProviders: ['google'],
+      },
+    },
+    plugins: [convex({ authConfig })],
+  });
+};
+
+export const { getAuthUser } = authComponent.clientApi();
 
 const SESSION_TTL_DAYS = 30;
 
@@ -116,8 +203,6 @@ export const register = mutation({
     });
 
     // Generate verification tokens
-    let debugOtp: string | undefined;
-    let debugVerificationToken: string | undefined;
     let verificationRequired: 'email' | 'phone' = cleanEmail ? 'email' : 'phone';
 
     if (cleanEmail) {
@@ -130,7 +215,6 @@ export const register = mutation({
         attempts: 0,
         createdAt: now,
       });
-      debugVerificationToken = emailToken;
     }
 
     if (cleanPhone) {
@@ -143,7 +227,6 @@ export const register = mutation({
         attempts: 0,
         createdAt: now,
       });
-      debugOtp = otp;
     }
 
     // Audit log
@@ -161,8 +244,6 @@ export const register = mutation({
       user: toSafeUserProfile(user),
       sessionToken,
       verificationRequired,
-      debugOtp,
-      debugVerificationToken,
     };
   },
 });
@@ -315,7 +396,6 @@ export const sendOtp = mutation({
       success: true,
       message: `Verification code sent to ${cleanPhone}.`,
       expiresInMinutes: 10,
-      debugOtp: otp,
     };
   },
 });
@@ -434,58 +514,40 @@ export const forgotPassword = mutation({
         .withIndex('by_email', (q) => q.eq('email', email))
         .first();
 
-      if (!user) {
-        // Return success for security to prevent user enumeration
-        return {
-          type: 'email' as const,
-          message: 'If an account exists with this email, recovery instructions have been sent.',
-        };
+      if (user) {
+        const token = generateToken(32);
+        await ctx.db.insert('verificationTokens', {
+          identifier: email,
+          token,
+          type: 'password_reset_email',
+          expiresAt: getMinutesExpiration(60), // 1 hour
+          attempts: 0,
+          createdAt: now,
+        });
       }
-
-      const token = generateToken(32);
-      await ctx.db.insert('verificationTokens', {
-        identifier: email,
-        token,
-        type: 'password_reset_email',
-        expiresAt: getMinutesExpiration(60), // 1 hour
-        attempts: 0,
-        createdAt: now,
-      });
-
-      return {
-        type: 'email' as const,
-        message: 'Password reset instructions have been sent to your email.',
-        debugToken: token,
-      };
     } else {
       const user = await ctx.db
         .query('users')
         .withIndex('by_phone', (q) => q.eq('phoneNumber', cleanId))
         .first();
 
-      if (!user) {
-        return {
-          type: 'phone' as const,
-          message: 'If an account exists with this phone number, a reset OTP has been sent.',
-        };
+      if (user) {
+        const otp = generateOtp(6);
+        await ctx.db.insert('verificationTokens', {
+          identifier: cleanId,
+          token: otp,
+          type: 'password_reset_phone',
+          expiresAt: getMinutesExpiration(10), // 10 minutes
+          attempts: 0,
+          createdAt: now,
+        });
       }
-
-      const otp = generateOtp(6);
-      await ctx.db.insert('verificationTokens', {
-        identifier: cleanId,
-        token: otp,
-        type: 'password_reset_phone',
-        expiresAt: getMinutesExpiration(10), // 10 minutes
-        attempts: 0,
-        createdAt: now,
-      });
-
-      return {
-        type: 'phone' as const,
-        message: `Password reset verification code sent to ${cleanId}.`,
-        debugOtp: otp,
-      };
     }
+
+    return {
+      success: true,
+      message: 'If an account exists, we have sent instructions.',
+    };
   },
 });
 
@@ -564,100 +626,7 @@ export const resetPassword = mutation({
   },
 });
 
-/**
- * Google OAuth user upsert & session generation.
- */
-export const googleAuth = mutation({
-  args: {
-    googleId: v.string(),
-    email: v.string(),
-    name: v.string(),
-    image: v.optional(v.union(v.string(), v.null())),
-    userAgent: v.optional(v.string()),
-    ipAddress: v.optional(v.string()),
-  },
-  handler: async (ctx, args) => {
-    const cleanEmail = args.email.trim().toLowerCase();
-    const now = new Date().toISOString();
 
-    // Check if user exists by googleId
-    let user = await ctx.db
-      .query('users')
-      .withIndex('by_googleId', (q) => q.eq('googleId', args.googleId))
-      .first();
-
-    if (!user) {
-      // Check if user exists by email
-      user = await ctx.db
-        .query('users')
-        .withIndex('by_email', (q) => q.eq('email', cleanEmail))
-        .first();
-
-      if (user) {
-        // Link googleId to existing user
-        const providers = user.providers.includes('google')
-          ? user.providers
-          : [...user.providers, 'google'];
-        await ctx.db.patch(user._id, {
-          googleId: args.googleId,
-          emailVerified: true,
-          emailVerifiedAt: user.emailVerifiedAt || now,
-          providers,
-          image: user.image || args.image || null,
-          lastLoginAt: now,
-          updatedAt: now,
-        });
-        user = await ctx.db.get(user._id);
-      } else {
-        // Create new user
-        const newUserId = await ctx.db.insert('users', {
-          name: args.name.trim(),
-          email: cleanEmail,
-          phoneNumber: null,
-          image: args.image || null,
-          providers: ['google'],
-          passwordHash: null,
-          passwordSalt: null,
-          googleId: args.googleId,
-          emailVerified: true,
-          emailVerifiedAt: now,
-          phoneVerified: false,
-          phoneVerifiedAt: null,
-          role: 'consumer',
-          createdAt: now,
-          updatedAt: now,
-          lastLoginAt: now,
-        });
-        user = await ctx.db.get(newUserId);
-      }
-    } else {
-      // Update lastLoginAt
-      await ctx.db.patch(user._id, {
-        lastLoginAt: now,
-        updatedAt: now,
-      });
-      user = await ctx.db.get(user._id);
-    }
-
-    if (!user) throw new Error('Google authentication failed.');
-
-    // Create session
-    const sessionToken = generateToken(32);
-    await ctx.db.insert('sessions', {
-      userId: user._id,
-      token: sessionToken,
-      expiresAt: getExpirationDate(SESSION_TTL_DAYS),
-      createdAt: now,
-      userAgent: args.userAgent,
-      ipAddress: args.ipAddress,
-    });
-
-    return {
-      user: toSafeUserProfile(user),
-      sessionToken,
-    };
-  },
-});
 
 /**
  * Update authenticated user's profile details.

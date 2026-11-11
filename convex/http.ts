@@ -1,8 +1,13 @@
 import { httpRouter } from 'convex/server';
 import { httpAction } from './_generated/server';
+import { authComponent, createAuth } from './auth';
 
 const http = httpRouter();
 
+// Register official Better Auth HTTP endpoints on Convex
+authComponent.registerRoutes(http, createAuth);
+
+// Health check endpoint
 http.route({
   path: '/health',
   method: 'GET',
@@ -25,4 +30,3 @@ http.route({
 });
 
 export default http;
-
