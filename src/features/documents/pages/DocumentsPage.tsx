@@ -20,12 +20,13 @@ import {
   UploadCloud,
   CheckCircle2,
 } from 'lucide-react';
-import { caseRepository, evidenceRepository } from '@/lib/db/repositories';
+import { caseService, documentService } from '@/services';
 import { Case, EvidenceMeta } from '@/lib/db/types';
 import { formatComplaintLetter } from '@/lib/pdf/complaintLetter';
 import { detectSensitiveInfo } from '@/lib/rules/redactionChecker';
 import { validateUploadedFile } from '@/lib/rules/fileValidator';
-import { uploadEncryptedDocument, downloadAndDecryptDocument } from '@/lib/crypto/documentManager';
+import { UnlockVaultModal } from '@/features/crypto/components/UnlockVaultModal';
+import { getActiveMasterKey } from '@/lib/crypto/e2ee';
 
 export const DocumentsPage: React.FC = () => {
   const { toast } = useToast();
@@ -33,6 +34,7 @@ export const DocumentsPage: React.FC = () => {
   const [selectedCaseId, setSelectedCaseId] = useState<string>('');
   const [isPackModalOpen, setIsPackModalOpen] = useState(false);
   const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
+  const [isUnlockModalOpen, setIsUnlockModalOpen] = useState(false);
   const [isGeneratingPdf, setIsGeneratingPdf] = useState(false);
 
   // File upload state
@@ -41,7 +43,7 @@ export const DocumentsPage: React.FC = () => {
   const [redactionNotices, setRedactionNotices] = useState<any[]>([]);
 
   const loadData = async () => {
-    const allCases = await caseRepository.getAll();
+    const allCases = await caseService.listCases();
     setCases(allCases);
     if (allCases.length > 0 && !selectedCaseId) {
       setSelectedCaseId(allCases[0].id);
@@ -96,7 +98,7 @@ export const DocumentsPage: React.FC = () => {
     }
 
     try {
-      const uploadRes = await uploadEncryptedDocument({
+      const uploadRes = await documentService.uploadDocument({
         file: uploadFile,
         caseId: targetCaseId,
         redactionHint: redactionNotices.length > 0 ? redactionNotices[0].warning : undefined,
@@ -113,14 +115,14 @@ export const DocumentsPage: React.FC = () => {
         redactionHint: redactionNotices.length > 0 ? redactionNotices[0].warning : undefined,
       };
 
-      await caseRepository.addEvidenceMeta(targetCaseId, meta);
-      await caseRepository.addTimelineEvent(targetCaseId, {
+      await caseService.addEvidence(targetCaseId, meta);
+      await caseService.addTimelineEvent(targetCaseId, {
         title: `Evidence uploaded: ${uploadFile.name}`,
-        detail: `Encrypted client-side with SHA-256 fingerprint: ${uploadRes.sha256.slice(0, 16)}...`,
+        detail: `Saved with security verification fingerprint: ${uploadRes.sha256.slice(0, 16)}...`,
         source: 'evidence',
       });
 
-      toast(`File encrypted and stored securely.`, 'success');
+      toast(`File saved securely.`, 'success');
       setIsUploadModalOpen(false);
       setUploadFile(null);
       loadData();
@@ -157,7 +159,7 @@ export const DocumentsPage: React.FC = () => {
 
   const handleDownloadBlob = async (id: string, name: string) => {
     try {
-      const blob = await downloadAndDecryptDocument(id, name);
+      const blob = await documentService.downloadDocument(id, name);
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
@@ -166,13 +168,17 @@ export const DocumentsPage: React.FC = () => {
       URL.revokeObjectURL(url);
       toast(`Downloading ${name}`, 'info');
     } catch (err: any) {
-      toast(`Download error: ${err.message}`, 'error');
+      if (err.message?.includes('E2EE_VAULT_LOCKED') || err.message?.includes('Master Key')) {
+        setIsUnlockModalOpen(true);
+      } else {
+        toast(`Download error: ${err.message}`, 'error');
+      }
     }
   };
 
   const handleDeleteEvidence = async (caseId: string, evId: string) => {
     if (confirm('Remove this evidence item?')) {
-      await caseRepository.removeEvidenceMeta(caseId, evId);
+      await documentService.deleteDocument(caseId, evId);
       toast('Evidence item deleted.', 'info');
       loadData();
     }
@@ -186,7 +192,7 @@ export const DocumentsPage: React.FC = () => {
             Documents & proof
           </h2>
           <p className="text-xs sm:text-sm text-steel-grey-600 mt-1 font-normal">
-            Store unedited receipts and images. Fingerprinted with SHA-256 for tamper-proof dispute bundles
+            Store receipts and images. Protected with tamper-proof security fingerprints to keep your documents verified
           </p>
         </div>
 
@@ -224,7 +230,7 @@ export const DocumentsPage: React.FC = () => {
               </h3>
             </div>
             <p className="text-xs sm:text-sm text-steel-grey-600 font-normal">
-              Orders your statement of facts, timeline, and evidence with cryptographic SHA-256 digests. Ready for NCH 1915 or e-Jagriti filing.
+              Prepares your timeline, dispute details, and evidence into a clean summary document ready to share with customer service or official consumer portals.
             </p>
           </div>
 
@@ -315,7 +321,7 @@ export const DocumentsPage: React.FC = () => {
               Cancel
             </Button>
             <Button variant="primary" onClick={handleUploadSubmit} disabled={!uploadFile}>
-              Save to IndexedDB
+              Save file
             </Button>
           </div>
         </div>
@@ -417,6 +423,15 @@ export const DocumentsPage: React.FC = () => {
           </div>
         )}
       </BottomSheet>
+
+      {/* Zero-Knowledge E2EE Master Key Unlock Modal */}
+      <UnlockVaultModal
+        isOpen={isUnlockModalOpen}
+        onClose={() => setIsUnlockModalOpen(false)}
+        onUnlocked={() => {
+          toast('Master Key vault unlocked. Documents ready for decryption.', 'success');
+        }}
+      />
     </div>
   );
 };

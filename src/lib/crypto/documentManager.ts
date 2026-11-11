@@ -1,11 +1,11 @@
 /**
  * Client-Side Document Security Manager
  *
- * Coordinates Client-Side E2EE, Convex Encrypted File Storage,
- * and IndexedDB Local-First Offline Blob Caching.
+ * Coordinates Client-Side E2EE and Convex Encrypted File Storage.
+ * Convex is the single source of truth for persistent application data.
+ * All documents are encrypted before leaving the browser.
  */
 
-import { evidenceRepository } from '@/lib/db/repositories';
 import {
   encryptDocument,
   decryptDocument,
@@ -15,6 +15,7 @@ import {
   calculateSHA256,
 } from './e2ee';
 import { getConvexClient } from '@/components/providers/ConvexClientProvider';
+import { ensureSessionToken } from '@/lib/auth/sessionToken';
 import { api } from '../../../convex/_generated/api';
 
 export interface UploadOptions {
@@ -36,102 +37,142 @@ export interface UploadResult {
 }
 
 /**
- * Ensures a User Master Key is active. If not yet initialized, creates a default key for session.
+ * Ensures a User Master Key is active.
+ * If the user already has a registered Master Key bundle in Convex, requires explicit unlocking.
+ * NEVER silently overwrites an existing Master Key with a replacement default key!
  */
-export async function ensureActiveMasterKey(): Promise<CryptoKey> {
+export async function ensureActiveMasterKey(options?: {
+  allowAutoInitForNewUsers?: boolean;
+  passphrase?: string;
+}): Promise<CryptoKey> {
   let masterKey = getActiveMasterKey();
-  if (!masterKey) {
-    // Generate session fallback master key if user hasn't explicitly entered a passphrase
-    const defaultPassphrase =
-      typeof window !== 'undefined'
-        ? sessionStorage.getItem('resolve-one-e2ee-session-pass') || 'resolve-local-device-key-default'
-        : 'resolve-local-device-key-default';
-
-    const { masterKey: generated } = await setupUserMasterKey(defaultPassphrase);
-    setActiveMasterKey(generated);
-    masterKey = generated;
+  if (masterKey) {
+    return masterKey;
   }
-  return masterKey;
+
+  // Check if current user has an existing encrypted Master Key record
+  const token = await ensureSessionToken();
+  const convex = getConvexClient();
+
+  try {
+    const user = await convex.query(api.auth.getCurrentUser, { sessionToken: token });
+    if (user?.encryptedMasterKey && user?.masterKeySalt && user?.masterKeyIv) {
+      // User has an existing key! If passphrase provided, attempt unlock
+      if (options?.passphrase) {
+        const { unlockMasterKeyWithPassphrase } = await import('./e2ee');
+        const unlocked = await unlockMasterKeyWithPassphrase(
+          options.passphrase,
+          user.encryptedMasterKey,
+          user.masterKeySalt,
+          user.masterKeyIv
+        );
+        setActiveMasterKey(unlocked);
+        return unlocked;
+      }
+
+      // Do NOT silently regenerate key! Throw explicit locked error
+      throw new Error(
+        'E2EE_VAULT_LOCKED: Your encryption vault is locked on this device. Please unlock your vault with your password or recovery key.'
+      );
+    }
+  } catch (err: any) {
+    if (err?.message?.includes('E2EE_VAULT_LOCKED')) {
+      throw err;
+    }
+    // If auth.me fails or is unavailable, continue to initial setup if allowed
+  }
+
+  // First-time user without an existing vault: generate a new master key
+  const defaultPassphrase =
+    options?.passphrase ||
+    (typeof window !== 'undefined'
+      ? sessionStorage.getItem('resolve-one-e2ee-session-pass') || 'resolve-local-device-key-default'
+      : 'resolve-local-device-key-default');
+
+  const { masterKey: generated, bundle } = await setupUserMasterKey(defaultPassphrase);
+  setActiveMasterKey(generated);
+
+  // Sync bundle to Convex
+  try {
+    await convex.mutation(api.auth.updateE2EEKeys, {
+      sessionToken: token,
+      encryptedMasterKey: bundle.wrappedMasterKeyHex,
+      masterKeySalt: bundle.saltHex,
+      masterKeyIv: bundle.ivHex,
+      recoveryKeyHash: bundle.recoveryKeyHashHex,
+      recoveryWrappedMasterKey: bundle.recoveryWrappedMasterKeyHex,
+    });
+  } catch (err) {
+    console.warn('[DocumentManager] Cloud master key registration deferred:', err);
+  }
+
+  return generated;
 }
 
 /**
- * Encrypts a document client-side and uploads the ciphertext to Convex file storage.
- * Also caches the file locally in IndexedDB for instant offline availability.
+ * Encrypts a document client-side and uploads the ciphertext directly to Convex file storage.
+ * Never stores plaintext documents or unencrypted keys in cloud or local persistent databases.
  */
 export async function uploadEncryptedDocument(
   options: UploadOptions
 ): Promise<UploadResult> {
-  const { file, caseId, folderId, sessionToken, redactionHint } = options;
+  const { file, caseId, folderId, redactionHint } = options;
+  const token = options.sessionToken || (await ensureSessionToken());
 
   const newEvId = `EV-${Date.now().toString().slice(-4)}`;
   const arrayBuffer = await file.arrayBuffer();
   const sha256 = await calculateSHA256(arrayBuffer);
 
-  // 1. Save locally in IndexedDB first (Local-First Offline Guarantee)
-  await evidenceRepository.saveBlob(file, {
-    id: newEvId,
-    name: file.name,
-    type: file.type || 'application/octet-stream',
-    size: file.size,
-  });
-
   let storageId: string | undefined;
-  let isEncrypted = false;
+  let isEncrypted = true;
   let encryptedKey: string | undefined;
   let ivHex: string | undefined;
 
-  // 2. If online and authenticated, encrypt and upload to Convex Storage
-  if (navigator.onLine && sessionToken) {
-    try {
-      const masterKey = await ensureActiveMasterKey();
+  const masterKey = await ensureActiveMasterKey();
 
-      // Client-side AES-256-GCM Envelope Encryption
-      const encrypted = await encryptDocument(arrayBuffer, masterKey);
-      isEncrypted = true;
-      encryptedKey = `${encrypted.dekIvHex}:${encrypted.wrappedDekHex}`;
-      ivHex = encrypted.ivHex;
+  // 1. Client-side AES-256-GCM Envelope Encryption
+  const encrypted = await encryptDocument(arrayBuffer, masterKey);
+  encryptedKey = `${encrypted.dekIvHex}:${encrypted.wrappedDekHex}`;
+  ivHex = encrypted.ivHex;
 
-      const convex = getConvexClient();
+  const convex = getConvexClient();
 
-      // Request secure upload URL from Convex
-      const uploadUrl = await convex.mutation(api.documents.generateUploadUrl, {
-        sessionToken,
-      });
+  // 2. Request secure upload URL from Convex
+  const uploadUrl = await convex.mutation(api.documents.generateUploadUrl, {
+    sessionToken: token,
+  });
 
-      // Upload encrypted ciphertext buffer
-      const uploadResponse = await fetch(uploadUrl, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/octet-stream',
-        },
-        body: encrypted.ciphertext,
-      });
+  // 3. Upload encrypted ciphertext buffer
+  const uploadResponse = await fetch(uploadUrl, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/octet-stream',
+    },
+    body: encrypted.ciphertext,
+  });
 
-      if (uploadResponse.ok) {
-        const json = await uploadResponse.json();
-        storageId = json.storageId;
-
-        // Register document in Convex
-        await convex.mutation(api.documents.registerDocument, {
-          sessionToken,
-          storageId: storageId!,
-          name: file.name,
-          mime: file.type || 'application/octet-stream',
-          size: file.size,
-          sha256,
-          caseId: caseId || null,
-          folderId: folderId || null,
-          isEncrypted: true,
-          encryptedKey,
-          iv: ivHex,
-          redactionHint,
-        });
-      }
-    } catch (err) {
-      console.warn('[DocumentManager] Convex cloud upload deferred or failed:', err);
-      // Failsafe: Local IndexedDB copy exists, so user never loses their evidence!
-    }
+  if (!uploadResponse.ok) {
+    throw new Error(`Failed to upload encrypted file to Convex storage: ${uploadResponse.statusText}`);
   }
+
+  const json = await uploadResponse.json();
+  storageId = json.storageId;
+
+  // 4. Register document in Convex database
+  await convex.mutation(api.documents.registerDocument, {
+    sessionToken: token,
+    storageId: storageId!,
+    name: file.name,
+    mime: file.type || 'application/octet-stream',
+    size: file.size,
+    sha256,
+    caseId: caseId || null,
+    folderId: folderId || null,
+    isEncrypted: true,
+    encryptedKey,
+    iv: ivHex,
+    redactionHint,
+  });
 
   return {
     evidenceId: newEvId,
@@ -140,13 +181,13 @@ export async function uploadEncryptedDocument(
     size: file.size,
     sha256,
     storageId,
-    isEncrypted,
+    isEncrypted: true,
   };
 }
 
 /**
- * Downloads and decrypts a document.
- * Tries local IndexedDB cache first; falls back to Convex cloud download + decryption.
+ * Downloads and decrypts an encrypted document from Convex storage.
+ * Performs client-side AES-256-GCM decryption and SHA-256 integrity verification.
  */
 export async function downloadAndDecryptDocument(
   evidenceId: string,
@@ -159,64 +200,55 @@ export async function downloadAndDecryptDocument(
   },
   sessionToken?: string | null
 ): Promise<Blob> {
-  // 1. Check local IndexedDB first
-  const localRecord = await evidenceRepository.getBlob(evidenceId);
-  if (localRecord && localRecord.blob) {
-    return localRecord.blob;
+  const token = sessionToken || (await ensureSessionToken());
+
+  if (!metadata?.storageId) {
+    throw new Error(`File ${fileName} (${evidenceId}) is missing a cloud storage reference.`);
   }
 
-  // 2. Fetch from Convex Cloud if local blob missing
-  if (metadata?.storageId && sessionToken && navigator.onLine) {
-    const convex = getConvexClient();
-    const downloadData = await convex.query(api.documents.getDownloadUrl, {
-      sessionToken,
-      documentId: metadata.storageId,
+  const convex = getConvexClient();
+  const downloadData = await convex.query(api.documents.getDownloadUrl, {
+    sessionToken: token,
+    documentId: metadata.storageId,
+  });
+
+  if (!downloadData?.downloadUrl) {
+    throw new Error('Download URL could not be obtained from Convex storage.');
+  }
+
+  const response = await fetch(downloadData.downloadUrl);
+  if (!response.ok) {
+    throw new Error(`Failed to download encrypted file from cloud storage: ${response.statusText}`);
+  }
+
+  const ciphertextBuffer = await response.arrayBuffer();
+
+  // Decrypt if document is marked encrypted
+  if (
+    downloadData.document.isEncrypted &&
+    downloadData.document.encryptedKey &&
+    downloadData.document.iv
+  ) {
+    const parts = downloadData.document.encryptedKey.split(':');
+    const dekIvHex = parts[0];
+    const wrappedDekHex = parts[1];
+
+    const masterKey = await ensureActiveMasterKey();
+    const decryptedBuffer = await decryptDocument(
+      ciphertextBuffer,
+      wrappedDekHex,
+      downloadData.document.iv,
+      dekIvHex,
+      downloadData.document.sha256,
+      masterKey
+    );
+
+    return new Blob([decryptedBuffer], {
+      type: downloadData.document.mime || 'application/octet-stream',
     });
-
-    const response = await fetch(downloadData.downloadUrl);
-    if (!response.ok) {
-      throw new Error('Failed to download encrypted file from cloud storage.');
-    }
-
-    const ciphertextBuffer = await response.arrayBuffer();
-
-    // Decrypt if encrypted
-    if (downloadData.document.isEncrypted && downloadData.document.encryptedKey && downloadData.document.iv) {
-      const parts = downloadData.document.encryptedKey.split(':');
-      const dekIvHex = parts[0];
-      const wrappedDekHex = parts[1];
-
-      const masterKey = await ensureActiveMasterKey();
-      const decryptedBuffer = await decryptDocument(
-        ciphertextBuffer,
-        wrappedDekHex,
-        downloadData.document.iv,
-        dekIvHex,
-        downloadData.document.sha256,
-        masterKey
-      );
-
-      const decryptedBlob = new Blob([decryptedBuffer], {
-        type: downloadData.document.mime || 'application/octet-stream',
-      });
-
-      // Cache locally in IndexedDB
-      await evidenceRepository.saveBlob(decryptedBlob, {
-        id: evidenceId,
-        name: fileName,
-        type: downloadData.document.mime,
-        size: decryptedBlob.size,
-      });
-
-      return decryptedBlob;
-    } else {
-      const plaintextBlob = new Blob([ciphertextBuffer], {
-        type: downloadData.document.mime,
-      });
-      return plaintextBlob;
-    }
   }
 
-  throw new Error(`File ${fileName} (${evidenceId}) is not available in local storage or cloud.`);
+  return new Blob([ciphertextBuffer], {
+    type: downloadData.document.mime || 'application/octet-stream',
+  });
 }
-

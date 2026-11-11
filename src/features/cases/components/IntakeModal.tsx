@@ -4,7 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { Button, Input, Select, Textarea, useToast, BottomSheet } from '@/design-system';
 import { parseComplaintText } from '@/lib/rules/intakeParser';
-import { caseRepository } from '@/lib/db/repositories';
+import { caseService } from '@/services';
 import { SlidersHorizontal, Mic, MicOff, Edit2, ArrowRight, Building2, Tag, IndianRupee, Hash } from 'lucide-react';
 
 interface IntakeModalProps {
@@ -143,7 +143,7 @@ export const IntakeModal: React.FC<IntakeModalProps> = ({
     const parsedAmount = amount ? parseFloat(amount) : null;
 
     try {
-      const created = await caseRepository.create({
+      const created = await caseService.createCase({
         id: newId,
         title: product ? `${issueType} for ${product}` : `${issueType} from ${company || 'Store'}`,
         issueType,
@@ -224,7 +224,7 @@ export const IntakeModal: React.FC<IntakeModalProps> = ({
                   ? 'bg-coral text-white'
                   : 'text-steel-grey-400 hover:text-charcoal hover:bg-steel-grey-100'
               }`}
-              title={isRecording ? 'Listening... click to stop' : 'Record voice note (in-browser Speech API)'}
+              title={isRecording ? 'Listening... click to stop' : 'Record voice note'}
             >
               {isRecording ? <MicOff className="w-4 h-4" /> : <Mic className="w-4 h-4" />}
             </button>
@@ -237,9 +237,9 @@ export const IntakeModal: React.FC<IntakeModalProps> = ({
             <div className="flex items-start gap-2">
               <Mic className="w-4 h-4 text-amber-700 mt-0.5 shrink-0" />
               <div>
-                <p className="font-medium">Microphone transcription notice</p>
+                <p className="font-medium">Microphone access</p>
                 <p className="mt-0.5 leading-relaxed text-xs text-amber-800">
-                  Your browser may send audio to its speech recognition engine (e.g. Google in Chrome) to transcribe it. Use manual typing if you prefer.
+                  Your browser converts your spoken words into text. You can type instead if you prefer.
                 </p>
               </div>
             </div>
@@ -273,12 +273,12 @@ export const IntakeModal: React.FC<IntakeModalProps> = ({
           </p>
         )}
 
-        {/* Live Rule-based chips card */}
+        {/* Detected facts card */}
         <div className="p-4 rounded-xl border border-steel-grey-200 bg-steel-grey-50/50 space-y-2.5">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-1.5 text-xs font-medium text-coral">
               <SlidersHorizontal className="w-3.5 h-3.5" />
-              <span>Extracted facts (in-browser regex rules)</span>
+              <span>Information found in your description</span>
             </div>
             <span className="text-[11px] text-steel-grey-500">Tap chip to edit</span>
           </div>

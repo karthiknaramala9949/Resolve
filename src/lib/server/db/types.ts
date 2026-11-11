@@ -1,6 +1,6 @@
 import { z } from 'zod';
 
-export type AuthProvider = 'email' | 'phone' | 'google';
+export type AuthProvider = 'email' | 'phone' | 'google' | 'local' | 'guest';
 
 export const UserProfileSchema = z.object({
   id: z.string(),
@@ -8,7 +8,7 @@ export const UserProfileSchema = z.object({
   email: z.string().email().nullable(),
   phoneNumber: z.string().nullable(),
   image: z.string().nullable(),
-  providers: z.array(z.enum(['email', 'phone', 'google'])),
+  providers: z.array(z.enum(['email', 'phone', 'google', 'local', 'guest'])),
   emailVerified: z.boolean(),
   emailVerifiedAt: z.string().nullable(),
   phoneVerified: z.boolean(),

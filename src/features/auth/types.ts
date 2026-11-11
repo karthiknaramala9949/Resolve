@@ -1,4 +1,4 @@
-export type AuthProvider = 'email' | 'phone' | 'google';
+export type AuthProvider = 'email' | 'phone' | 'google' | 'local' | 'guest';
 
 export interface UserProfile {
   id: string;
@@ -11,9 +11,15 @@ export interface UserProfile {
   emailVerifiedAt: string | null;
   phoneVerified: boolean;
   phoneVerifiedAt: string | null;
+  encryptedMasterKey?: string;
+  masterKeySalt?: string;
+  masterKeyIv?: string;
+  recoveryWrappedMasterKey?: string;
+  recoveryKeyHash?: string;
   createdAt: string;
-  updatedAt: string;
+  updatedAt?: string;
   lastLoginAt: string;
+  isGuest?: boolean;
 }
 
 export interface RegisterFormData {

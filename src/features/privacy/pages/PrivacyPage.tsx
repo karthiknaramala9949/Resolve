@@ -13,8 +13,7 @@ import {
   AlertTriangle,
   KeyRound,
 } from 'lucide-react';
-import { db } from '@/lib/db/db';
-import { caseRepository, purchaseRepository, reminderRepository } from '@/lib/db/repositories';
+import { caseService, purchaseService, reminderService, documentService, authService } from '@/services';
 import { encryptBuffer, decryptBuffer } from '@/lib/crypto/encryption';
 import { createZipArchive } from '@/lib/utils/zipGenerator';
 
@@ -30,16 +29,16 @@ export const PrivacyPage: React.FC = () => {
   const handleExportAll = async () => {
     try {
       const [cases, purchases, reminders] = await Promise.all([
-        caseRepository.getAll(),
-        purchaseRepository.getAll(),
-        reminderRepository.getAll(),
+        caseService.listCases(),
+        purchaseService.listPurchases(),
+        reminderService.listReminders(),
       ]);
 
       const exportBundle = {
         app: 'RESOLVE-ONE',
         version: '2.0.0',
         exportedAt: new Date().toISOString(),
-        disclaimer: 'Unencrypted client-side export of local dispute records.',
+        disclaimer: 'Export backup of your dispute records.',
         data: {
           cases,
           purchases,
@@ -56,7 +55,7 @@ export const PrivacyPage: React.FC = () => {
       a.download = `RESOLVE-ONE-Export-${new Date().toISOString().slice(0, 10)}.json`;
       a.click();
       URL.revokeObjectURL(url);
-      toast('JSON backup exported.', 'success');
+      toast('Backup downloaded successfully.', 'success');
     } catch (err: any) {
       toast(`Export failed: ${err.message}`, 'error');
     }
@@ -64,18 +63,17 @@ export const PrivacyPage: React.FC = () => {
 
   const handleExportZip = async () => {
     try {
-      const [cases, purchases, reminders, blobs] = await Promise.all([
-        caseRepository.getAll(),
-        purchaseRepository.getAll(),
-        reminderRepository.getAll(),
-        db.evidenceBlobs.toArray(),
+      const [cases, purchases, reminders] = await Promise.all([
+        caseService.listCases(),
+        purchaseService.listPurchases(),
+        reminderService.listReminders(),
       ]);
 
       const exportBundle = {
         app: 'RESOLVE-ONE',
         version: '2.0.0',
         exportedAt: new Date().toISOString(),
-        disclaimer: 'Unencrypted client-side export of local dispute records.',
+        disclaimer: 'Export backup of your dispute records from Convex.',
         data: { cases, purchases, reminders },
       };
 
@@ -86,13 +84,21 @@ export const PrivacyPage: React.FC = () => {
         },
       ];
 
-      for (const b of blobs) {
-        if (b.blob) {
-          const buf = await b.blob.arrayBuffer();
-          entries.push({
-            filename: `evidence/${b.id}_${b.name}`,
-            data: new Uint8Array(buf),
-          });
+      // Download attached encrypted evidence documents from Convex storage
+      for (const c of cases) {
+        for (const ev of c.evidence || []) {
+          if (ev.storageId) {
+            try {
+              const blob = await documentService.downloadDocument(ev.id, ev.name, ev);
+              const buf = await blob.arrayBuffer();
+              entries.push({
+                filename: `evidence/${ev.id}_${ev.name}`,
+                data: new Uint8Array(buf),
+              });
+            } catch (err) {
+              console.warn(`[ExportZip] Could not retrieve evidence ${ev.id}:`, err);
+            }
+          }
         }
       }
 
@@ -105,7 +111,7 @@ export const PrivacyPage: React.FC = () => {
       a.click();
       document.body.removeChild(a);
       URL.revokeObjectURL(url);
-      toast('ZIP archive exported.', 'success');
+      toast('Archive downloaded successfully.', 'success');
     } catch (err: any) {
       toast(`ZIP export failed: ${err.message}`, 'error');
     }
@@ -113,33 +119,46 @@ export const PrivacyPage: React.FC = () => {
 
   const handleWipeAll = async () => {
     const confirmation = prompt(
-      'Type "DELETE" to permanently erase all local cases, documents, purchases, and settings from this browser:'
+      'Type "DELETE" to permanently delete all your saved cases, documents, purchases, and settings from Convex:'
     );
 
     if (confirmation === 'DELETE') {
       try {
-        await db.cases.clear();
-        await db.purchases.clear();
-        await db.reminders.clear();
-        await db.policies.clear();
-        await db.evidenceBlobs.clear();
-        localStorage.clear();
+        const [cases, purchases, reminders] = await Promise.all([
+          caseService.listCases(),
+          purchaseService.listPurchases(),
+          reminderService.listReminders(),
+        ]);
 
-        toast('All local records wiped.', 'info');
+        for (const c of cases) {
+          await caseService.deleteCase(c.id);
+        }
+        for (const p of purchases) {
+          await purchaseService.deletePurchase(p.id);
+        }
+        for (const r of reminders) {
+          await reminderService.deleteReminder(r.id);
+        }
+
+        localStorage.clear();
+        sessionStorage.clear();
+        await authService.logout();
+
+        toast('All records deleted from Convex.', 'info');
         setTimeout(() => {
           window.location.href = '/';
         }, 1000);
       } catch (err: any) {
-        toast(`Wipe failed: ${err.message}`, 'error');
+        toast(`Delete failed: ${err.message}`, 'error');
       }
     } else {
-      toast('Wipe cancelled.', 'info');
+      toast('Deletion cancelled.', 'info');
     }
   };
 
   const handleEnableEncryption = async () => {
     if (!passphrase.trim() || passphrase.length < 6) {
-      toast('Please enter a passphrase of at least 6 characters.', 'warning');
+      toast('Please enter a password of at least 6 characters.', 'warning');
       return;
     }
 
@@ -159,9 +178,9 @@ export const PrivacyPage: React.FC = () => {
 
       setIsEncrypted(true);
       setPassphrase('');
-      toast('AES-256-GCM encryption enabled.', 'success');
+      toast('Personal security password enabled.', 'success');
     } catch (err: any) {
-      toast(`Encryption error: ${err.message}`, 'error');
+      toast(`Security setup error: ${err.message}`, 'error');
     }
   };
 
@@ -188,12 +207,12 @@ export const PrivacyPage: React.FC = () => {
         localStorage.removeItem('resolve-one-enc-check');
         setIsEncrypted(false);
         setPassphraseInput('');
-        toast('Passphrase verified. Encryption disabled.', 'success');
+        toast('Password verified. Extra protection turned off.', 'success');
       } else {
-        toast('Incorrect passphrase.', 'error');
+        toast('Incorrect password.', 'error');
       }
     } catch {
-      toast('Decryption failed. Passphrase is incorrect.', 'error');
+      toast('Incorrect password. Please try again.', 'error');
     }
   };
 
@@ -202,67 +221,67 @@ export const PrivacyPage: React.FC = () => {
       <div>
         <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-50 text-emerald-900 border border-emerald-200 text-xs font-normal mb-2">
           <ShieldCheck className="w-3.5 h-3.5 text-emerald-700" />
-          <span>Zero telemetry & local device ownership</span>
+          <span>Private & on your terms</span>
         </div>
         <h2 className="text-2xl font-serif font-medium text-charcoal tracking-tight">
-          Privacy & data trust
+          Privacy & security
         </h2>
         <p className="text-xs sm:text-sm text-steel-grey-600 mt-1 max-w-2xl font-normal">
-          RESOLVE-ONE is local-first. We do not operate tracking trackers, customer accounts, or cloud databases. Your evidence and dispute data remain strictly on your device.
+          Your dispute data belongs to you. You can use RESOLVE-ONE entirely on this device, or sign in to sync across your devices with strong protection.
         </p>
       </div>
 
       {/* Transparency Panel */}
       <Card variant="elevated" className="p-6 sm:p-7 space-y-4 bg-white border border-steel-grey-200">
         <h3 className="text-base sm:text-lg font-serif font-medium text-charcoal">
-          What is stored where
+          Where your information is stored
         </h3>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-3 pt-1">
           <div className="p-4 rounded-xl bg-steel-grey-50 border border-steel-grey-200 space-y-1.5">
             <div className="flex items-center gap-2 text-coral font-medium text-xs sm:text-sm">
               <HardDrive className="w-4 h-4" />
-              <span>Browser IndexedDB</span>
+              <span>Convex Cloud Backend</span>
             </div>
             <p className="text-xs text-steel-grey-600 leading-relaxed font-normal">
-              Holds your dispute cases, chronological facts, timeline logs, return records, and actual PDF/image evidence binary files.
+              Convex serves as the single source of truth for your dispute cases, timeline notes, return records, and warranty dates.
             </p>
           </div>
 
           <div className="p-4 rounded-xl bg-steel-grey-50 border border-steel-grey-200 space-y-1.5">
             <div className="flex items-center gap-2 text-blue-800 font-medium text-xs sm:text-sm">
               <EyeOff className="w-4 h-4" />
-              <span>Local preferences</span>
+              <span>Display settings</span>
             </div>
             <p className="text-xs text-steel-grey-600 leading-relaxed font-normal">
-              Stored in localStorage: theme and interface preferences. Never transmitted externally.
+              Temporary browser state: theme and simplified language preferences. Authoritative business records are never stored in browser databases.
             </p>
           </div>
 
           <div className="p-4 rounded-xl bg-steel-grey-50 border border-steel-grey-200 space-y-1.5">
             <div className="flex items-center gap-2 text-emerald-800 font-medium text-xs sm:text-sm">
               <ShieldCheck className="w-4 h-4" />
-              <span>Remote cloud servers</span>
+              <span>Client-Side E2EE Storage</span>
             </div>
             <p className="text-xs text-steel-grey-600 leading-relaxed font-normal">
-              <strong>Zero.</strong> No personal data, case details, or uploaded receipts are ever transmitted to remote cloud servers.
+              Your evidence files and receipts are client-side envelope-encrypted with AES-256-GCM before upload. Neither Convex nor cloud providers can read your documents.
             </p>
           </div>
         </div>
       </Card>
 
-      {/* Optional Client-Side AES-256-GCM Encryption */}
+      {/* Extra Password Protection */}
       <Card variant="default" className="p-6 sm:p-7 space-y-4 bg-white border border-steel-grey-200">
         <div className="flex items-start justify-between gap-4">
           <div className="space-y-1">
             <div className="flex items-center gap-2">
               <KeyRound className="w-4 h-4 text-coral" />
               <h3 className="text-base font-medium text-charcoal">
-                Client-side passphrase encryption
+                Extra security password
               </h3>
             </div>
             <p className="text-xs text-steel-grey-600 max-w-xl font-normal">
-              Optionally secure your local storage with an AES-GCM 256-bit key derived via PBKDF2 (100,000 rounds).
+              Optionally protect your saved files on this device with a personal security password.
             </p>
           </div>
 
@@ -273,7 +292,7 @@ export const PrivacyPage: React.FC = () => {
                 : 'bg-steel-grey-100 text-steel-grey-600 border border-steel-grey-200'
             }`}
           >
-            {isEncrypted ? 'Active on device' : 'Unencrypted storage'}
+            {isEncrypted ? 'Password protected' : 'Standard protection'}
           </span>
         </div>
 
@@ -281,8 +300,8 @@ export const PrivacyPage: React.FC = () => {
         <div className="p-3.5 rounded-xl bg-amber-50 border border-amber-200 text-xs text-amber-900 flex items-start gap-2.5">
           <AlertTriangle className="w-4 h-4 shrink-0 text-amber-700 mt-0.5" />
           <div className="font-normal">
-            <span className="font-medium block mb-0.5">Crucial passphrase note:</span>
-            Because RESOLVE-ONE has zero backend servers or user accounts, if you forget your passphrase, your encrypted dispute records cannot be decrypted or recovered by anyone.
+            <span className="font-medium block mb-0.5">Important note about security passwords:</span>
+            If you turn on an extra security password, keep it safe. Because your stored records are protected with advanced security, no one can unlock them without your password.
           </div>
         </div>
 
@@ -290,28 +309,28 @@ export const PrivacyPage: React.FC = () => {
           <div className="flex flex-col sm:flex-row gap-3 pt-1">
             <Input
               type="password"
-              placeholder="Enter master passphrase (min 6 characters)"
+              placeholder="Enter a security password (min 6 characters)"
               value={passphrase}
               onChange={(e) => setPassphrase(e.target.value)}
               className="max-w-md"
             />
             <Button variant="primary" className="w-full sm:w-auto shrink-0" onClick={handleEnableEncryption}>
               <Lock className="w-3.5 h-3.5" />
-              <span>Enable encryption</span>
+              <span>Turn on password</span>
             </Button>
           </div>
         ) : (
           <div className="flex flex-col sm:flex-row gap-3 pt-1">
             <Input
               type="password"
-              placeholder="Enter passphrase to unlock & disable"
+              placeholder="Enter password to turn off"
               value={passphraseInput}
               onChange={(e) => setPassphraseInput(e.target.value)}
               className="max-w-md"
             />
             <Button variant="outline" className="w-full sm:w-auto shrink-0" onClick={handleDisableEncryption}>
               <Unlock className="w-3.5 h-3.5" />
-              <span>Disable encryption</span>
+              <span>Turn off password</span>
             </Button>
           </div>
         )}
@@ -322,19 +341,19 @@ export const PrivacyPage: React.FC = () => {
         <Card variant="default" className="p-5 sm:p-6 space-y-3 bg-white border border-steel-grey-200">
           <h3 className="text-base font-medium text-charcoal flex items-center gap-2">
             <Download className="w-4 h-4 text-steel-grey-500 shrink-0" />
-            <span>Export data package</span>
+            <span>Download your data</span>
           </h3>
           <p className="text-xs text-steel-grey-600 font-normal">
-            Download a portable, unencrypted JSON backup of all your cases, timeline logs, and evidence records.
+            Download a copy of all your cases, timeline notes, and evidence records.
           </p>
           <div className="flex flex-col sm:flex-row flex-wrap gap-2.5 pt-1">
             <Button variant="secondary" size="md" className="w-full sm:w-auto" onClick={handleExportAll}>
               <Download className="w-3.5 h-3.5" />
-              <span>Download JSON</span>
+              <span>Download backup</span>
             </Button>
             <Button variant="outline" size="md" className="w-full sm:w-auto" onClick={handleExportZip}>
               <Download className="w-3.5 h-3.5" />
-              <span>Export ZIP archive</span>
+              <span>Download ZIP archive</span>
             </Button>
           </div>
         </Card>
@@ -342,13 +361,13 @@ export const PrivacyPage: React.FC = () => {
         <Card variant="default" className="p-5 sm:p-6 space-y-3 bg-white border border-coral-200">
           <h3 className="text-base font-medium text-coral-700 flex items-center gap-2">
             <Trash2 className="w-4 h-4" />
-            <span>Delete local data</span>
+            <span>Delete data from this device</span>
           </h3>
           <p className="text-xs text-steel-grey-600 font-normal">
-            Immediately purges all IndexedDB records, evidence files, purchases, and settings from this browser.
+            Permanently removes all saved cases, receipts, purchases, and settings from this device.
           </p>
           <Button variant="danger" size="md" onClick={handleWipeAll}>
-            <span>Wipe all records</span>
+            <span>Delete all records</span>
           </Button>
         </Card>
       </div>

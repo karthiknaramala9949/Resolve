@@ -29,11 +29,11 @@ function AuthCallbackContent() {
 
   return (
     <AuthLayout
-      title={isMock ? 'Google Sign-In' : 'Completing authentication'}
+      title={isMock ? 'Google Sign-In' : 'Signing you in'}
       subtitle={
         isMock
-          ? 'Authentication status'
-          : 'Verifying cryptographic tokens and establishing your secure session.'
+          ? 'Sign-in status'
+          : 'Please wait while we verify your details and sign you in.'
       }
     >
       {isMock ? (
@@ -43,7 +43,7 @@ function AuthCallbackContent() {
             <div>
               <p className="font-semibold">Google sign-in is not available</p>
               <p className="text-xs text-amber-700 mt-1">
-                Google OAuth is not configured on this environment. Please sign in with your email or phone number.
+                Google sign-in is not set up on this device. Please sign in with your email or phone number.
               </p>
             </div>
           </div>
@@ -63,8 +63,8 @@ function AuthCallbackContent() {
           <div className="w-12 h-12 rounded-full bg-steel-grey-100 flex items-center justify-center mx-auto text-coral animate-pulse">
             <RefreshCw className="w-6 h-6 animate-spin" />
           </div>
-          <h3 className="text-base font-semibold text-charcoal">Securing your session...</h3>
-          <p className="text-xs text-steel-grey-500">Please wait while we redirect you to your workspace.</p>
+          <h3 className="text-base font-semibold text-charcoal">Signing you in...</h3>
+          <p className="text-xs text-steel-grey-500">Please wait while we open your workspace.</p>
         </div>
       )}
     </AuthLayout>

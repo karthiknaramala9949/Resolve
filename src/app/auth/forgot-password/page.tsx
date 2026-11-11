@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation';
 import { AuthLayout } from '@/features/auth/components/AuthLayout';
 import { Input, Button } from '@/design-system';
 import { AlertCircle, CheckCircle2, ArrowLeft, Mail, Phone } from 'lucide-react';
+import { authService } from '@/services/authService';
 
 export default function ForgotPasswordPage() {
   const router = useRouter();
@@ -21,30 +22,19 @@ export default function ForgotPasswordPage() {
     setErrorMessage(null);
 
     if (!identifier.trim()) {
-      setErrorMessage('Please enter your registered email address or phone number.');
+      setErrorMessage('Please enter your email address or phone number.');
       return;
     }
 
     try {
       setIsSubmitting(true);
-      const res = await fetch('/api/auth/forgot-password', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ identifier: identifier.trim() }),
-      });
-
-      const data = await res.json();
-      if (!res.ok) {
-        setErrorMessage(data.error || 'Failed to submit recovery request.');
-        setIsSubmitting(false);
-        return;
-      }
+      const res = await authService.requestPasswordReset(identifier.trim());
 
       setSentInfo({
-        message: data.message || 'If an account exists, we have sent instructions.',
+        message: res.message || 'If an account exists, we have sent instructions.',
       });
-    } catch {
-      setErrorMessage('A network error occurred. Please try again.');
+    } catch (err: any) {
+      setErrorMessage(err.message || 'Unable to connect. Please check your internet connection and try again.');
     } finally {
       setIsSubmitting(false);
     }
@@ -52,8 +42,8 @@ export default function ForgotPasswordPage() {
 
   return (
     <AuthLayout
-      title="Recover your password"
-      subtitle="Enter your verified email address or phone number to receive secure recovery instructions."
+      title="Reset your password"
+      subtitle="Enter your email address or phone number to receive password reset instructions."
     >
       {/* Back to sign in link */}
       <div className="mb-4">
@@ -80,7 +70,7 @@ export default function ForgotPasswordPage() {
           <div className="p-4 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-900 space-y-2">
             <div className="flex items-center gap-2">
               <CheckCircle2 className="w-5 h-5 text-emerald-600 shrink-0" />
-              <h3 className="text-sm font-semibold">Recovery instructions dispatched</h3>
+              <h3 className="text-sm font-semibold">Reset link sent</h3>
             </div>
             <p className="text-xs text-emerald-800 leading-relaxed">
               {sentInfo.message}
@@ -105,7 +95,7 @@ export default function ForgotPasswordPage() {
             placeholder="e.g. name@example.com or +91 9876543210"
             value={identifier}
             onChange={(e) => setIdentifier(e.target.value)}
-            hint="We'll send an email link or an SMS OTP code depending on the format you enter."
+            hint="We'll send an email link or a verification code depending on what you enter."
             required
             autoComplete="username"
             disabled={isSubmitting}
@@ -119,7 +109,7 @@ export default function ForgotPasswordPage() {
             isLoading={isSubmitting}
             disabled={isSubmitting}
           >
-            Send recovery link
+            Send reset instructions
           </Button>
         </form>
       )}

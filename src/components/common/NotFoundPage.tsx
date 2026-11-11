@@ -13,10 +13,10 @@ export const NotFoundPage: React.FC = () => {
 
         <div className="space-y-2">
           <h1 className="text-3xl font-bold font-serif text-neutral-900 dark:text-neutral-100">
-            Page Not Found (404)
+            Page not found
           </h1>
           <p className="text-sm text-neutral-600 dark:text-neutral-400">
-            The page you requested does not exist or has been removed from this version of RESOLVE-ONE.
+            We could not find the page you are looking for. It may have moved or no longer exists.
           </p>
         </div>
 

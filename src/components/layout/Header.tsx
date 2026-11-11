@@ -64,10 +64,10 @@ export const Header: React.FC = () => {
           <Search className="w-4 h-4" />
         </button>
 
-        {/* Local Storage Trust Badge */}
+        {/* Storage Trust Badge */}
         <div className="hidden lg:inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-steel-grey-50 text-xs font-normal text-steel-grey-600 border border-steel-grey-200 leading-none select-none">
           <Shield className="w-3 h-3 text-emerald-600 shrink-0" />
-          <span>On-device only</span>
+          <span>Private & protected</span>
         </div>
 
         {/* User Account Menu */}

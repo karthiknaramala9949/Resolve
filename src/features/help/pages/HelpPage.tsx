@@ -29,7 +29,7 @@ export const HelpPage: React.FC = () => {
       webUrl: 'https://consumerhelpline.gov.in',
       sourceUrl: 'https://consumerhelpline.gov.in',
       lastVerifiedAt: '',
-      legalStatus: 'Pre-litigation conciliation',
+      legalStatus: 'Informal resolution before court',
       verifyBeforeLaunch: true,
     },
     {
@@ -42,7 +42,7 @@ export const HelpPage: React.FC = () => {
       webUrl: 'https://e-jagriti.gov.in/',
       sourceUrl: 'https://e-jagriti.gov.in/',
       lastVerifiedAt: '',
-      legalStatus: 'Consumer Commission filing',
+      legalStatus: 'Official consumer court',
       verifyBeforeLaunch: true,
     },
     {
@@ -55,7 +55,7 @@ export const HelpPage: React.FC = () => {
       webUrl: 'https://cms.rbi.org.in',
       sourceUrl: 'https://cms.rbi.org.in',
       lastVerifiedAt: '',
-      legalStatus: 'Banking regulatory ombudsman',
+      legalStatus: 'Banking complaints & refunds',
       verifyBeforeLaunch: true,
     },
   ];
@@ -116,10 +116,10 @@ export const HelpPage: React.FC = () => {
           <div className="p-4 sm:p-5 rounded-xl bg-amber-50 border border-amber-200 space-y-2.5 animate-in fade-in">
             <div className="flex items-center gap-2 text-amber-900 font-medium text-xs sm:text-sm">
               <ShieldCheck className="w-4 h-4 text-amber-700" />
-              <span>Recommended first step: Lodge formal ticket with merchant</span>
+              <span>Recommended first step: Contact the store or seller</span>
             </div>
             <p className="text-xs text-amber-800 leading-relaxed font-normal">
-              Under Indian consumer law and NCH rules, statutory commissions require proof that you first gave the merchant an opportunity to rectify the issue. Use our proof pack builder to draft a formal complaint letter and submit it via the merchant&apos;s support channel.
+              Official consumer commissions require proof that you first gave the store an opportunity to fix the issue. Use our proof pack builder to prepare a formal complaint letter and submit it to the store&apos;s customer service.
             </p>
             <Button variant="secondary" size="sm" onClick={() => setDecisionStep(null)}>
               <RefreshCw className="w-3 h-3 shrink-0" />
@@ -154,7 +154,7 @@ export const HelpPage: React.FC = () => {
               <span>Recommended route: National Consumer Helpline (NCH - 1915)</span>
             </div>
             <p className="text-xs text-blue-800 leading-relaxed font-normal">
-              NCH handles pre-litigation convergence for consumer durables and e-commerce. Call 1915 or register your docket online at consumerhelpline.gov.in. Include your order ID and invoice proof pack.
+              NCH helps resolve consumer disputes directly with companies before going to court. Call 1915 or register online at consumerhelpline.gov.in with your order details and proof pack.
             </p>
             <div className="flex items-center gap-2.5 pt-1">
               <a
@@ -180,7 +180,7 @@ export const HelpPage: React.FC = () => {
               <span>Recommended route: Bank Grievance Officer & RBI Integrated Ombudsman</span>
             </div>
             <p className="text-xs text-indigo-800 leading-relaxed font-normal">
-              If the store provided a 12-digit UTR/RRN number, request a Written Beneficiary Confirmation from your bank. If the bank fails to trace or credit the funds, lodge a complaint with the RBI Ombudsman at cms.rbi.org.in or call 14448.
+              If the store provided a 12-digit transaction number, ask your bank for written confirmation. If the bank fails to trace or credit the funds, lodge a complaint with the RBI Ombudsman at cms.rbi.org.in or call 14448.
             </p>
             <div className="flex items-center gap-2.5 pt-1">
               <a
@@ -206,7 +206,7 @@ export const HelpPage: React.FC = () => {
               <span>Recommended route: e-Jagriti (District Consumer Commission)</span>
             </div>
             <p className="text-xs text-emerald-800 leading-relaxed font-normal">
-              When informal mediation via NCH fails, file a formal complaint under Section 35 of the Consumer Protection Act, 2019 via the official e-Jagriti portal. Consumers can file in their own district without hiring an advocate.
+              When informal resolution with the company or NCH does not solve the issue, file a formal complaint through the official e-Jagriti portal. You can file in your own district without hiring a lawyer.
             </p>
             <div className="flex items-center gap-2.5 pt-1">
               <a

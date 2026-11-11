@@ -9,6 +9,7 @@ import { PasswordStrengthMeter } from '@/features/auth/components/PasswordStreng
 import { OtpInput } from '@/features/auth/components/OtpInput';
 import { Input, Button } from '@/design-system';
 import { AlertCircle, CheckCircle2, ArrowLeft } from 'lucide-react';
+import { authService } from '@/services/authService';
 
 function ResetPasswordContent() {
   const router = useRouter();
@@ -43,7 +44,7 @@ function ResetPasswordContent() {
     }
 
     if (!token.trim()) {
-      setErrorMessage('Please enter the reset token or 6-digit verification code.');
+      setErrorMessage('Please enter the reset code or link.');
       return;
     }
 
@@ -53,35 +54,24 @@ function ResetPasswordContent() {
     }
 
     if (newPassword !== confirmPassword) {
-      setErrorMessage('Passwords do not match. Please verify and try again.');
+      setErrorMessage('Passwords do not match. Please check and try again.');
       return;
     }
 
     try {
       setIsSubmitting(true);
-      const res = await fetch('/api/auth/reset-password', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          identifier: identifier.trim(),
-          token: token.trim(),
-          newPassword,
-        }),
+      await authService.resetPassword({
+        identifier: identifier.trim(),
+        token: token.trim(),
+        newPassword,
       });
-
-      const data = await res.json();
-      if (!res.ok) {
-        setErrorMessage(data.error || 'Failed to reset password.');
-        setIsSubmitting(false);
-        return;
-      }
 
       setIsSuccess(true);
       setTimeout(() => {
         router.push('/app/overview');
       }, 1500);
-    } catch {
-      setErrorMessage('An unexpected network error occurred.');
+    } catch (err: any) {
+      setErrorMessage(err.message || 'Unable to connect. Please check your internet connection and try again.');
       setIsSubmitting(false);
     }
   };
@@ -89,7 +79,7 @@ function ResetPasswordContent() {
   return (
     <AuthLayout
       title="Create new password"
-      subtitle="Choose a strong, secure password to protect your dispute filings and personal records."
+      subtitle="Choose a strong password to protect your account and records."
     >
       <div className="mb-4">
         <Link
@@ -117,7 +107,7 @@ function ResetPasswordContent() {
           </div>
           <h3 className="text-base font-semibold text-charcoal">Password updated!</h3>
           <p className="text-xs text-steel-grey-600">
-            Your password has been changed securely. Signing you in now...
+            Your password has been changed. Signing you in now...
           </p>
         </div>
       ) : (
@@ -150,7 +140,7 @@ function ResetPasswordContent() {
             !initialToken && (
               <Input
                 id="token"
-                label="Reset security token"
+                label="Reset code"
                 value={token}
                 onChange={(e) => setToken(e.target.value)}
                 placeholder="Paste the reset code from your email"

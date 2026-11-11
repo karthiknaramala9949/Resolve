@@ -169,7 +169,19 @@ export const getDownloadUrl = query({
   handler: async (ctx, args) => {
     const { user } = await getAuthenticatedUser(ctx, args.sessionToken);
 
-    const doc = await ctx.db.get(args.documentId as Id<'documents'>);
+    let doc: Doc<'documents'> | null = null;
+    try {
+      doc = await ctx.db.get(args.documentId as Id<'documents'>);
+    } catch {}
+
+    if (!doc) {
+      doc = await ctx.db
+        .query('documents')
+        .withIndex('by_user', (q) => q.eq('userId', user._id))
+        .filter((q) => q.eq(q.field('storageId'), args.documentId))
+        .first();
+    }
+
     if (!doc || doc.userId !== user._id || doc.deletedAt) {
       throw new Error('Document not found or permission denied.');
     }
@@ -198,7 +210,19 @@ export const rename = mutation({
   handler: async (ctx, args) => {
     const { user } = await getAuthenticatedUser(ctx, args.sessionToken);
 
-    const doc = await ctx.db.get(args.documentId as Id<'documents'>);
+    let doc: Doc<'documents'> | null = null;
+    try {
+      doc = await ctx.db.get(args.documentId as Id<'documents'>);
+    } catch {}
+
+    if (!doc) {
+      doc = await ctx.db
+        .query('documents')
+        .withIndex('by_user', (q) => q.eq('userId', user._id))
+        .filter((q) => q.eq(q.field('storageId'), args.documentId))
+        .first();
+    }
+
     if (!doc || doc.userId !== user._id) {
       throw new Error('Document not found or permission denied.');
     }
@@ -225,7 +249,19 @@ export const deleteDocument = mutation({
   handler: async (ctx, args) => {
     const { user } = await getAuthenticatedUser(ctx, args.sessionToken);
 
-    const doc = await ctx.db.get(args.documentId as Id<'documents'>);
+    let doc: Doc<'documents'> | null = null;
+    try {
+      doc = await ctx.db.get(args.documentId as Id<'documents'>);
+    } catch {}
+
+    if (!doc) {
+      doc = await ctx.db
+        .query('documents')
+        .withIndex('by_user', (q) => q.eq('userId', user._id))
+        .filter((q) => q.eq(q.field('storageId'), args.documentId))
+        .first();
+    }
+
     if (!doc || doc.userId !== user._id) {
       throw new Error('Document not found or permission denied.');
     }

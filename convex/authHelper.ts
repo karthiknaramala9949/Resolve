@@ -22,12 +22,19 @@ export interface SafeUserProfile {
     simpleLanguageMode?: boolean;
     notificationsEnabled?: boolean;
   };
+  isGuest?: boolean;
   createdAt: string;
   updatedAt: string;
   lastLoginAt: string;
 }
 
 export function toSafeUserProfile(user: Doc<'users'>): SafeUserProfile {
+  const isGuest = Boolean(
+    user.role === 'guest' ||
+    user.providers?.includes('guest') ||
+    user.providers?.includes('local')
+  );
+
   return {
     id: user._id,
     name: user.name,
@@ -45,6 +52,7 @@ export function toSafeUserProfile(user: Doc<'users'>): SafeUserProfile {
     masterKeyIv: user.masterKeyIv,
     recoveryWrappedMasterKey: user.recoveryWrappedMasterKey,
     preferences: user.preferences,
+    isGuest,
     createdAt: user.createdAt,
     updatedAt: user.updatedAt,
     lastLoginAt: user.lastLoginAt,

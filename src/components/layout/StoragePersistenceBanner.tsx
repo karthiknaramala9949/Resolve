@@ -1,50 +1,37 @@
+/**
+ * Periodic Backup Reminder Banner
+ *
+ * Recommends downloading a local backup of dispute records and evidence.
+ * All authoritative persistent business records are safely managed by Convex.
+ */
+
 'use client';
 
 import React, { useEffect, useState } from 'react';
-import { AlertTriangle, Download, X, ShieldAlert } from 'lucide-react';
+import { Download, X, ShieldCheck } from 'lucide-react';
 import { exportFullBackup } from '@/lib/utils/exportBackup';
 import { useToast } from '@/design-system';
 
 export const StoragePersistenceBanner: React.FC = () => {
   const { toast } = useToast();
-  const [showPersistenceWarning, setShowPersistenceWarning] = useState(false);
   const [showBackupReminder, setShowBackupReminder] = useState(false);
 
   useEffect(() => {
     let isMounted = true;
 
-    async function checkPersistence() {
-      try {
-        if (typeof navigator !== 'undefined' && navigator.storage && navigator.storage.persist) {
-          const isPersisted = await navigator.storage.persisted();
-          if (!isPersisted) {
-            const granted = await navigator.storage.persist();
-            if (!granted && isMounted) {
-              setShowPersistenceWarning(true);
-            }
-          }
-        } else if (isMounted) {
-          setShowPersistenceWarning(true);
-        }
-      } catch {
-        if (isMounted) setShowPersistenceWarning(true);
-      }
+    // 14-day recurring backup check
+    try {
+      const lastBackup = localStorage.getItem('resolve-one-last-backup-prompt');
+      const now = Date.now();
+      const FOURTEEN_DAYS_MS = 14 * 24 * 60 * 60 * 1000;
 
-      // 14-day recurring backup check
-      try {
-        const lastBackup = localStorage.getItem('resolve-one-last-backup-prompt');
-        const now = Date.now();
-        const FOURTEEN_DAYS_MS = 14 * 24 * 60 * 60 * 1000;
-
-        if (!lastBackup || now - parseInt(lastBackup, 10) > FOURTEEN_DAYS_MS) {
-          if (isMounted) setShowBackupReminder(true);
-        }
-      } catch {
-        // ignore storage errors
+      if (!lastBackup || now - parseInt(lastBackup, 10) > FOURTEEN_DAYS_MS) {
+        if (isMounted) setShowBackupReminder(true);
       }
+    } catch {
+      // ignore storage errors
     }
 
-    checkPersistence();
     return () => {
       isMounted = false;
     };
@@ -55,7 +42,6 @@ export const StoragePersistenceBanner: React.FC = () => {
       await exportFullBackup();
       localStorage.setItem('resolve-one-last-backup-prompt', String(Date.now()));
       setShowBackupReminder(false);
-      setShowPersistenceWarning(false);
       toast('Backup exported successfully! Keep this file in your downloads.', 'success');
     } catch (err: any) {
       toast(`Export failed: ${err.message}`, 'error');
@@ -67,25 +53,19 @@ export const StoragePersistenceBanner: React.FC = () => {
     setShowBackupReminder(false);
   };
 
-  if (!showPersistenceWarning && !showBackupReminder) {
+  if (!showBackupReminder) {
     return null;
   }
 
   return (
     <aside
-      aria-label="Storage status and backup notification"
-      className="bg-amber-500 text-neutral-950 px-4 py-2.5 text-xs font-medium flex flex-wrap items-center justify-between gap-3 border-b border-amber-600/30 select-none"
+      aria-label="Backup notification"
+      className="bg-steel-grey-900 text-white px-4 py-2.5 text-xs font-medium flex flex-wrap items-center justify-between gap-3 border-b border-steel-grey-800 select-none"
     >
       <div className="flex items-center gap-2">
-        {showPersistenceWarning ? (
-          <ShieldAlert className="w-4 h-4 shrink-0 text-amber-950" />
-        ) : (
-          <AlertTriangle className="w-4 h-4 shrink-0 text-amber-950" />
-        )}
+        <ShieldCheck className="w-4 h-4 shrink-0 text-emerald-400" />
         <span>
-          {showPersistenceWarning
-            ? 'Browser storage is not persistent. Your browser may delete saved evidence if device storage runs low.'
-            : '14-Day Backup Reminder: Save an offline copy of your dispute records and evidence.'}
+          Your dispute records are securely stored in Convex. You can also download a portable JSON backup for offline archival.
         </span>
       </div>
 
@@ -93,17 +73,17 @@ export const StoragePersistenceBanner: React.FC = () => {
         <button
           type="button"
           onClick={handleExport}
-          className="inline-flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-lg bg-charcoal hover:bg-steel-grey-800 text-white font-medium text-xs transition-colors shadow-2xs leading-none shrink-0"
+          className="inline-flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-lg bg-coral hover:bg-coral-600 text-white font-medium text-xs transition-colors shadow-2xs leading-none shrink-0"
         >
           <Download className="w-3.5 h-3.5 shrink-0" />
-          <span>Export backup</span>
+          <span>Download backup</span>
         </button>
 
         <button
           type="button"
-          onClick={showPersistenceWarning ? () => setShowPersistenceWarning(false) : dismissBackup}
-          className="p-1.5 text-neutral-950/70 hover:text-neutral-950 rounded hover:bg-amber-600/20 transition-colors inline-flex items-center justify-center shrink-0 min-w-[32px] min-h-[32px]"
-          aria-label="Dismiss notification"
+          onClick={dismissBackup}
+          aria-label="Dismiss backup reminder"
+          className="p-1.5 rounded-lg text-steel-grey-400 hover:text-white hover:bg-steel-grey-800 transition-colors"
         >
           <X className="w-4 h-4 shrink-0" />
         </button>
@@ -111,4 +91,3 @@ export const StoragePersistenceBanner: React.FC = () => {
     </aside>
   );
 };
-

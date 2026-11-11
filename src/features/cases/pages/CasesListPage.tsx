@@ -4,7 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Button, CaseCard, EmptyState, Input, Select } from '@/design-system';
 import { Plus, Search } from 'lucide-react';
-import { caseRepository } from '@/lib/db/repositories';
+import { caseService } from '@/services';
 import { Case } from '@/lib/db/types';
 import { IntakeModal } from '../components/IntakeModal';
 
@@ -24,7 +24,7 @@ export const CasesListPage: React.FC = () => {
   }, [searchParams]);
 
   const loadCases = async () => {
-    const items = await caseRepository.getAll({
+    const items = await caseService.listCases({
       status: filter,
       search: search,
     });
@@ -92,10 +92,10 @@ export const CasesListPage: React.FC = () => {
             onChange={(e) => setFilter(e.target.value)}
             options={[
               { value: 'all', label: 'All cases' },
-              { value: 'action_required', label: 'Action required' },
+              { value: 'action_required', label: 'Action needed' },
               { value: 'waiting_company', label: 'Waiting for company' },
               { value: 'response_received', label: 'Reply received' },
-              { value: 'resolved', label: 'Confirmed resolved' },
+              { value: 'resolved', label: 'Resolved' },
             ]}
           />
         </div>
@@ -105,8 +105,12 @@ export const CasesListPage: React.FC = () => {
       {cases.length === 0 ? (
         <EmptyState
           illustration="cases"
-          title="No cases match your filter"
-          description="Try clearing your search or tell us what happened to start a new dispute case."
+          title={search || filter !== 'all' ? 'No cases match your search' : 'No dispute cases yet'}
+          description={
+            search || filter !== 'all'
+              ? 'Try changing your search or filter to see more cases.'
+              : 'Tell us what happened with a store or order to create your first case.'
+          }
           actionLabel="Tell us what happened"
           onAction={() => setIsIntakeOpen(true)}
         />

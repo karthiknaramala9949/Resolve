@@ -138,7 +138,12 @@ export const deletePurchase = mutation({
       throw new Error('Purchase not found or permission denied.');
     }
 
-    await ctx.db.delete(existing._id);
+    const now = new Date().toISOString();
+    await ctx.db.patch(existing._id, {
+      deletedAt: now,
+      updatedAt: now,
+      version: existing.version + 1,
+    });
     return { success: true };
   },
 });

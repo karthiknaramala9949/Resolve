@@ -39,8 +39,8 @@
     "takeNextStep": "Take Next Step"
   },
   "storage": {
-    "indexedDbActive": "IndexedDB Active",
-    "onDeviceOnly": "On-device only",
+    "indexedDbActive": "Convex Cloud Active",
+    "onDeviceOnly": "Convex Backend",
     "v2": "v2.0"
   },
   "toast": {

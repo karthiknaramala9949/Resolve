@@ -8,6 +8,7 @@ import { OtpInput } from '@/features/auth/components/OtpInput';
 import { Button } from '@/design-system';
 import { Smartphone, CheckCircle2, AlertCircle, ArrowLeft } from 'lucide-react';
 import { useAuth } from '@/features/auth/context/AuthContext';
+import { authService } from '@/services/authService';
 
 function VerifyPhoneContent() {
   const router = useRouter();
@@ -35,22 +36,7 @@ function VerifyPhoneContent() {
 
     try {
       setIsSubmitting(true);
-      const res = await fetch('/api/auth/otp/verify', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          phoneNumber: targetPhone,
-          otp: codeToVerify,
-          type: 'phone_otp',
-        }),
-      });
-
-      const data = await res.json();
-      if (!res.ok) {
-        setErrorMessage(data.error || 'Invalid verification code.');
-        setIsSubmitting(false);
-        return;
-      }
+      await authService.verifyOtp(targetPhone, codeToVerify, 'phone_otp');
 
       setIsSuccess(true);
       await refreshUser();
@@ -58,33 +44,21 @@ function VerifyPhoneContent() {
       setTimeout(() => {
         router.push(returnTo);
       }, 1200);
-    } catch {
-      setErrorMessage('Network error while verifying OTP.');
+    } catch (err: any) {
+      setErrorMessage(err.message || 'Invalid verification code.');
       setIsSubmitting(false);
     }
   };
 
   const handleResend = async () => {
     setErrorMessage(null);
-    const res = await fetch('/api/auth/otp/send', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        phoneNumber: targetPhone,
-        type: 'phone_otp',
-      }),
-    });
-
-    const data = await res.json();
-    if (!res.ok) {
-      throw new Error(data.error || 'Failed to resend code');
-    }
+    await authService.sendOtp(targetPhone, 'phone_otp');
   };
 
   return (
     <AuthLayout
       title="Verify your mobile number"
-      subtitle="We sent a 6-digit one-time password (OTP) to your phone for identity verification."
+      subtitle="We sent a 6-digit verification code to your phone."
     >
       <div className="mb-4">
         <Link
@@ -103,7 +77,7 @@ function VerifyPhoneContent() {
           </div>
           <h3 className="text-base font-semibold text-charcoal">Phone number verified!</h3>
           <p className="text-xs text-steel-grey-600">
-            Your mobile number has been authenticated. Entering workspace...
+            Your mobile number has been verified. Opening your cases...
           </p>
         </div>
       ) : (

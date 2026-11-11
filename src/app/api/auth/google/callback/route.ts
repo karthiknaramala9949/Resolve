@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { authStore } from '@/lib/server/db/authStore';
 import { setSessionCookie } from '@/lib/server/auth/session';
+import { syncSessionToConvex } from '@/lib/server/convex/convexClient';
 
 export const dynamic = 'force-dynamic';
 
@@ -153,6 +154,14 @@ export async function GET(req: NextRequest) {
       userAgent: req.headers.get('user-agent') || undefined,
       ipAddress: req.headers.get('x-forwarded-for') || '127.0.0.1',
     });
+
+    // Synchronize session with Convex cloud database
+    await syncSessionToConvex(
+      user,
+      session.token,
+      req.headers.get('user-agent') || undefined,
+      req.headers.get('x-forwarded-for') || '127.0.0.1'
+    );
 
     const targetUrl =
       !user.phoneNumber

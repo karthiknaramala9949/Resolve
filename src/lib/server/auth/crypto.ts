@@ -13,7 +13,7 @@ let devFallbackSecret: string | null = null;
  * In development, generates a random per-process secret and logs a warning.
  */
 export function getAuthSecret(): string {
-  const secret = process.env.AUTH_SECRET;
+  const secret = process.env.AUTH_SECRET || process.env.BETTER_AUTH_SECRET;
   if (!secret || secret.length < 32) {
     if (process.env.NODE_ENV === 'production') {
       throw new Error(

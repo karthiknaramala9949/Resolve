@@ -3,19 +3,25 @@
 import React, { createContext, useContext, useEffect, useState, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { UserProfile, LoginFormData, RegisterFormData } from '../types';
-import { syncEngine } from '@/lib/sync/syncEngine';
+import { setSessionToken, clearSessionToken } from '@/lib/auth/sessionToken';
+import { clearLocalUserData } from '@/lib/db/db';
+import { authService, ApiError } from '@/services';
 
-interface AuthContextValue {
+export interface AuthContextValue {
   user: UserProfile | null;
   isLoading: boolean;
   isAuthenticated: boolean;
-  login: (data: LoginFormData) => Promise<{ success: boolean; error?: string }>;
+  isGuest: boolean;
+  isOnline: boolean;
+  login: (data: LoginFormData) => Promise<{ success: boolean; isOffline?: boolean; error?: string }>;
   register: (data: RegisterFormData) => Promise<{
     success: boolean;
     user?: UserProfile;
     verificationRequired?: 'email' | 'phone';
     error?: string;
+    isOffline?: boolean;
   }>;
+  continueAsGuest: (name?: string) => void;
   logout: () => Promise<void>;
   refreshUser: () => Promise<void>;
   setUser: (user: UserProfile | null) => void;
@@ -26,28 +32,60 @@ const AuthContext = createContext<AuthContextValue | undefined>(undefined);
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<UserProfile | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(true);
+  const [isOnline, setIsOnline] = useState<boolean>(true);
   const router = useRouter();
 
-  const refreshUser = useCallback(async () => {
+  // Network status listener
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      setIsOnline(navigator.onLine);
+      const handleOnline = () => setIsOnline(true);
+      const handleOffline = () => setIsOnline(false);
+      window.addEventListener('online', handleOnline);
+      window.addEventListener('offline', handleOffline);
+      return () => {
+        window.removeEventListener('online', handleOnline);
+        window.removeEventListener('offline', handleOffline);
+      };
+    }
+  }, []);
+
+  const continueAsGuest = useCallback(async (name?: string) => {
     try {
-      const res = await fetch('/api/auth/me', {
-        headers: { 'Cache-Control': 'no-cache' },
-      });
-      if (res.ok) {
-        const data = await res.json();
-        setUser(data.user || null);
+      const res = await authService.continueAsGuest(name);
+      if (res?.user) {
+        setUser(res.user);
+        return;
+      }
+    } catch (err) {
+      console.warn('[AuthContext] Guest session creation error:', err);
+      throw err;
+    }
+  }, []);
+
+  const refreshUser = useCallback(async () => {
+    // If offline, don't query remote server
+    if (typeof navigator !== 'undefined' && !navigator.onLine) {
+      setIsLoading(false);
+      return;
+    }
+
+    try {
+      const data = await authService.getMe();
+      if (data && data.user) {
+        setUser(data.user);
         if (data.sessionToken) {
-          syncEngine.setSessionToken(data.sessionToken);
+          setSessionToken(data.sessionToken);
         } else {
-          syncEngine.setSessionToken(null);
+          setSessionToken(null);
         }
       } else {
         setUser(null);
-        syncEngine.setSessionToken(null);
+        setSessionToken(null);
       }
     } catch {
       setUser(null);
-      syncEngine.setSessionToken(null);
+      setSessionToken(null);
     } finally {
       setIsLoading(false);
     }
@@ -58,59 +96,80 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   }, [refreshUser]);
 
   const login = async (data: LoginFormData) => {
-    try {
-      const res = await fetch('/api/auth/login', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(data),
-      });
-
-      const result = await res.json();
-      if (!res.ok) {
-        return { success: false, error: result.error || 'Failed to sign in.' };
-      }
-
-      setUser(result.user);
-      return { success: true };
-    } catch {
+    if (typeof navigator !== 'undefined' && !navigator.onLine) {
       return {
         success: false,
-        error: 'Network connection error. Please check your connection and try again.',
+        isOffline: true,
+        error: 'You are currently offline. You can continue on this device without signing in.',
+      };
+    }
+
+    try {
+      const result = await authService.login(data);
+      setUser(result.user);
+      if (result.sessionToken) {
+        setSessionToken(result.sessionToken);
+      }
+      await refreshUser();
+      return { success: true };
+    } catch (err: any) {
+      const isOfflineError =
+        err?.isOffline ||
+        (typeof navigator !== 'undefined' && !navigator.onLine) ||
+        (err instanceof TypeError && err.message.toLowerCase().includes('fetch'));
+
+      return {
+        success: false,
+        isOffline: isOfflineError,
+        error: isOfflineError
+          ? 'You are currently offline. You can continue on this device without signing in.'
+          : err.message || 'Could not sign in. Please check your credentials and try again.',
       };
     }
   };
 
   const register = async (data: RegisterFormData) => {
+    if (typeof navigator !== 'undefined' && !navigator.onLine) {
+      return {
+        success: false,
+        isOffline: true,
+        error: 'You are currently offline. You can continue on this device without an account.',
+      };
+    }
+
     try {
-      const res = await fetch('/api/auth/register', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(data),
-      });
-
-      const result = await res.json();
-      if (!res.ok) {
-        return { success: false, error: result.error || 'Failed to register.' };
-      }
-
+      const result = await authService.register(data);
       setUser(result.user);
+      if (result.sessionToken) {
+        setSessionToken(result.sessionToken);
+      }
+      await refreshUser();
       return {
         success: true,
         user: result.user,
         verificationRequired: result.verificationRequired,
       };
-    } catch {
+    } catch (err: any) {
+      const isOfflineError =
+        err?.isOffline ||
+        (typeof navigator !== 'undefined' && !navigator.onLine) ||
+        (err instanceof TypeError && err.message.toLowerCase().includes('fetch'));
+
       return {
         success: false,
-        error: 'Network connection error. Please check your connection and try again.',
+        isOffline: isOfflineError,
+        error: isOfflineError
+          ? 'You are currently offline. You can continue on this device without an account.'
+          : err.message || 'Could not create account. Please try again.',
       };
     }
   };
 
   const logout = async () => {
     try {
-      syncEngine.setSessionToken(null);
-      await fetch('/api/auth/logout', { method: 'POST' });
+      clearSessionToken();
+      await clearLocalUserData();
+      await authService.logout();
     } catch {
       // Ignore
     } finally {
@@ -120,14 +179,19 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
+  const isGuest = Boolean(user?.isGuest || user?.providers?.includes('local'));
+
   return (
     <AuthContext.Provider
       value={{
         user,
         isLoading,
         isAuthenticated: Boolean(user),
+        isGuest,
+        isOnline,
         login,
         register,
+        continueAsGuest,
         logout,
         refreshUser,
         setUser,

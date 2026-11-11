@@ -105,7 +105,12 @@ export async function middleware(req: NextRequest) {
   const legacySessionCookie = req.cookies.get(SESSION_COOKIE_NAME)?.value;
   const isLegacyAuthenticated = await verifySessionCookie(legacySessionCookie);
 
-  const isAuthenticated = isBetterAuthAuthenticated || isLegacyAuthenticated;
+  // 3. Check for offline / local guest mode session
+  const isGuest =
+    req.cookies.get('resolve_guest')?.value === 'true' ||
+    req.cookies.get(SESSION_COOKIE_NAME)?.value?.startsWith('guest_');
+
+  const isAuthenticated = isBetterAuthAuthenticated || isLegacyAuthenticated || isGuest;
 
   const isProtectedRoute = pathname.startsWith('/app');
   const isAuthPage =
@@ -121,8 +126,10 @@ export async function middleware(req: NextRequest) {
     return NextResponse.redirect(redirectUrl);
   }
 
-  // 2. Authenticated user trying to access sign-in or sign-up pages
-  if (isAuthPage && isAuthenticated) {
+  // 2. Authenticated user (non-guest) trying to access sign-in or sign-up pages
+  // (Guests are allowed to visit auth pages if they wish to create or link a cloud account)
+  const isFullUser = isBetterAuthAuthenticated || isLegacyAuthenticated;
+  if (isAuthPage && isFullUser) {
     const nextParam = req.nextUrl.searchParams.get('next');
     const redirectTarget = nextParam || '/app/overview';
     return NextResponse.redirect(new URL(redirectTarget, req.url));

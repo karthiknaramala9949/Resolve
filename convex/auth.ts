@@ -348,6 +348,8 @@ export const getCurrentUser = query({
   },
 });
 
+export const me = getCurrentUser;
+
 /**
  * Log out and destroy session.
  */
@@ -366,6 +368,54 @@ export const logout = mutation({
     }
 
     return { success: true };
+  },
+});
+
+/**
+ * Creates an anonymous guest session in Convex so that all guest data
+ * is persistently and authoritatively managed by Convex.
+ */
+export const createGuestSession = mutation({
+  args: {
+    name: v.optional(v.string()),
+    userAgent: v.optional(v.string()),
+    ipAddress: v.optional(v.string()),
+  },
+  handler: async (ctx, args) => {
+    const now = new Date().toISOString();
+    const guestName = args.name?.trim() || 'Local Consumer';
+
+    const userId = await ctx.db.insert('users', {
+      name: guestName,
+      email: null,
+      phoneNumber: null,
+      image: null,
+      providers: ['guest'],
+      emailVerified: false,
+      emailVerifiedAt: null,
+      phoneVerified: false,
+      phoneVerifiedAt: null,
+      role: 'guest',
+      createdAt: now,
+      updatedAt: now,
+      lastLoginAt: now,
+    });
+
+    const sessionToken = generateToken(32);
+    await ctx.db.insert('sessions', {
+      userId,
+      token: sessionToken,
+      expiresAt: getExpirationDate(SESSION_TTL_DAYS),
+      createdAt: now,
+      userAgent: args.userAgent,
+      ipAddress: args.ipAddress,
+    });
+
+    const user = await ctx.db.get(userId);
+    return {
+      user: toSafeUserProfile(user!),
+      sessionToken,
+    };
   },
 });
 
@@ -728,3 +778,77 @@ export const updateE2EEKeys = mutation({
     return { success: true };
   },
 });
+
+/**
+ * Synchronize an externally authenticated session (e.g. Next.js auth route or Google OAuth)
+ * into Convex's authoritative users and sessions tables for cloud sync and secure file operations.
+ */
+export const syncExternalSession = mutation({
+  args: {
+    userId: v.optional(v.string()),
+    name: v.string(),
+    email: v.optional(v.union(v.string(), v.null())),
+    phoneNumber: v.optional(v.union(v.string(), v.null())),
+    providers: v.array(v.string()),
+    sessionToken: v.string(),
+    expiresAt: v.string(),
+    userAgent: v.optional(v.string()),
+    ipAddress: v.optional(v.string()),
+  },
+  handler: async (ctx, args) => {
+    const now = new Date().toISOString();
+    let user = null;
+
+    if (args.email) {
+      user = await ctx.db
+        .query('users')
+        .withIndex('by_email', (q) => q.eq('email', args.email!.toLowerCase()))
+        .first();
+    }
+    if (!user && args.phoneNumber) {
+      user = await ctx.db
+        .query('users')
+        .withIndex('by_phone', (q) => q.eq('phoneNumber', args.phoneNumber!))
+        .first();
+    }
+
+    let convexUserId = user?._id;
+    if (!convexUserId) {
+      convexUserId = await ctx.db.insert('users', {
+        name: args.name,
+        email: args.email ? args.email.toLowerCase() : null,
+        phoneNumber: args.phoneNumber || null,
+        image: null,
+        providers: args.providers,
+        emailVerified: Boolean(args.email),
+        emailVerifiedAt: args.email ? now : null,
+        phoneVerified: Boolean(args.phoneNumber),
+        phoneVerifiedAt: args.phoneNumber ? now : null,
+        role: 'consumer',
+        createdAt: now,
+        updatedAt: now,
+        lastLoginAt: now,
+      });
+    }
+
+    // Check existing session
+    const existingSession = await ctx.db
+      .query('sessions')
+      .withIndex('by_token', (q) => q.eq('token', args.sessionToken))
+      .first();
+
+    if (!existingSession) {
+      await ctx.db.insert('sessions', {
+        userId: convexUserId,
+        token: args.sessionToken,
+        expiresAt: args.expiresAt,
+        createdAt: now,
+        userAgent: args.userAgent,
+        ipAddress: args.ipAddress,
+      });
+    }
+
+    return { success: true, userId: convexUserId };
+  },
+});
+

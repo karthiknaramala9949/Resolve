@@ -25,7 +25,7 @@ import {
   Edit2,
   FileText,
 } from 'lucide-react';
-import { purchaseRepository } from '@/lib/db/repositories';
+import { purchaseService } from '@/services';
 import { Purchase } from '@/lib/db/types';
 import {
   calculateReturnWindow,
@@ -57,7 +57,7 @@ export const PurchasesPage: React.FC = () => {
   const [warrantyMonths, setWarrantyMonths] = useState('12');
 
   const loadPurchases = async () => {
-    const all = await purchaseRepository.getAll();
+    const all = await purchaseService.listPurchases();
     setPurchases(all);
   };
 
@@ -130,7 +130,7 @@ export const PurchasesPage: React.FC = () => {
   const handleUpdatePurchase = async () => {
     if (!editingPurchase) return;
     try {
-      await purchaseRepository.save(editingPurchase);
+      await purchaseService.savePurchase(editingPurchase);
       toast('Purchase record updated.', 'success');
       setEditingPurchase(null);
       loadPurchases();
@@ -157,8 +157,8 @@ export const PurchasesPage: React.FC = () => {
         createdAt: new Date().toISOString(),
       };
 
-      await purchaseRepository.save(newPurchase);
-      toast('Purchase saved to local vault.', 'success');
+      await purchaseService.savePurchase(newPurchase);
+      toast('Purchase saved successfully.', 'success');
       setIsImportModalOpen(false);
       setImportText('');
       setImportDraft(null);
@@ -188,7 +188,7 @@ export const PurchasesPage: React.FC = () => {
         createdAt: new Date().toISOString(),
       };
 
-      await purchaseRepository.save(newPurchase);
+      await purchaseService.savePurchase(newPurchase);
       toast('Purchase added successfully.', 'success');
       setIsAddModalOpen(false);
       setStore('');
@@ -205,7 +205,7 @@ export const PurchasesPage: React.FC = () => {
 
   const handleDelete = async (id: string) => {
     if (confirm('Delete this purchase record?')) {
-      await purchaseRepository.delete(id);
+      await purchaseService.deletePurchase(id);
       toast('Purchase deleted.', 'info');
       loadPurchases();
     }

@@ -155,7 +155,9 @@ export const Sidebar: React.FC<SidebarProps> = ({ className }) => {
               )}
               <div className="min-w-0">
                 <p className="text-xs font-semibold text-charcoal truncate">{user.name}</p>
-                <p className="text-[10px] text-steel-grey-500 truncate">{user.email || user.phoneNumber}</p>
+                <p className="text-[10px] text-steel-grey-500 truncate">
+                  {user.email || user.phoneNumber || 'Offline on this device'}
+                </p>
               </div>
             </Link>
 
@@ -175,14 +177,14 @@ export const Sidebar: React.FC<SidebarProps> = ({ className }) => {
             className="flex items-center justify-center gap-2 w-full py-2 px-3 rounded-xl border border-steel-grey-200 bg-white hover:bg-steel-grey-50 text-xs font-semibold text-charcoal transition-colors shadow-2xs"
           >
             <User className="w-3.5 h-3.5 text-steel-grey-500" />
-            <span>Sign In to Sync</span>
+            <span>Sign in to sync</span>
           </Link>
         )}
 
         <div className="flex items-center justify-between px-2 text-xs text-steel-grey-500 font-normal">
           <div className="flex items-center gap-2">
             <span className="w-2 h-2 rounded-full bg-emerald-600" />
-            <span className="font-mono text-xs">IndexedDB local</span>
+            <span className="text-xs text-steel-grey-600 font-medium">Saved on this device</span>
           </div>
           <span className="text-xs">v2.0</span>
         </div>

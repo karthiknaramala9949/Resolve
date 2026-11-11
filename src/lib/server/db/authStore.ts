@@ -1,5 +1,3 @@
-import fs from 'node:fs';
-import path from 'node:path';
 import crypto from 'node:crypto';
 import {
   AuthDatabaseSchema,
@@ -12,8 +10,6 @@ import {
 } from './types';
 import { generateRandomToken } from '../auth/crypto';
 
-const DATA_DIR = path.join(process.cwd(), 'data');
-const DB_FILE = path.join(DATA_DIR, 'auth_db.json');
 const CURRENT_VERSION = 1;
 
 class AuthStore {
@@ -27,61 +23,21 @@ class AuthStore {
   private writeLock = Promise.resolve();
 
   constructor() {
-    this.loadSync();
+    this.isLoaded = true;
   }
 
   private loadSync(): void {
-    if (this.isLoaded) return;
-    try {
-      if (!fs.existsSync(DATA_DIR)) {
-        fs.mkdirSync(DATA_DIR, { recursive: true });
-      }
-
-      if (fs.existsSync(DB_FILE)) {
-        const raw = fs.readFileSync(DB_FILE, 'utf-8');
-        const parsed = JSON.parse(raw);
-        if (parsed && typeof parsed.version === 'number') {
-          this.data = {
-            version: parsed.version || CURRENT_VERSION,
-            users: Array.isArray(parsed.users) ? parsed.users : [],
-            sessions: Array.isArray(parsed.sessions) ? parsed.sessions : [],
-            tokens: Array.isArray(parsed.tokens) ? parsed.tokens : [],
-          };
-        }
-      } else {
-        this.saveSync();
-      }
-    } catch (err) {
-      console.error('[AuthStore] Error loading auth database:', err);
-    }
+    // In-memory test store only; persistent storage is managed authoritatively by Convex
     this.isLoaded = true;
   }
 
   private saveSync(): void {
-    try {
-      if (!fs.existsSync(DATA_DIR)) {
-        fs.mkdirSync(DATA_DIR, { recursive: true });
-      }
-      const tmpFile = `${DB_FILE}.${Date.now()}.${crypto.randomBytes(4).toString('hex')}.tmp`;
-      fs.writeFileSync(tmpFile, JSON.stringify(this.data, null, 2), 'utf-8');
-      fs.renameSync(tmpFile, DB_FILE);
-    } catch (err) {
-      console.error('[AuthStore] Error saving auth database sync:', err);
-    }
+    // No-op: all persistent application data is managed authoritatively through Convex
   }
 
   private async persist(): Promise<void> {
-    this.writeLock = this.writeLock.then(async () => {
-      try {
-        await fs.promises.mkdir(DATA_DIR, { recursive: true });
-        const tmpFile = `${DB_FILE}.${Date.now()}.${crypto.randomBytes(4).toString('hex')}.tmp`;
-        await fs.promises.writeFile(tmpFile, JSON.stringify(this.data, null, 2), 'utf-8');
-        await fs.promises.rename(tmpFile, DB_FILE);
-      } catch (err) {
-        console.error('[AuthStore] Error persisting database:', err);
-      }
-    });
-    return this.writeLock;
+    // No-op: all persistent application data is managed authoritatively through Convex
+    return Promise.resolve();
   }
 
   // ===================== USER MANAGEMENT =====================

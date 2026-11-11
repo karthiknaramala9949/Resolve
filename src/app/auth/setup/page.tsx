@@ -8,6 +8,7 @@ import { PasswordInput } from '@/features/auth/components/PasswordInput';
 import { PasswordStrengthMeter } from '@/features/auth/components/PasswordStrengthMeter';
 import { Input, Button } from '@/design-system';
 import { useAuth } from '@/features/auth/context/AuthContext';
+import { authService } from '@/services/authService';
 import { UserCheck, ShieldCheck, AlertCircle, ArrowRight } from 'lucide-react';
 
 export default function AccountSetupPage() {
@@ -35,23 +36,11 @@ export default function AccountSetupPage() {
         payload.password = password;
       }
 
-      const res = await fetch('/api/auth/setup', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload),
-      });
-
-      const data = await res.json();
-      if (!res.ok) {
-        setErrorMessage(data.error || 'Failed to update profile.');
-        setIsSubmitting(false);
-        return;
-      }
-
+      await authService.setupProfile(payload);
       await refreshUser();
       router.push('/app/overview');
-    } catch {
-      setErrorMessage('Network error while saving profile.');
+    } catch (err: any) {
+      setErrorMessage(err.message || 'Network error while saving profile.');
       setIsSubmitting(false);
     }
   };
@@ -59,7 +48,7 @@ export default function AccountSetupPage() {
   return (
     <AuthLayout
       title="Complete your profile"
-      subtitle="Verify your details so return window alerts and statutory notices can reach you."
+      subtitle="Confirm your details so you can receive important updates and deadline reminders."
     >
       <div className="space-y-5">
         {/* Linked Identity Badge */}
@@ -100,10 +89,10 @@ export default function AccountSetupPage() {
 
           <PhoneInput
             id="mobile-phone"
-            label="Mobile number (for urgent return deadline SMS)"
+            label="Mobile number (for urgent deadline reminders)"
             value={phoneNumber}
             onChange={setPhoneNumber}
-            hint="Used strictly for time-sensitive return window warnings and statutory updates."
+            hint="Used only for time-sensitive deadline reminders and case updates."
             disabled={isSubmitting}
           />
 
@@ -115,7 +104,7 @@ export default function AccountSetupPage() {
                 placeholder="Allows password login alongside Google"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                hint="Optional: setting a password allows signing in even if Google is inaccessible."
+                hint="Optional: setting a password allows you to sign in without Google."
                 disabled={isSubmitting}
               />
               {password && <PasswordStrengthMeter password={password} />}
@@ -130,7 +119,7 @@ export default function AccountSetupPage() {
             isLoading={isSubmitting}
             disabled={isSubmitting}
           >
-            <span>Finish setup & open workspace</span>
+            <span>Save and continue</span>
             <ArrowRight className="w-4 h-4 ml-1.5" />
           </Button>
 

@@ -50,12 +50,11 @@ export class ErrorBoundary extends Component<Props, State> {
   handleReset = async () => {
     if (
       window.confirm(
-        'Are you sure you want to reset local storage? This will clear all dispute cases on this device. (Make sure you export a backup first).'
+        'Are you sure you want to clear temporary browser session settings?'
       )
     ) {
       this.setState({ isResetting: true });
       try {
-        indexedDB.deleteDatabase('resolve-one-v2');
         localStorage.clear();
         sessionStorage.clear();
         window.location.href = '/';

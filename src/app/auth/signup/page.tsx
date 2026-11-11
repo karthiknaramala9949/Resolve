@@ -10,7 +10,7 @@ import { PasswordStrengthMeter } from '@/features/auth/components/PasswordStreng
 import { PhoneInput } from '@/features/auth/components/PhoneInput';
 import { Input, Button } from '@/design-system';
 import { useAuth } from '@/features/auth/context/AuthContext';
-import { Mail, Phone, AlertCircle } from 'lucide-react';
+import { Mail, Phone, AlertCircle, WifiOff, HardDrive } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 function SignUpContent() {
@@ -18,7 +18,7 @@ function SignUpContent() {
   const searchParams = useSearchParams();
   const returnTo = searchParams.get('next') || '/app/overview';
 
-  const { register } = useAuth();
+  const { register, continueAsGuest, isOnline } = useAuth();
 
   const [method, setMethod] = useState<'email' | 'phone'>('email');
   const [name, setName] = useState('');
@@ -27,10 +27,25 @@ function SignUpContent() {
   const [password, setPassword] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [isOfflineError, setIsOfflineError] = useState(false);
+
+  const handleContinueOffline = () => {
+    continueAsGuest(name || 'Local Consumer');
+    router.push(returnTo);
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setErrorMessage(null);
+    setIsOfflineError(false);
+
+    if (!isOnline) {
+      setIsOfflineError(true);
+      setErrorMessage(
+        'You are currently offline. You can continue on this device without signing in.'
+      );
+      return;
+    }
 
     if (!name.trim()) {
       setErrorMessage('Please enter your full name.');
@@ -63,6 +78,7 @@ function SignUpContent() {
 
       if (!res.success) {
         setErrorMessage(res.error || 'Failed to create account.');
+        setIsOfflineError(Boolean(res.isOffline));
         setIsSubmitting(false);
         return;
       }
@@ -81,7 +97,8 @@ function SignUpContent() {
         router.push(`/auth/verify-email?${query.toString()}`);
       }
     } catch {
-      setErrorMessage('A network error occurred. Please try again.');
+      setIsOfflineError(true);
+      setErrorMessage('Unable to connect. Please check your internet connection or continue on this device.');
       setIsSubmitting(false);
     }
   };
@@ -133,8 +150,33 @@ function SignUpContent() {
         </button>
       </div>
 
+      {/* Offline Alert with Instant 1-Click Offline Access */}
+      {(isOfflineError || !isOnline) && (
+        <div className="mb-4 p-4 rounded-xl bg-amber-50 border border-amber-200 text-amber-900 text-xs space-y-3">
+          <div className="flex items-start gap-2.5">
+            <WifiOff className="w-4 h-4 text-amber-600 shrink-0 mt-0.5" />
+            <div className="space-y-1">
+              <p className="font-semibold text-amber-950">You are currently offline</p>
+              <p className="text-amber-800 leading-relaxed">
+                You can use RESOLVE-ONE on this device without signing in. You can draft complaints, organize evidence, and track return deadlines offline.
+              </p>
+            </div>
+          </div>
+          <Button
+            type="button"
+            variant="secondary"
+            size="sm"
+            onClick={handleContinueOffline}
+            className="w-full bg-white hover:bg-amber-100 border-amber-300 text-amber-950 font-medium flex items-center justify-center gap-2"
+          >
+            <HardDrive className="w-3.5 h-3.5 text-amber-700" />
+            <span>Continue on this device without signing in</span>
+          </Button>
+        </div>
+      )}
+
       {/* Error Banner */}
-      {errorMessage && (
+      {errorMessage && !isOfflineError && (
         <div className="mb-4 p-3 rounded-xl bg-red-50 border border-red-200 text-red-700 text-xs font-medium flex items-start gap-2">
           <AlertCircle className="w-4 h-4 text-red-500 shrink-0 mt-0.5" />
           <span>{errorMessage}</span>
@@ -193,8 +235,7 @@ function SignUpContent() {
         </div>
 
         <p className="text-[11px] text-steel-grey-500 leading-normal pt-1">
-          By continuing, you agree to local proof packaging and client-side evidence storage under
-          our privacy principles.
+          By continuing, you understand that your evidence and documents are kept secure and private.
         </p>
 
         <Button
@@ -207,6 +248,20 @@ function SignUpContent() {
         >
           Create account
         </Button>
+
+        {/* Offline / Local Mode Quick Link (guarded by policy flag) */}
+        {process.env.NEXT_PUBLIC_ENABLE_GUEST_ACCESS !== 'false' && (
+          <div className="pt-2 text-center">
+            <button
+              type="button"
+              onClick={handleContinueOffline}
+              className="w-full py-2 px-3 rounded-xl border border-dashed border-steel-grey-300 bg-steel-grey-50 hover:bg-steel-grey-100 text-steel-grey-700 text-xs font-medium flex items-center justify-center gap-2 transition-colors"
+            >
+              <HardDrive className="w-3.5 h-3.5 text-steel-grey-500" />
+              <span>Or continue on this device without an account</span>
+            </button>
+          </div>
+        )}
       </form>
 
       {/* Navigation to Sign In */}

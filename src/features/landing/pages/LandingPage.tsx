@@ -24,9 +24,24 @@ import {
   SlidersHorizontal,
 } from 'lucide-react';
 import { parseComplaintText } from '@/lib/rules/intakeParser';
+import { useAuth } from '@/features/auth/context/AuthContext';
 
 export const LandingPage: React.FC = () => {
   const router = useRouter();
+  const { isAuthenticated, continueAsGuest } = useAuth();
+
+  const handleOpenWorkspace = (target = '/app/overview') => {
+    if (!isAuthenticated) {
+      if (process.env.NEXT_PUBLIC_ENABLE_GUEST_ACCESS !== 'false') {
+        continueAsGuest('Local Consumer');
+        router.push(target);
+      } else {
+        router.push('/auth/signin?next=' + encodeURIComponent(target));
+      }
+      return;
+    }
+    router.push(target);
+  };
 
   // Interactive Live Demo tab state
   const [activeTab, setActiveTab] = useState<'docket' | 'try'>('docket');
@@ -54,35 +69,35 @@ export const LandingPage: React.FC = () => {
   const faqs = [
     {
       q: 'Does RESOLVE-ONE contact the company or send emails on my behalf?',
-      a: 'Never. RESOLVE-ONE operates with your explicit approval at every step. We compile your proof, verify return window deadlines, and draft formal complaint letters, but you review and submit every filing yourself. We never auto-send or connect to proprietary store APIs.',
+      a: 'Never. RESOLVE-ONE operates with your approval at every step. We organize your evidence, verify return deadlines, and prepare formal complaint letters, but you review and submit every filing yourself.',
     },
     {
       q: 'Will RESOLVE-ONE ever ask for my passwords or banking OTPs?',
-      a: 'Never. We have an unshakeable boundary against requesting passwords, OTPs, session cookies, CVVs, or banking PINs. All data processing is strictly local to your browser.',
+      a: 'Never. We never ask for your passwords, one-time security codes, card numbers, or banking PINs. Your sensitive financial information stays strictly with you.',
     },
     {
-      q: 'How is this different from generic legal-tech portals or chatbots?',
-      a: 'Most services make unverified claims about "AI lawyers" or promise guaranteed refunds that do not exist. RESOLVE-ONE is honest: our text extraction runs on transparent in-browser rules, and we strictly separate a company\'s promised refund from verified bank receipt.',
+      q: 'How is this different from generic legal portals or chatbots?',
+      a: 'Many tools make exaggerated claims about "AI lawyers" or promise guaranteed refunds that cannot be assured. RESOLVE-ONE is honest: our text helper runs on clear, transparent rules on your device, and we carefully distinguish a company\'s promised refund from money confirmed in your bank account.',
     },
     {
       q: 'Where is my data stored? Can anyone else see my invoices?',
-      a: 'Your data is stored locally in your browser using IndexedDB. There are no remote tracking servers and no cloud telemetries. You can export or erase all records in one click at any time.',
+      a: 'Your information is stored privately on your device. When you choose to sign in to sync across devices, your documents are protected with strong security so only you and the people you authorize can access them. You can download or delete your records at any time.',
     },
     {
       q: 'When should I use NCH (1915) versus e-Jagriti?',
-      a: 'Start with NCH (National Consumer Helpline at 1915 or consumerhelpline.gov.in) for quick, informal pre-litigation mediation with major e-commerce brands. If informal mediation fails after 15 days or the claim is high-value, file a formal complaint under Section 35 of the CPA 2019 via e-Jagriti (e-jagriti.gov.in), which does not require hiring an advocate.',
+      a: 'Start with NCH (National Consumer Helpline at 1915 or consumerhelpline.gov.in) for quick, informal resolution with major companies before going to court. If informal resolution fails after 15 days or your claim is high-value, file a formal complaint with the official consumer court via e-Jagriti (e-jagriti.gov.in), which does not require hiring a lawyer.',
     },
     {
       q: 'How does the Return Window Countdown work?',
-      a: 'The Return Vault calculates exact calendar days remaining from the confirmed delivery date using verified retailer policies (such as 7 days for electronics or 10 days for fashion). It alerts you before deadlines expire so you never forfeit statutory rights.',
+      a: 'We calculate the exact calendar days remaining from your confirmed delivery date using verified retailer policies (such as 7 days for electronics or 10 days for fashion). You get clear alerts before deadlines expire so you never lose your rights.',
     },
     {
       q: 'Can I use RESOLVE-ONE completely offline?',
-      a: 'Yes. RESOLVE-ONE is an installable Progressive Web App (PWA) with offline caching and IndexedDB storage. Once loaded, you can draft complaints, check return deadlines, organize evidence, and build proof packs completely offline.',
+      a: 'Yes. RESOLVE-ONE works offline on your device. You can draft complaints, check return deadlines, organize receipts, and prepare proof packs even without an active internet connection.',
     },
     {
-      q: 'What happens if I forget my local encryption passphrase?',
-      a: 'Because RESOLVE-ONE has zero remote backend servers or user accounts, there is no master reset key. If you enable client-side AES-256-GCM encryption with a passphrase, only that exact passphrase can decrypt your records. We recommend keeping a downloaded JSON backup in a safe location.',
+      q: 'What happens if I set a personal security password?',
+      a: 'If you choose to protect your files on this device with an extra security password, keep that password safe. Because your stored records are protected with advanced security, no one can unlock them without your password. You can also download a backup copy whenever you wish.',
     },
   ];
 
@@ -117,14 +132,14 @@ export const LandingPage: React.FC = () => {
               onClick={(e) => scrollToSection(e, 'rights')}
               className="hover:text-charcoal transition-colors"
             >
-              Official routes
+              Official channels
             </a>
             <a
               href="#privacy"
               onClick={(e) => scrollToSection(e, 'privacy')}
               className="hover:text-charcoal transition-colors"
             >
-              Honesty manifesto
+              Our principles
             </a>
             <a
               href="#faq"
@@ -145,7 +160,7 @@ export const LandingPage: React.FC = () => {
             <Button
               variant="primary"
               size="sm"
-              onClick={() => router.push('/app/overview')}
+              onClick={() => handleOpenWorkspace('/app/overview')}
               className="flex items-center gap-1.5"
             >
               <span>Get started</span>
@@ -178,7 +193,7 @@ export const LandingPage: React.FC = () => {
               <Button
                 variant="primary"
                 size="lg"
-                onClick={() => router.push('/app/cases?new=true')}
+                onClick={() => handleOpenWorkspace('/app/cases?new=true')}
                 className="flex items-center justify-center gap-2 shadow-sm"
               >
                 <span>Tell us what happened</span>
@@ -187,7 +202,7 @@ export const LandingPage: React.FC = () => {
               <Button
                 variant="secondary"
                 size="lg"
-                onClick={() => router.push('/app/overview')}
+                onClick={() => handleOpenWorkspace('/app/overview')}
                 className="flex items-center justify-center"
               >
                 Explore demo workspace
@@ -198,15 +213,15 @@ export const LandingPage: React.FC = () => {
             <div className="pt-4 flex flex-wrap items-center gap-6 text-xs text-steel-grey-600 font-normal">
               <div className="flex items-center gap-1.5">
                 <Lock className="w-3.5 h-3.5 text-steel-grey-400 shrink-0" />
-                <span>100% on-device storage</span>
+                <span>Private & protected</span>
               </div>
               <div className="flex items-center gap-1.5">
                 <ShieldCheck className="w-3.5 h-3.5 text-steel-grey-400 shrink-0" />
-                <span>Never auto-submits filings</span>
+                <span>You control every filing</span>
               </div>
               <div className="flex items-center gap-1.5">
                 <CheckCircle2 className="w-3.5 h-3.5 text-coral shrink-0" />
-                <span>Zero passwords or OTPs</span>
+                <span>No mandatory account</span>
               </div>
             </div>
           </div>
@@ -225,7 +240,7 @@ export const LandingPage: React.FC = () => {
                       : 'border-transparent text-steel-grey-500 hover:text-charcoal'
                   }`}
                 >
-                  Dispute docket preview
+                  Dispute case preview
                 </button>
                 <button
                   type="button"
@@ -236,7 +251,7 @@ export const LandingPage: React.FC = () => {
                       : 'border-transparent text-steel-grey-500 hover:text-charcoal'
                   }`}
                 >
-                  Test local parser
+                  Try the complaint helper
                 </button>
               </div>
 
@@ -248,7 +263,7 @@ export const LandingPage: React.FC = () => {
                     <div>
                       <div className="flex items-center gap-2">
                         <span className="font-mono text-xs font-medium text-steel-grey-500">
-                          DOCKET-2026-0842
+                          Case #2026-0842
                         </span>
                         <span className="text-steel-grey-300">•</span>
                         <span className="text-xs text-steel-grey-500">Amazon India</span>
@@ -270,7 +285,7 @@ export const LandingPage: React.FC = () => {
                   {/* Evidence & Hash Integrity Seal */}
                   <div className="space-y-2">
                     <span className="text-xs font-medium text-steel-grey-500 block">
-                      Compiled evidence pack
+                      Collected evidence
                     </span>
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs font-mono text-steel-grey-600">
                       <div className="p-2.5 rounded-lg bg-steel-grey-50 border border-steel-grey-200 flex items-center justify-between">
@@ -290,7 +305,7 @@ export const LandingPage: React.FC = () => {
                     </div>
                     <div className="flex items-center gap-1.5 text-[11px] font-mono text-steel-grey-500 pt-1">
                       <Fingerprint className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
-                      <span>Local SHA-256 integrity seal: sha256:8f2a...c014</span>
+                      <span>Tamper-proof digital fingerprint: verified</span>
                     </div>
                   </div>
 
@@ -303,22 +318,22 @@ export const LandingPage: React.FC = () => {
                       <span className="text-[11px] text-steel-grey-500 font-mono">Day 4 of 7</span>
                     </div>
                     <p className="text-xs sm:text-sm text-charcoal font-medium">
-                      Copy formal CPA Section 35 escalation letter into Amazon Grievance Officer portal.
+                      Copy formal complaint letter and submit it to the company&apos;s grievance portal.
                     </p>
                     <p className="text-xs text-steel-grey-600">
-                      Standard customer support rejected refund citing courier handover. Statutory notice invokes Consumer Protection (E-Commerce) Rules, 2020.
+                      Standard customer service rejected the refund. This formal notice cites official consumer protection rules.
                     </p>
                   </div>
 
                   {/* Action row */}
                   <div className="pt-2 flex items-center justify-between gap-3 text-xs">
                     <span className="text-steel-grey-500">
-                      Zero cloud exposure · Verified on device
+                      Private & protected on this device
                     </span>
                     <Button
                       variant="primary"
                       size="sm"
-                      onClick={() => router.push('/app/overview')}
+                      onClick={() => handleOpenWorkspace('/app/overview')}
                       className="shrink-0"
                     >
                       <span>Open this case</span>
@@ -335,7 +350,7 @@ export const LandingPage: React.FC = () => {
                       <span>Edit or paste your dispute text below</span>
                     </span>
                     <span className="text-[11px] font-mono text-steel-grey-500 px-2 py-0.5 rounded bg-steel-grey-50 border border-steel-grey-200">
-                      In-browser regex heuristics
+                      Instant rule-based detection
                     </span>
                   </div>
 
@@ -350,7 +365,7 @@ export const LandingPage: React.FC = () => {
                   {/* Extracted Facts */}
                   <div className="space-y-2">
                     <span className="text-xs font-medium text-steel-grey-500">
-                      Extracted facts
+                      Detected details
                     </span>
                     <div className="flex flex-wrap gap-2 text-xs">
                       {parsedDemo.company && (
@@ -382,7 +397,7 @@ export const LandingPage: React.FC = () => {
 
                   <div className="pt-3 flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-t border-steel-grey-100">
                     <span className="text-xs text-steel-grey-500">
-                      Parsing runs completely in memory.
+                      Analyzed instantly on this device without third-party AI.
                     </span>
                     <Button
                       variant="primary"
@@ -396,7 +411,7 @@ export const LandingPage: React.FC = () => {
                       }
                       className="shrink-0"
                     >
-                      <span>Convert to active case</span>
+                      <span>Start a case with this</span>
                       <ArrowRight className="w-3.5 h-3.5" />
                     </Button>
                   </div>
@@ -415,7 +430,7 @@ export const LandingPage: React.FC = () => {
               How it works
             </h2>
             <p className="text-sm sm:text-base text-steel-grey-600 max-w-md mx-auto">
-              A disciplined, step-by-step workflow for stressful dispute situations
+              A simple, step-by-step path to resolve stressful dispute situations
             </p>
           </div>
 
@@ -424,9 +439,9 @@ export const LandingPage: React.FC = () => {
               <div className="font-serif text-2xl font-normal text-coral">
                 01
               </div>
-              <h3 className="text-base font-medium text-charcoal">Record the dispute in plain words</h3>
+              <h3 className="text-base font-medium text-charcoal">Record the dispute in your own words</h3>
               <p className="text-xs sm:text-sm text-steel-grey-600 leading-relaxed font-normal">
-                Describe the problem in plain text or speech. In-browser heuristics extract the company name, order number, claimed amount, and delivery dates into clean chips.
+                Describe the problem in plain text or voice. Our helper identifies the company name, order number, amount, and important dates into clean details.
               </p>
             </div>
 
@@ -436,7 +451,7 @@ export const LandingPage: React.FC = () => {
               </div>
               <h3 className="text-base font-medium text-charcoal">Follow one clear next step</h3>
               <p className="text-xs sm:text-sm text-steel-grey-600 leading-relaxed font-normal">
-                No complex 40-step confusion. The engine highlights exactly one action to take next—such as filing an internal escalation before the 7-day return deadline lapses.
+                No complex confusion. We show you exactly one action to take next—such as sending a formal complaint before the return deadline lapses.
               </p>
             </div>
 
@@ -446,7 +461,7 @@ export const LandingPage: React.FC = () => {
               </div>
               <h3 className="text-base font-medium text-charcoal">Export proof pack and escalate</h3>
               <p className="text-xs sm:text-sm text-steel-grey-600 leading-relaxed font-normal">
-                Generate an offline PDF proof pack complete with SHA-256 evidence fingerprints. Copy formal complaint letters directly into NCH 1915 or e-Jagriti portals.
+                Create a complete summary document with verified digital fingerprints. Copy formal complaint letters directly into official consumer portals.
               </p>
             </div>
           </div>
@@ -458,13 +473,13 @@ export const LandingPage: React.FC = () => {
         <div className="text-center space-y-2 max-w-3xl mx-auto">
           <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-steel-grey-100 text-steel-grey-700 text-xs font-normal border border-steel-grey-200">
             <Scale className="w-3.5 h-3.5 text-coral" />
-            <span>Honesty manifesto</span>
+            <span>Our principles</span>
           </div>
           <h2 className="text-3xl sm:text-4xl font-serif font-normal tracking-tight text-charcoal">
             Four boundaries we never cross
           </h2>
           <p className="text-xs sm:text-sm text-steel-grey-600 max-w-lg mx-auto leading-relaxed">
-            Consumer disputes are sensitive. Our architecture protects your privacy and peace of mind by design.
+            Consumer disputes are personal and sensitive. Our design protects your privacy and peace of mind.
           </p>
         </div>
 
@@ -472,40 +487,40 @@ export const LandingPage: React.FC = () => {
           <div className="p-5 rounded-2xl border border-steel-grey-200 bg-white text-charcoal space-y-1.5 shadow-2xs">
             <h4 className="text-sm font-medium text-charcoal flex items-center gap-2">
               <Ban className="w-4 h-4 text-coral shrink-0" aria-hidden="true" />
-              <span>Never collects credentials</span>
+              <span>Never asks for passwords or PINs</span>
             </h4>
             <p className="text-xs sm:text-sm text-steel-grey-600 leading-relaxed font-normal">
-              We strictly prohibit asking for passwords, OTPs, session cookies, or banking PINs. You remain in complete control.
+              We never ask for your passwords, one-time security codes, card details, or banking PINs. You remain in complete control.
             </p>
           </div>
 
           <div className="p-5 rounded-2xl border border-steel-grey-200 bg-white text-charcoal space-y-1.5 shadow-2xs">
             <h4 className="text-sm font-medium text-charcoal flex items-center gap-2">
               <Ban className="w-4 h-4 text-coral shrink-0" aria-hidden="true" />
-              <span>Never claims phantom AI</span>
+              <span>No fake AI promises</span>
             </h4>
             <p className="text-xs sm:text-sm text-steel-grey-600 leading-relaxed font-normal">
-              All text extraction uses honest, deterministic in-browser heuristics. No hallucinations or simulated legal counsel.
+              We use clear, transparent rules to extract details from your text. We never invent facts or pretend to be an AI lawyer.
             </p>
           </div>
 
           <div className="p-5 rounded-2xl border border-steel-grey-200 bg-white text-charcoal space-y-1.5 shadow-2xs">
             <h4 className="text-sm font-medium text-charcoal flex items-center gap-2">
               <Ban className="w-4 h-4 text-coral shrink-0" aria-hidden="true" />
-              <span>Never contacts parties on your behalf</span>
+              <span>Never contacts companies without you</span>
             </h4>
             <p className="text-xs sm:text-sm text-steel-grey-600 leading-relaxed font-normal">
-              You review, approve, and send every complaint yourself. RESOLVE-ONE never acts autonomously.
+              You review, approve, and send every complaint yourself. RESOLVE-ONE never acts on its own.
             </p>
           </div>
 
           <div className="p-5 rounded-2xl border border-steel-grey-200 bg-white text-charcoal space-y-1.5 shadow-2xs">
             <h4 className="text-sm font-medium text-charcoal flex items-center gap-2">
               <Ban className="w-4 h-4 text-coral shrink-0" aria-hidden="true" />
-              <span>Never confuses promises with money</span>
+              <span>Separates promises from money received</span>
             </h4>
             <p className="text-xs sm:text-sm text-steel-grey-600 leading-relaxed font-normal">
-              &quot;Company says refund initiated&quot; and &quot;Customer confirmed in bank account&quot; are strictly separated until you verify receipt.
+              &quot;Store promised a refund&quot; and &quot;Money received in your bank account&quot; are kept strictly separate until you confirm receipt.
             </p>
           </div>
         </div>
@@ -531,12 +546,12 @@ export const LandingPage: React.FC = () => {
                     Toll Free 1915 / WA 8800001915
                   </span>
                   <span className="px-2 py-0.5 rounded text-[11px] font-medium bg-amber-50 text-amber-900 border border-amber-200">
-                    Pre-litigation
+                    Before going to court
                   </span>
                 </div>
                 <h3 className="text-base font-serif font-medium text-charcoal">National Consumer Helpline (NCH)</h3>
                 <p className="text-xs sm:text-sm text-steel-grey-600 leading-relaxed font-normal">
-                  Department of Consumer Affairs convergence channel resolving e-commerce and retail disputes through direct company escalations.
+                  Department of Consumer Affairs channel resolving e-commerce and retail disputes through direct company escalations.
                 </p>
               </div>
               <a
@@ -557,7 +572,7 @@ export const LandingPage: React.FC = () => {
                     e-jagriti.gov.in
                   </span>
                   <span className="px-2 py-0.5 rounded text-[11px] font-medium bg-blue-50 text-blue-900 border border-blue-200">
-                    Formal commission
+                    Official consumer court
                   </span>
                 </div>
                 <h3 className="text-base font-serif font-medium text-charcoal">e-Jagriti Consumer Commission</h3>
@@ -583,12 +598,12 @@ export const LandingPage: React.FC = () => {
                     Toll Free 14448
                   </span>
                   <span className="px-2 py-0.5 rounded text-[11px] font-medium bg-indigo-50 text-indigo-900 border border-indigo-200">
-                    Banking regulatory
+                    Banking complaints & refunds
                   </span>
                 </div>
                 <h3 className="text-base font-serif font-medium text-charcoal">RBI Integrated Ombudsman</h3>
                 <p className="text-xs sm:text-sm text-steel-grey-600 leading-relaxed font-normal">
-                  Turnaround resolution for failed UPI refunds, net banking debits, or card reversal discrepancies when reference IDs are disputed.
+                  Resolution for failed UPI refunds, net banking debits, or card reversal discrepancies when reference IDs are disputed.
                 </p>
               </div>
               <a
@@ -652,13 +667,13 @@ export const LandingPage: React.FC = () => {
             Ready to organize your dispute?
           </h2>
           <p className="text-xs sm:text-sm text-steel-grey-600 max-w-lg mx-auto leading-relaxed">
-            Zero signups required. 100% private and on-device. Turn order numbers and frustration into structured resolution.
+            Start instantly without an account, or sign in to sync across your devices. Turn order numbers and frustration into clear resolution.
           </p>
           <div className="pt-2 flex flex-col sm:flex-row items-center justify-center gap-3">
             <Button
               variant="primary"
               size="lg"
-              onClick={() => router.push('/app/cases?new=true')}
+              onClick={() => handleOpenWorkspace('/app/cases?new=true')}
               className="w-full sm:w-auto flex items-center justify-center gap-2"
             >
               <span>Start your case</span>
@@ -667,7 +682,7 @@ export const LandingPage: React.FC = () => {
             <Button
               variant="secondary"
               size="lg"
-              onClick={() => router.push('/app/overview')}
+              onClick={() => handleOpenWorkspace('/app/overview')}
               className="w-full sm:w-auto"
             >
               Open workspace
@@ -679,18 +694,18 @@ export const LandingPage: React.FC = () => {
       {/* Footer */}
       <footer className="bg-white border-t border-steel-grey-200 py-10 px-4 text-center text-xs text-steel-grey-600 font-normal space-y-3">
         <p className="text-charcoal font-medium">
-          RESOLVE-ONE · Consumer Dispute Resolution for India · Offline-First PWA
+          RESOLVE-ONE · Consumer Dispute Care for India
         </p>
         <p className="max-w-xl mx-auto text-steel-grey-500 leading-relaxed">
           Informational guidance only. Not formal legal advice. Direct formal disputes through official Consumer Commissions under the Consumer Protection Act, 2019.
         </p>
         <div className="pt-1 flex items-center justify-center gap-4 text-xs text-steel-grey-600">
-          <button type="button" onClick={() => router.push('/app/overview')} className="hover:text-coral transition-colors">
+          <button type="button" onClick={() => handleOpenWorkspace('/app/overview')} className="hover:text-coral transition-colors">
             Workspace
           </button>
           <span className="text-steel-grey-300">•</span>
-          <button type="button" onClick={() => router.push('/app/privacy')} className="hover:text-coral transition-colors">
-            Privacy & trust
+          <button type="button" onClick={() => handleOpenWorkspace('/app/privacy')} className="hover:text-coral transition-colors">
+            Privacy & security
           </button>
         </div>
       </footer>

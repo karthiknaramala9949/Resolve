@@ -1,12 +1,16 @@
 import { NextResponse } from 'next/server';
 import { getSessionTokenFromCookies, clearSessionCookie } from '@/lib/server/auth/session';
 import { authStore } from '@/lib/server/db/authStore';
+import { deleteSessionFromConvex } from '@/lib/server/convex/convexClient';
 
 export async function POST() {
   try {
     const token = await getSessionTokenFromCookies();
     if (token) {
-      await authStore.deleteSession(token);
+      await Promise.all([
+        authStore.deleteSession(token),
+        deleteSessionFromConvex(token),
+      ]);
     }
 
     const response = NextResponse.json({
@@ -15,6 +19,10 @@ export async function POST() {
     });
 
     clearSessionCookie(response);
+    response.cookies.set('resolve_guest', '', {
+      path: '/',
+      maxAge: 0,
+    });
     return response;
   } catch (err) {
     console.error('[Logout API Error]:', err);

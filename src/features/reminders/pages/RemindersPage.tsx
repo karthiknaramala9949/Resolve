@@ -17,7 +17,7 @@ import {
   CheckCircle2,
   Trash2,
 } from 'lucide-react';
-import { reminderRepository, caseRepository } from '@/lib/db/repositories';
+import { reminderService, caseService } from '@/services';
 import { Reminder, Case } from '@/lib/db/types';
 
 export const RemindersPage: React.FC = () => {
@@ -34,8 +34,8 @@ export const RemindersPage: React.FC = () => {
 
   const loadData = async () => {
     const [allReminders, allCases] = await Promise.all([
-      reminderRepository.getAll(),
-      caseRepository.getAll(),
+      reminderService.listReminders(),
+      caseService.listCases(),
     ]);
     setReminders(allReminders);
     setCases(allCases);
@@ -75,13 +75,13 @@ export const RemindersPage: React.FC = () => {
   };
 
   const handleToggleDone = async (id: string) => {
-    const updatedState = await reminderRepository.toggleDone(id);
+    const updatedState = await reminderService.toggleReminder(id);
     toast(updatedState ? 'Reminder marked as completed.' : 'Reminder reopened.', 'info');
     loadData();
   };
 
   const handleDelete = async (id: string) => {
-    await reminderRepository.delete(id);
+    await reminderService.deleteReminder(id);
     toast('Reminder deleted.', 'info');
     loadData();
   };
@@ -101,7 +101,7 @@ export const RemindersPage: React.FC = () => {
       createdAt: new Date().toISOString(),
     };
 
-    await reminderRepository.save(newReminder);
+    await reminderService.saveReminder(newReminder);
     toast('Reminder scheduled.', 'success');
     setIsAddModalOpen(false);
     setTitle('');
@@ -125,7 +125,7 @@ export const RemindersPage: React.FC = () => {
             Reminders & follow-ups
           </h2>
           <p className="text-xs sm:text-sm text-steel-grey-600 mt-1 font-normal">
-            Track company response windows and suggested follow-ups stored on-device
+            Track company response dates and follow-ups saved for your convenience
           </p>
         </div>
 

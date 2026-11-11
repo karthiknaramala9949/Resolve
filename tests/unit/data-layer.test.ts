@@ -1,24 +1,146 @@
-import { describe, it, expect, beforeEach } from 'vitest';
-import { ResolveOneDB } from '@/lib/db/db';
-import { DexieCaseRepository } from '@/lib/db/repositories/DexieCaseRepository';
-import { DexieEvidenceRepository } from '@/lib/db/repositories/DexieEvidenceRepository';
-import { detectV1Data, migrateV1Data } from '@/lib/migrate/v1Migrator';
+import { describe, it, expect, beforeEach, vi } from 'vitest';
+import {
+  caseRepository,
+  purchaseRepository,
+  reminderRepository,
+  evidenceRepository,
+} from '@/lib/db/repositories';
+import { setSessionToken } from '@/lib/auth/sessionToken';
 
-describe('Data Layer & Repositories', () => {
-  let testDb: ResolveOneDB;
-  let caseRepo: DexieCaseRepository;
-  let evidenceRepo: DexieEvidenceRepository;
+// In-memory mock storage simulating Convex tables
+let convexCases: any[] = [];
+let convexPurchases: any[] = [];
+let convexReminders: any[] = [];
 
-  beforeEach(async () => {
-    testDb = new ResolveOneDB();
-    await testDb.delete();
-    await testDb.open();
-    caseRepo = new DexieCaseRepository(testDb);
-    evidenceRepo = new DexieEvidenceRepository(testDb);
+vi.mock('@/components/providers/ConvexClientProvider', () => ({
+  getConvexClient: () => ({
+    query: vi.fn(async (queryRef: any, args: any) => {
+      // Mock cases list
+      if (args && 'status' in args && !('caseId' in args)) {
+        let results = [...convexCases];
+        if (args.status && args.status !== 'all') {
+          results = results.filter((c) => c.status === args.status);
+        }
+        if (args.search) {
+          const q = args.search.toLowerCase();
+          results = results.filter(
+            (c) =>
+              c.title.toLowerCase().includes(q) ||
+              c.company.toLowerCase().includes(q) ||
+              c.clientGeneratedId.toLowerCase().includes(q)
+          );
+        }
+        return results;
+      }
+
+      // Mock cases getById
+      if (args && args.id && !('caseId' in args)) {
+        return convexCases.find(
+          (c) => c._id === args.id || c.clientGeneratedId === args.id
+        );
+      }
+
+      // Mock purchases list
+      if (queryRef?.name === 'purchases:list' || (!('status' in args) && !('caseId' in args) && !('documentId' in args))) {
+        return convexPurchases;
+      }
+
+      // Mock reminders list
+      if (args && 'caseId' in args) {
+        if (args.caseId) {
+          return convexReminders.filter((r) => r.caseId === args.caseId);
+        }
+        return convexReminders;
+      }
+
+      return [];
+    }),
+
+    mutation: vi.fn(async (mutationRef: any, args: any) => {
+      // Create case
+      if (args.title && args.company && !args.caseId) {
+        const newCase = {
+          _id: `convex_case_${Date.now()}`,
+          clientGeneratedId: args.clientGeneratedId || `RS-${Date.now().toString().slice(-5)}`,
+          title: args.title,
+          issueType: args.issueType,
+          company: args.company,
+          amount: args.amount,
+          description: args.description,
+          status: args.status || 'action_required',
+          timeline: [
+            ...(args.timeline || []),
+            {
+              id: `EV-${Date.now()}`,
+              at: new Date().toISOString(),
+              title: 'Case created',
+              detail: 'Dispute registered in RESOLVE-ONE platform.',
+              source: 'customer',
+            },
+          ],
+          evidence: args.evidence || [],
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString(),
+        };
+        convexCases.push(newCase);
+        return newCase;
+      }
+
+      // Add timeline event
+      if (args.caseId && args.detail) {
+        const found = convexCases.find(
+          (c) => c._id === args.caseId || c.clientGeneratedId === args.caseId
+        );
+        if (found) {
+          const event = {
+            id: `EV-${Date.now()}`,
+            at: new Date().toISOString(),
+            title: args.title,
+            detail: args.detail,
+            source: args.source || 'customer',
+          };
+          found.timeline.push(event);
+          found.updatedAt = new Date().toISOString();
+          return event;
+        }
+      }
+
+      // Update case
+      if (args.id && (args.status || args.title)) {
+        const found = convexCases.find(
+          (c) => c._id === args.id || c.clientGeneratedId === args.id
+        );
+        if (found) {
+          if (args.status) found.status = args.status;
+          if (args.title) found.title = args.title;
+          found.updatedAt = new Date().toISOString();
+          return found;
+        }
+      }
+
+      // Delete case
+      if (args.id && !args.store && !args.date) {
+        convexCases = convexCases.filter(
+          (c) => c._id !== args.id && c.clientGeneratedId !== args.id
+        );
+        return { success: true };
+      }
+
+      return { success: true };
+    }),
+  }),
+}));
+
+describe('Convex-First Data Layer & Repositories', () => {
+  beforeEach(() => {
+    convexCases = [];
+    convexPurchases = [];
+    convexReminders = [];
+    setSessionToken('mock-active-session-token');
   });
 
-  it('creates and retrieves a case via CaseRepository', async () => {
-    const created = await caseRepo.create({
+  it('creates and retrieves a case via CaseRepository backed by Convex', async () => {
+    const created = await caseRepository.create({
       id: 'RS-TEST-01',
       title: 'Missing Delivery Package',
       issueType: 'Delivery problem',
@@ -34,14 +156,14 @@ describe('Data Layer & Repositories', () => {
     expect(created.createdAt).toBeDefined();
     expect(created.timeline.length).toBeGreaterThan(0); // Auto-logs creation event
 
-    const fetched = await caseRepo.getById('RS-TEST-01');
+    const fetched = await caseRepository.getById('RS-TEST-01');
     expect(fetched).toBeDefined();
     expect(fetched?.title).toBe('Missing Delivery Package');
     expect(fetched?.company).toBe('Speedy Express');
   });
 
-  it('filters and searches cases accurately', async () => {
-    await caseRepo.create({
+  it('filters and searches cases accurately in Convex', async () => {
+    await caseRepository.create({
       id: 'RS-A',
       title: 'Earbuds broken',
       issueType: 'Damaged or defective',
@@ -52,7 +174,7 @@ describe('Data Layer & Repositories', () => {
       evidence: [],
     });
 
-    await caseRepo.create({
+    await caseRepository.create({
       id: 'RS-B',
       title: 'Refund delayed',
       issueType: 'Refund not received',
@@ -64,18 +186,18 @@ describe('Data Layer & Repositories', () => {
     });
 
     // Filter by status
-    const waitingCases = await caseRepo.getAll({ status: 'waiting_company' });
+    const waitingCases = await caseRepository.getAll({ status: 'waiting_company' });
     expect(waitingCases.length).toBe(1);
     expect(waitingCases[0].id).toBe('RS-B');
 
     // Search by keyword
-    const searchResults = await caseRepo.getAll({ search: 'Tech Mart' });
+    const searchResults = await caseRepository.getAll({ search: 'Tech Mart' });
     expect(searchResults.length).toBe(1);
     expect(searchResults[0].id).toBe('RS-A');
   });
 
-  it('adds timeline events to an existing case', async () => {
-    await caseRepo.create({
+  it('adds timeline events to an existing case in Convex', async () => {
+    await caseRepository.create({
       id: 'RS-TIME',
       title: 'Wrong Item',
       issueType: 'Wrong or missing item',
@@ -86,7 +208,7 @@ describe('Data Layer & Repositories', () => {
       evidence: [],
     });
 
-    const event = await caseRepo.addTimelineEvent('RS-TIME', {
+    const event = await caseRepository.addTimelineEvent('RS-TIME', {
       title: 'Customer called support',
       detail: 'Representative promised resolution in 48 hours.',
       source: 'customer',
@@ -95,89 +217,15 @@ describe('Data Layer & Repositories', () => {
     expect(event.id).toBeDefined();
     expect(event.title).toBe('Customer called support');
 
-    const updated = await caseRepo.getById('RS-TIME');
-    expect(updated?.timeline[0].title).toBe('Customer called support');
+    const updated = await caseRepository.getById('RS-TIME');
+    expect(updated?.timeline.some((e) => e.title === 'Customer called support')).toBe(true);
   });
 
   it('calculates SHA-256 fingerprint for evidence files', async () => {
     const encoder = new TextEncoder();
     const data = encoder.encode('Hello RESOLVE-ONE evidence hash');
-    const hash = await evidenceRepo.calculateSHA256(data.buffer);
+    const hash = await evidenceRepository.calculateSHA256(data.buffer as ArrayBuffer);
     expect(hash).toHaveLength(64);
     expect(hash).toMatch(/^[0-9a-f]{64}$/);
   });
 });
-
-describe('Legacy Prototype Migration', () => {
-  it('detects and migrates resolve-one-prototype-v1 data into Dexie', async () => {
-    const legacyPayload = {
-      cases: [
-        {
-          id: 'RS-MIG-1',
-          title: 'Old refund issue',
-          issueType: 'Refund not received',
-          company: 'Legacy Store',
-          amount: 899,
-          description: 'Migrated case from prototype v1',
-          status: 'waiting_company',
-          createdAt: '2026-10-01T12:00:00Z',
-          updatedAt: '2026-10-05T12:00:00Z',
-          evidence: [
-            {
-              id: 'EV-MIG-1',
-              name: 'invoice.pdf',
-              mime: 'application/pdf',
-              size: 1024,
-            },
-          ],
-          timeline: [
-            {
-              id: 'T-MIG-1',
-              at: '2026-10-01T12:00:00Z',
-              title: 'Legacy case created',
-              detail: 'Imported from old format',
-              source: 'sample',
-            },
-          ],
-        },
-      ],
-      purchases: [
-        {
-          id: 'PUR-MIG-1',
-          store: 'Legacy Shop',
-          product: 'Leather Wallet',
-          amount: 499,
-          returnWindowDays: 14,
-        },
-      ],
-      reminders: [
-        {
-          id: 'REM-MIG-1',
-          caseId: 'RS-MIG-1',
-          title: 'Follow up on refund',
-          date: '2026-10-10',
-          done: false,
-        },
-      ],
-    };
-
-    localStorage.setItem('resolve-one-prototype-v1', JSON.stringify(legacyPayload));
-
-    expect(await detectV1Data()).toBe(true);
-    const report = await migrateV1Data();
-
-    expect(report.success).toBe(true);
-    expect(report.casesCount).toBe(1);
-    expect(report.purchasesCount).toBe(1);
-    expect(report.remindersCount).toBe(1);
-    expect(report.errors).toHaveLength(0);
-
-    // Verify backup key was created
-    const keys = Object.keys(localStorage);
-    const backupKey = keys.find((k) => k.startsWith('resolve-one-backup-v1-'));
-    expect(backupKey).toBeDefined();
-
-    localStorage.clear();
-  });
-});
-

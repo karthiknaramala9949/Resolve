@@ -3,7 +3,10 @@ import { z } from 'zod';
 import { authStore } from '@/lib/server/db/authStore';
 import { hashPassword, generateRandomToken, generateNumericOtp } from '@/lib/server/auth/crypto';
 import { setSessionCookie } from '@/lib/server/auth/session';
-import { rateLimiter, RATE_LIMITS } from '@/lib/server/auth/rateLimit';
+import { rateLimiter } from '@/lib/server/auth/rateLimit';
+import { getServerConvexClient } from '@/lib/server/convex/convexClient';
+import { validateCsrf } from '@/lib/server/auth/csrf';
+import { api } from '../../../../../convex/_generated/api';
 
 const RegisterSchema = z.object({
   name: z.string().min(2, 'Name must be at least 2 characters'),
@@ -19,6 +22,11 @@ const RegisterSchema = z.object({
 
 export async function POST(req: NextRequest) {
   try {
+    const csrfCheck = validateCsrf(req);
+    if (!csrfCheck.valid && csrfCheck.errorResponse) {
+      return csrfCheck.errorResponse;
+    }
+
     const ip = req.headers.get('x-forwarded-for') || '127.0.0.1';
     const body = await req.json();
 
@@ -46,7 +54,41 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // Check if user already exists
+    // 1. Authoritative Convex Registration
+    const client = getServerConvexClient();
+    if (client) {
+      try {
+        const convexRes = await client.mutation(api.auth.register, {
+          name,
+          email: email || null,
+          phoneNumber: phoneNumber || null,
+          password,
+          userAgent: req.headers.get('user-agent') || undefined,
+          ipAddress: ip,
+        });
+
+        if (convexRes?.sessionToken && convexRes?.user) {
+          const response = NextResponse.json(
+            {
+              success: true,
+              user: convexRes.user,
+              sessionToken: convexRes.sessionToken,
+              verificationRequired: convexRes.verificationRequired,
+              message: 'Account created successfully.',
+            },
+            { status: 201 }
+          );
+          setSessionCookie(response, convexRes.sessionToken);
+          return response;
+        }
+      } catch (err: any) {
+        if (err?.message?.includes('already exists')) {
+          return NextResponse.json({ error: err.message }, { status: 409 });
+        }
+      }
+    }
+
+    // 2. In-memory fallback for local mock / unit testing
     if (email) {
       const existingEmail = await authStore.findUserByEmail(email);
       if (existingEmail) {
@@ -86,21 +128,14 @@ export async function POST(req: NextRequest) {
     // Generate verification tokens
     if (email) {
       const emailToken = generateRandomToken(32);
-      await authStore.createToken(email, emailToken, 'email_verification', 24 * 60); // 24 hours
-      if (process.env.NODE_ENV === 'development') {
-        console.log(`[RESOLVE-ONE AUTH] Email verification link generated for ${email}: /auth/verify-email?token=${emailToken}`);
-      }
+      await authStore.createToken(email, emailToken, 'email_verification', 24 * 60);
     }
 
     if (phoneNumber) {
       const otp = generateNumericOtp(6);
-      await authStore.createToken(phoneNumber, otp, 'phone_otp', 10); // 10 minutes
-      if (process.env.NODE_ENV === 'development') {
-        console.log(`[RESOLVE-ONE AUTH] Phone OTP generated for ${phoneNumber}: ${otp}`);
-      }
+      await authStore.createToken(phoneNumber, otp, 'phone_otp', 10);
     }
 
-    // Create session and set cookie
     const session = await authStore.createSession(user.id, {
       userAgent: req.headers.get('user-agent') || undefined,
       ipAddress: ip,
@@ -110,6 +145,7 @@ export async function POST(req: NextRequest) {
       {
         success: true,
         user: authStore.toUserProfile(user),
+        sessionToken: session.token,
         verificationRequired: phoneNumber ? 'phone' : 'email',
         message: 'Account created successfully.',
       },
@@ -118,7 +154,7 @@ export async function POST(req: NextRequest) {
 
     setSessionCookie(response, session.token);
     return response;
-  } catch (err) {
+  } catch (err: any) {
     console.error('[Register API Error]:', err);
     return NextResponse.json(
       { error: 'An unexpected error occurred during registration. Please try again.' },

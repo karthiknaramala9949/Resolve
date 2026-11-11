@@ -9,8 +9,6 @@ import {
   bufferToHex,
   hexToBuffer,
 } from '@/lib/crypto/e2ee';
-import { ResolveOneDB } from '@/lib/db/db';
-import { DexieCaseRepository } from '@/lib/db/repositories/DexieCaseRepository';
 
 describe('End-to-End Encryption (E2EE) Subsystem', () => {
   it('generates a User Master Key (UMK), wraps it with passphrase and recovery key', async () => {
@@ -137,64 +135,64 @@ describe('End-to-End Encryption (E2EE) Subsystem', () => {
   });
 });
 
-describe('IndexedDB Offline Queue & Repository Integration', () => {
-  let testDb: ResolveOneDB;
-  let caseRepo: DexieCaseRepository;
+describe('Zero-Knowledge E2EE Cross-Device Key Restoration', () => {
+  it('restores Master Key across devices using passphrase and unwraps encrypted payload', async () => {
+    // Device A: Setup master key and encrypt file
+    const passphrase = 'DeviceCrossSyncPassword@2026';
+    const { masterKey: deviceAMasterKey, bundle } = await setupUserMasterKey(passphrase);
 
-  beforeEach(async () => {
-    testDb = new ResolveOneDB();
-    await testDb.delete();
-    await testDb.open();
-    caseRepo = new DexieCaseRepository(testDb);
+    const encoder = new TextEncoder();
+    const documentContent = encoder.encode('Confidential dispute evidence - Shattered laptop screen');
+    const encrypted = await encryptDocument(documentContent.buffer as ArrayBuffer, deviceAMasterKey);
+
+    // Device B: Restore master key from wrapped bundle using passphrase alone
+    const deviceBMasterKey = await unlockMasterKeyWithPassphrase(
+      passphrase,
+      bundle.wrappedMasterKeyHex,
+      bundle.saltHex,
+      bundle.ivHex
+    );
+
+    // Device B decrypts document with restored key
+    const decryptedBuffer = await decryptDocument(
+      encrypted.ciphertext,
+      encrypted.wrappedDekHex,
+      encrypted.ivHex,
+      encrypted.dekIvHex,
+      encrypted.sha256Hex,
+      deviceBMasterKey
+    );
+
+    const decryptedText = new TextDecoder().decode(decryptedBuffer);
+    expect(decryptedText).toBe('Confidential dispute evidence - Shattered laptop screen');
   });
 
-  it('automatically enqueues created cases into syncQueue for offline resilience', async () => {
-    const newCase = await caseRepo.create({
-      id: 'RS-SYNC-01',
-      title: 'Delayed Flight Refund',
-      issueType: 'Flight cancellation',
-      company: 'AeroIndia',
-      amount: 4500,
-      description: 'Flight cancelled without refund within statutory 48 hours.',
-      status: 'action_required',
-      timeline: [],
-      evidence: [],
-    });
+  it('restores Master Key across devices using recovery phrase when passphrase is forgotten', async () => {
+    // Device A: Setup master key and encrypt file
+    const passphrase = 'ForgottenPassword@2026';
+    const { masterKey: deviceAMasterKey, bundle } = await setupUserMasterKey(passphrase);
 
-    const queueItems = await testDb.syncQueue.toArray();
-    expect(queueItems.length).toBe(1);
-    expect(queueItems[0].entity).toBe('cases');
-    expect(queueItems[0].operation).toBe('create');
-    expect(queueItems[0].clientGeneratedId).toBe('RS-SYNC-01');
-    expect(queueItems[0].status).toBe('pending');
-  });
+    const encoder = new TextEncoder();
+    const documentContent = encoder.encode('Bank statement with unauthorized UPI debit');
+    const encrypted = await encryptDocument(documentContent.buffer as ArrayBuffer, deviceAMasterKey);
 
-  it('automatically enqueues updates and deletions to syncQueue', async () => {
-    await caseRepo.create({
-      id: 'RS-SYNC-02',
-      title: 'Damaged Blender',
-      issueType: 'Damaged or defective',
-      company: 'Appliance Hub',
-      description: 'Cracked jar on delivery',
-      status: 'action_required',
-      timeline: [],
-      evidence: [],
-    });
+    // Device B: Unlocks master key using the 24-character human-readable recovery key
+    const deviceBMasterKey = await unlockMasterKeyWithRecoveryKey(
+      bundle.recoveryKey,
+      bundle.recoveryWrappedMasterKeyHex
+    );
 
-    // Update
-    await caseRepo.update('RS-SYNC-02', {
-      status: 'waiting_company',
-    });
+    const decryptedBuffer = await decryptDocument(
+      encrypted.ciphertext,
+      encrypted.wrappedDekHex,
+      encrypted.ivHex,
+      encrypted.dekIvHex,
+      encrypted.sha256Hex,
+      deviceBMasterKey
+    );
 
-    let queueItems = await testDb.syncQueue.toArray();
-    expect(queueItems.length).toBe(2);
-    expect(queueItems[1].operation).toBe('update');
-
-    // Delete
-    await caseRepo.delete('RS-SYNC-02');
-    queueItems = await testDb.syncQueue.toArray();
-    expect(queueItems.length).toBe(3);
-    expect(queueItems[2].operation).toBe('delete');
+    const decryptedText = new TextDecoder().decode(decryptedBuffer);
+    expect(decryptedText).toBe('Bank statement with unauthorized UPI debit');
   });
 });
 

@@ -4,7 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { Button, Card, CaseCard, EmptyState } from '@/design-system';
 import { Plus, ArrowRight } from 'lucide-react';
-import { caseRepository } from '@/lib/db/repositories';
+import { caseService, dashboardService } from '@/services';
 import { Case } from '@/lib/db/types';
 import { computeNextStep } from '@/lib/rules/nextStepEngine';
 import { IntakeModal } from '../components/IntakeModal';
@@ -17,7 +17,7 @@ export const OverviewPage: React.FC = () => {
   const [isIntakeOpen, setIsIntakeOpen] = useState(false);
 
   const loadCases = async () => {
-    const all = await caseRepository.getAll();
+    const all = await caseService.listCases();
     setCases(all);
     setActiveCaseCount(all.filter((c) => c.status !== 'resolved' && c.status !== 'closed').length);
   };

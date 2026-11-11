@@ -1,10 +1,10 @@
-import { caseRepository, purchaseRepository, reminderRepository } from '@/lib/db/repositories';
+import { caseService, purchaseService, reminderService } from '@/services';
 
 export async function exportFullBackup(): Promise<void> {
   const [cases, purchases, reminders] = await Promise.all([
-    caseRepository.getAll(),
-    purchaseRepository.getAll(),
-    reminderRepository.getAll(),
+    caseService.listCases(),
+    purchaseService.listPurchases(),
+    reminderService.listReminders(),
   ]);
 
   const exportBundle = {

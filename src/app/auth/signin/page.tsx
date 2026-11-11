@@ -8,7 +8,7 @@ import { GoogleButton, AuthDivider } from '@/features/auth/components/GoogleButt
 import { PasswordInput } from '@/features/auth/components/PasswordInput';
 import { Input, Button } from '@/design-system';
 import { useAuth } from '@/features/auth/context/AuthContext';
-import { AlertCircle, CheckCircle2 } from 'lucide-react';
+import { AlertCircle, CheckCircle2, WifiOff, HardDrive } from 'lucide-react';
 
 function SignInContent() {
   const router = useRouter();
@@ -17,7 +17,7 @@ function SignInContent() {
   const errorParam = searchParams.get('error');
   const messageParam = searchParams.get('message');
 
-  const { login } = useAuth();
+  const { login, continueAsGuest, isOnline } = useAuth();
 
   const [identifier, setIdentifier] = useState('');
   const [password, setPassword] = useState('');
@@ -25,14 +25,20 @@ function SignInContent() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
+  const [isOfflineError, setIsOfflineError] = useState(false);
+
+  const handleContinueOffline = () => {
+    continueAsGuest('Local Consumer');
+    router.push(returnTo);
+  };
 
   useEffect(() => {
     if (errorParam === 'oauth_cancelled') {
       setErrorMessage('Google sign-in was cancelled. Please try again or enter your password below.');
     } else if (errorParam === 'session_expired') {
-      setErrorMessage('Your session has expired. Please sign in again.');
+      setErrorMessage('Your session has ended. Please sign in again.');
     } else if (errorParam) {
-      setErrorMessage('Authentication error. Please try again.');
+      setErrorMessage('Could not sign you in. Please try again.');
     }
 
     if (messageParam === 'password_reset') {
@@ -46,6 +52,13 @@ function SignInContent() {
     e.preventDefault();
     setErrorMessage(null);
     setSuccessMessage(null);
+    setIsOfflineError(false);
+
+    if (!isOnline) {
+      setIsOfflineError(true);
+      setErrorMessage('You are currently offline. You can continue on this device without signing in.');
+      return;
+    }
 
     if (!identifier.trim()) {
       setErrorMessage('Please enter your email or phone number.');
@@ -67,13 +80,15 @@ function SignInContent() {
 
       if (!res.success) {
         setErrorMessage(res.error || 'Invalid credentials.');
+        setIsOfflineError(Boolean(res.isOffline));
         setIsSubmitting(false);
         return;
       }
 
       router.push(returnTo);
     } catch {
-      setErrorMessage('An unexpected network error occurred.');
+      setIsOfflineError(true);
+      setErrorMessage('An unexpected network error occurred. Please try again or continue in offline mode.');
       setIsSubmitting(false);
     }
   };
@@ -96,8 +111,33 @@ function SignInContent() {
         </div>
       )}
 
+      {/* Offline Alert with Instant 1-Click Offline Access */}
+      {(isOfflineError || !isOnline) && (
+        <div className="mb-4 p-4 rounded-xl bg-amber-50 border border-amber-200 text-amber-900 text-xs space-y-3">
+          <div className="flex items-start gap-2.5">
+            <WifiOff className="w-4 h-4 text-amber-600 shrink-0 mt-0.5" />
+            <div className="space-y-1">
+              <p className="font-semibold text-amber-950">You are currently offline</p>
+              <p className="text-amber-800 leading-relaxed">
+                You can use RESOLVE-ONE on this device without signing in. You can draft complaints, organize evidence, and track deadlines offline.
+              </p>
+            </div>
+          </div>
+          <Button
+            type="button"
+            variant="secondary"
+            size="sm"
+            onClick={handleContinueOffline}
+            className="w-full bg-white hover:bg-amber-100 border-amber-300 text-amber-950 font-medium flex items-center justify-center gap-2"
+          >
+            <HardDrive className="w-3.5 h-3.5 text-amber-700" />
+            <span>Continue on this device without signing in</span>
+          </Button>
+        </div>
+      )}
+
       {/* Error banner */}
-      {errorMessage && (
+      {errorMessage && !isOfflineError && (
         <div className="mb-4 p-3 rounded-xl bg-red-50 border border-red-200 text-red-700 text-xs font-medium flex items-start gap-2">
           <AlertCircle className="w-4 h-4 text-red-500 shrink-0 mt-0.5" />
           <span>{errorMessage}</span>
@@ -165,6 +205,20 @@ function SignInContent() {
         >
           Sign in
         </Button>
+
+        {/* Offline / Local Mode Quick Link (guarded by policy flag) */}
+        {process.env.NEXT_PUBLIC_ENABLE_GUEST_ACCESS !== 'false' && (
+          <div className="pt-2 text-center">
+            <button
+              type="button"
+              onClick={handleContinueOffline}
+              className="w-full py-2 px-3 rounded-xl border border-dashed border-steel-grey-300 bg-steel-grey-50 hover:bg-steel-grey-100 text-steel-grey-700 text-xs font-medium flex items-center justify-center gap-2 transition-colors"
+            >
+              <HardDrive className="w-3.5 h-3.5 text-steel-grey-500" />
+              <span>Or continue on this device without an account</span>
+            </button>
+          </div>
+        )}
       </form>
 
       {/* Navigation to Sign Up */}

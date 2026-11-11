@@ -7,7 +7,8 @@
  * or plaintext document content.
  */
 
-const PBKDF2_ITERATIONS = 100000;
+export const E2EE_KEY_VERSION = 1;
+export const PBKDF2_ITERATIONS = 100000;
 const AES_KEY_LENGTH = 256;
 const IV_LENGTH_BYTES = 12; // 96 bits recommended for AES-GCM
 const SALT_LENGTH_BYTES = 16;
@@ -19,6 +20,7 @@ export interface EncryptedPayload {
   dekIvHex: string;
   sha256Hex: string;
   originalSize: number;
+  version?: number;
 }
 
 export interface MasterKeyBundle {
@@ -28,6 +30,7 @@ export interface MasterKeyBundle {
   recoveryKey: string;
   recoveryWrappedMasterKeyHex: string;
   recoveryKeyHashHex: string;
+  version?: number;
 }
 
 /**
@@ -208,6 +211,38 @@ export async function unlockMasterKeyWithRecoveryKey(
     false,
     ['encrypt', 'decrypt', 'wrapKey', 'unwrapKey']
   );
+}
+
+/**
+ * Rewraps an active Master Key with a new passphrase during password updates.
+ * Preserves the underlying Master Key and all existing document DEKs!
+ */
+export async function rewrapMasterKeyOnPasswordChange(
+  masterKey: CryptoKey,
+  newPassphrase: string
+): Promise<{
+  wrappedMasterKeyHex: string;
+  saltHex: string;
+  ivHex: string;
+}> {
+  const salt = new Uint8Array(SALT_LENGTH_BYTES);
+  crypto.getRandomValues(salt);
+
+  const newKek = await deriveKeyFromPassphrase(newPassphrase, salt);
+
+  const iv = new Uint8Array(IV_LENGTH_BYTES);
+  crypto.getRandomValues(iv);
+
+  const wrappedMasterKey = await crypto.subtle.wrapKey('raw', masterKey, newKek, {
+    name: 'AES-GCM',
+    iv: iv,
+  });
+
+  return {
+    wrappedMasterKeyHex: bufferToHex(wrappedMasterKey),
+    saltHex: bufferToHex(salt),
+    ivHex: bufferToHex(iv),
+  };
 }
 
 /**

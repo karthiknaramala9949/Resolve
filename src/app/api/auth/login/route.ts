@@ -4,6 +4,9 @@ import { authStore } from '@/lib/server/db/authStore';
 import { verifyPassword } from '@/lib/server/auth/crypto';
 import { setSessionCookie } from '@/lib/server/auth/session';
 import { rateLimiter, RATE_LIMITS } from '@/lib/server/auth/rateLimit';
+import { getServerConvexClient } from '@/lib/server/convex/convexClient';
+import { validateCsrf } from '@/lib/server/auth/csrf';
+import { api } from '../../../../../convex/_generated/api';
 
 const LoginSchema = z.object({
   identifier: z.string().min(3, 'Email or phone number is required'),
@@ -13,6 +16,11 @@ const LoginSchema = z.object({
 
 export async function POST(req: NextRequest) {
   try {
+    const csrfCheck = validateCsrf(req);
+    if (!csrfCheck.valid && csrfCheck.errorResponse) {
+      return csrfCheck.errorResponse;
+    }
+
     const ip = req.headers.get('x-forwarded-for') || '127.0.0.1';
     const body = await req.json();
 
@@ -24,7 +32,7 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const { identifier, password } = parseResult.data;
+    const { identifier, password, rememberMe } = parseResult.data;
     const cleanId = identifier.trim().toLowerCase();
 
     // Check rate limit for this identifier and IP
@@ -39,13 +47,48 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // Try finding user by email first, then by phone
+    // 1. Authoritative Convex Cloud Authentication
+    const client = getServerConvexClient();
+    if (client) {
+      try {
+        const convexRes = await client.mutation(api.auth.login, {
+          identifier: cleanId,
+          password,
+          rememberMe: Boolean(rememberMe),
+          userAgent: req.headers.get('user-agent') || undefined,
+          ipAddress: ip,
+        });
+
+        if (convexRes?.sessionToken && convexRes?.user) {
+          rateLimiter.reset(rlKey);
+          const response = NextResponse.json({
+            success: true,
+            user: convexRes.user,
+            sessionToken: convexRes.sessionToken,
+            message: 'Signed in successfully.',
+          });
+          setSessionCookie(response, convexRes.sessionToken);
+          return response;
+        }
+      } catch (err: any) {
+        if (
+          err?.message?.includes('Invalid email') ||
+          err?.message?.includes('password')
+        ) {
+          return NextResponse.json(
+            { error: 'Invalid email, phone number, or password.' },
+            { status: 401 }
+          );
+        }
+      }
+    }
+
+    // 2. In-memory fallback for local mock / unit testing
     let user = await authStore.findUserByEmail(cleanId);
     if (!user) {
       user = await authStore.findUserByPhone(identifier);
     }
 
-    // If user not found, or user has no password set (e.g. Google-only sign-in)
     if (!user || !user.passwordHash || !user.passwordSalt) {
       return NextResponse.json(
         { error: 'Invalid email, phone number, or password.' },
@@ -53,7 +96,6 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // Verify password with constant-time comparison
     const isValid = verifyPassword(password, user.passwordHash, user.passwordSalt);
     if (!isValid) {
       return NextResponse.json(
@@ -62,10 +104,8 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // Successful login - reset rate limit
     rateLimiter.reset(rlKey);
 
-    // Create session and set cookie
     const session = await authStore.createSession(user.id, {
       userAgent: req.headers.get('user-agent') || undefined,
       ipAddress: ip,
@@ -74,6 +114,7 @@ export async function POST(req: NextRequest) {
     const response = NextResponse.json({
       success: true,
       user: authStore.toUserProfile(user),
+      sessionToken: session.token,
       message: 'Signed in successfully.',
     });
 

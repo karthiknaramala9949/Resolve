@@ -67,6 +67,9 @@ export async function getSessionTokenFromCookies(): Promise<string | null> {
   }
 }
 
+import { getServerConvexClient } from '../convex/convexClient';
+import { api } from '../../../../convex/_generated/api';
+
 /**
  * Retrieves the currently authenticated user record, or null if unauthenticated.
  */
@@ -78,6 +81,24 @@ export async function getCurrentUser(): Promise<{
   const token = await getSessionTokenFromCookies();
   if (!token) return null;
 
+  // 1. Authoritative Convex session verification
+  const client = getServerConvexClient();
+  if (client) {
+    try {
+      const convexUser = await client.query(api.auth.getCurrentUser, { sessionToken: token });
+      if (convexUser) {
+        return {
+          user: convexUser as unknown as UserProfile,
+          rawUser: convexUser as unknown as UserRecord,
+          sessionToken: token,
+        };
+      }
+    } catch {
+      // Deferred to in-memory check
+    }
+  }
+
+  // 2. In-memory fallback for local mock / unit testing
   const session = await authStore.findSessionByToken(token);
   if (!session) return null;
 

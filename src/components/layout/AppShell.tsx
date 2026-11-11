@@ -9,7 +9,7 @@ import { OfflineBanner } from './OfflineBanner';
 import { StoragePersistenceBanner } from './StoragePersistenceBanner';
 import { CommandPalette } from '@/design-system/components/CommandPalette';
 import { useAppStore } from '@/store/useAppStore';
-import { caseRepository } from '@/lib/db/repositories';
+import { caseService } from '@/services/caseService';
 import { Case } from '@/lib/db/types';
 
 interface AppShellProps {
@@ -23,7 +23,7 @@ export const AppShell: React.FC<AppShellProps> = ({ children }) => {
 
   const refreshCases = async () => {
     try {
-      const all = await caseRepository.getAll();
+      const all = await caseService.listCases();
       setCases(all);
       setActiveCaseCount(all.filter((c) => c.status !== 'resolved' && c.status !== 'closed').length);
     } catch {

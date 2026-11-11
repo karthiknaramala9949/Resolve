@@ -3,7 +3,8 @@
 import React, { ReactNode, useMemo } from 'react';
 import { ConvexProvider, ConvexReactClient } from 'convex/react';
 
-const CONVEX_URL = process.env.NEXT_PUBLIC_CONVEX_URL;
+const CONVEX_URL =
+  process.env.NEXT_PUBLIC_CONVEX_URL || 'https://quirky-skunk-768.convex.cloud';
 
 let convexClientInstance: ConvexReactClient | null = null;
 

@@ -1,5 +1,4 @@
 import '@testing-library/jest-dom';
-import 'fake-indexeddb/auto';
 import { webcrypto } from 'node:crypto';
 
 // Polyfill window.crypto.subtle in jsdom test environment using Node's native WebCrypto

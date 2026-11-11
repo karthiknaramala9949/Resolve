@@ -33,7 +33,7 @@ export const UserMenu: React.FC = () => {
         className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-coral hover:bg-coral-600 text-white font-medium text-xs shadow-2xs transition-colors"
       >
         <User className="w-3.5 h-3.5" />
-        <span>Sign In</span>
+        <span>Sign in</span>
       </Link>
     );
   }
@@ -93,13 +93,24 @@ export const UserMenu: React.FC = () => {
 
           {/* Links */}
           <div className="py-1">
+            {user.providers.includes('local') && (
+              <Link
+                href="/auth/signin"
+                onClick={() => setIsOpen(false)}
+                className="flex items-center gap-2.5 px-4 py-2 text-xs text-coral-700 hover:bg-coral-50 hover:text-coral transition-colors font-medium border-b border-steel-grey-100"
+              >
+                <User className="w-3.5 h-3.5 text-coral-600" />
+                <span>Sign in or create account</span>
+              </Link>
+            )}
+
             <Link
               href="/auth/setup"
               onClick={() => setIsOpen(false)}
               className="flex items-center gap-2.5 px-4 py-2 text-xs text-steel-grey-700 hover:bg-steel-grey-50 hover:text-charcoal transition-colors font-medium"
             >
               <Settings className="w-3.5 h-3.5 text-steel-grey-400" />
-              <span>Account setup & recovery</span>
+              <span>Account details & recovery</span>
             </Link>
 
             <Link
@@ -108,7 +119,7 @@ export const UserMenu: React.FC = () => {
               className="flex items-center gap-2.5 px-4 py-2 text-xs text-steel-grey-700 hover:bg-steel-grey-50 hover:text-charcoal transition-colors font-medium"
             >
               <ShieldCheck className="w-3.5 h-3.5 text-steel-grey-400" />
-              <span>Privacy & data trust</span>
+              <span>Privacy & security</span>
             </Link>
           </div>
 

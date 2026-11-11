@@ -37,13 +37,12 @@ import {
   UploadCloud,
   FileCheck,
 } from 'lucide-react';
-import { caseRepository, evidenceRepository, reminderRepository } from '@/lib/db/repositories';
+import { caseService, documentService, reminderService } from '@/services';
 import { Case, TimelineEvent, EvidenceMeta } from '@/lib/db/types';
 import { computeNextStep } from '@/lib/rules/nextStepEngine';
 import { formatComplaintLetter } from '@/lib/pdf/complaintLetter';
 import { validateUploadedFile } from '@/lib/rules/fileValidator';
 import { detectSensitiveInfo } from '@/lib/rules/redactionChecker';
-import { uploadEncryptedDocument, downloadAndDecryptDocument } from '@/lib/crypto/documentManager';
 
 export const CaseDetailPage: React.FC = () => {
   const params = useParams<{ id: string }>();
@@ -81,7 +80,7 @@ export const CaseDetailPage: React.FC = () => {
 
   const loadCase = async () => {
     if (!id) return;
-    const found = await caseRepository.getById(id);
+    const found = await caseService.getCaseById(id);
     if (found) {
       setCaseData(found);
     }
@@ -95,7 +94,7 @@ export const CaseDetailPage: React.FC = () => {
   if (loading) {
     return (
       <div className="py-20 text-center text-steel-grey-500 font-normal">
-        Loading case details from device storage...
+        Loading case details...
       </div>
     );
   }
@@ -105,7 +104,7 @@ export const CaseDetailPage: React.FC = () => {
       <div className="py-20 text-center space-y-4">
         <h2 className="text-xl font-medium font-serif text-charcoal">Case not found</h2>
         <p className="text-xs sm:text-sm text-steel-grey-600">
-          Case {id} does not exist in this browser&apos;s local database.
+          Case {id} could not be found.
         </p>
         <Button onClick={() => router.push('/app/cases')}>Return to cases</Button>
       </div>
@@ -122,7 +121,7 @@ export const CaseDetailPage: React.FC = () => {
     }
 
     try {
-      await caseRepository.addTimelineEvent(caseData.id, {
+      await caseService.addTimelineEvent(caseData.id, {
         title: eventTitle,
         detail: eventDetail,
         source: eventSource,
@@ -141,10 +140,10 @@ export const CaseDetailPage: React.FC = () => {
   // 2. Mark Sent to Company
   const handleMarkSent = async () => {
     try {
-      await caseRepository.update(caseData.id, {
+      await caseService.updateCase(caseData.id, {
         status: 'waiting_company',
       });
-      await caseRepository.addTimelineEvent(caseData.id, {
+      await caseService.addTimelineEvent(caseData.id, {
         title: 'Formal complaint submitted to store',
         detail: 'Dispute notice sent via official company grievance portal or email.',
         source: 'customer',
@@ -159,14 +158,7 @@ export const CaseDetailPage: React.FC = () => {
   // 3. Reopen Case
   const handleReopen = async () => {
     try {
-      await caseRepository.update(caseData.id, {
-        status: 'action_required',
-      });
-      await caseRepository.addTimelineEvent(caseData.id, {
-        title: 'Dispute reopened by customer',
-        detail: 'Resolution was not completed or fresh defect reported.',
-        source: 'customer',
-      });
+      await caseService.reopenCase(caseData.id);
       toast('Case reopened for further action.', 'info');
       loadCase();
     } catch (err: any) {
@@ -177,14 +169,7 @@ export const CaseDetailPage: React.FC = () => {
   // 4. Archive Case
   const handleArchive = async () => {
     try {
-      await caseRepository.update(caseData.id, {
-        status: 'closed',
-      });
-      await caseRepository.addTimelineEvent(caseData.id, {
-        title: 'Dispute archived',
-        detail: 'Case records moved to archive.',
-        source: 'customer',
-      });
+      await caseService.archiveCase(caseData.id);
       toast('Case moved to archive.', 'info');
       loadCase();
     } catch (err: any) {
@@ -194,12 +179,12 @@ export const CaseDetailPage: React.FC = () => {
 
   // 5. Delete Case
   const handleDeleteCase = async () => {
-    if (!window.confirm(`Are you sure you want to delete dispute ${caseData.id}? This will remove all local timeline logs from this device.`)) {
+    if (!window.confirm(`Are you sure you want to delete case ${caseData.id}? This will remove all records for this case.`)) {
       return;
     }
 
     try {
-      await caseRepository.delete(caseData.id);
+      await caseService.deleteCase(caseData.id);
       toast(`Case ${caseData.id} deleted.`, 'info');
       router.push('/app/cases');
     } catch (err: any) {
@@ -212,7 +197,7 @@ export const CaseDetailPage: React.FC = () => {
     try {
       const letter = formatComplaintLetter(caseData);
       await navigator.clipboard.writeText(letter);
-      toast('Formal grievance notice copied to clipboard.', 'success');
+      toast('Formal complaint letter copied to clipboard.', 'success');
     } catch {
       toast('Could not copy to clipboard. Please copy manually.', 'warning');
     }
@@ -223,10 +208,10 @@ export const CaseDetailPage: React.FC = () => {
     if (!window.confirm('Remove this evidence file from the case?')) return;
     try {
       const remaining = (caseData.evidence || []).filter((e) => e.id !== evId);
-      await caseRepository.update(caseData.id, { evidence: remaining });
-      await caseRepository.addTimelineEvent(caseData.id, {
+      await caseService.updateCase(caseData.id, { evidence: remaining });
+      await caseService.addTimelineEvent(caseData.id, {
         title: 'Evidence file removed',
-        detail: `Evidence item ${evId} detached from dispute record.`,
+        detail: `Evidence item ${evId} detached from case.`,
         source: 'evidence',
       });
       toast('Evidence removed from case.', 'info');
@@ -246,7 +231,7 @@ export const CaseDetailPage: React.FC = () => {
     }
 
     try {
-      const uploadRes = await uploadEncryptedDocument({
+      const uploadRes = await documentService.uploadDocument({
         file: uploadFile,
         caseId: caseData.id,
         redactionHint: redactionNotice || undefined,
@@ -264,14 +249,14 @@ export const CaseDetailPage: React.FC = () => {
       };
 
       const updatedEvidence = [...(caseData.evidence || []), meta];
-      await caseRepository.update(caseData.id, { evidence: updatedEvidence });
-      await caseRepository.addTimelineEvent(caseData.id, {
+      await caseService.updateCase(caseData.id, { evidence: updatedEvidence });
+      await caseService.addTimelineEvent(caseData.id, {
         title: `Attached evidence: ${uploadFile.name}`,
-        detail: `Client-side encrypted with SHA-256 fingerprint: ${uploadRes.sha256.slice(0, 16)}...`,
+        detail: `Saved with security verification fingerprint: ${uploadRes.sha256.slice(0, 16)}...`,
         source: 'evidence',
       });
 
-      toast('Evidence file encrypted and attached to case.', 'success');
+      toast('Evidence file attached securely.', 'success');
       setIsUploadEvidenceOpen(false);
       setUploadFile(null);
       setRedactionNotice(null);
@@ -289,7 +274,7 @@ export const CaseDetailPage: React.FC = () => {
     }
 
     try {
-      await reminderRepository.save({
+      await reminderService.saveReminder({
         id: `REM-${Date.now().toString().slice(-4)}`,
         caseId: caseData.id,
         title: reminderTitle,
@@ -314,7 +299,7 @@ export const CaseDetailPage: React.FC = () => {
       const numAmount = outcomeAmount ? parseFloat(outcomeAmount) : (caseData.amount || 0);
 
       if (outcomeStage === 'company') {
-        await caseRepository.update(caseData.id, {
+        await caseService.updateCase(caseData.id, {
           status: 'waiting_company',
           threeStateOutcome: {
             ...currentOutcomes,
@@ -325,14 +310,14 @@ export const CaseDetailPage: React.FC = () => {
             },
           },
         });
-        await caseRepository.addTimelineEvent(caseData.id, {
+        await caseService.addTimelineEvent(caseData.id, {
           title: 'Company stated refund initiated',
           detail: outcomeNote || `Company claims refund of ₹${numAmount} was processed.`,
           source: 'company',
         });
         toast('Company claim logged.', 'info');
       } else if (outcomeStage === 'evidence') {
-        await caseRepository.update(caseData.id, {
+        await caseService.updateCase(caseData.id, {
           threeStateOutcome: {
             ...currentOutcomes,
             evidenceFound: {
@@ -342,14 +327,14 @@ export const CaseDetailPage: React.FC = () => {
             },
           },
         });
-        await caseRepository.addTimelineEvent(caseData.id, {
+        await caseService.addTimelineEvent(caseData.id, {
           title: 'Payment transaction reference logged',
           detail: `Reference: ${outcomeNote}`,
           source: 'evidence',
         });
         toast('Transaction proof recorded.', 'info');
       } else if (outcomeStage === 'customer') {
-        await caseRepository.update(caseData.id, {
+        await caseService.updateCase(caseData.id, {
           status: 'resolved',
           customerConfirmedOutcome: 'Funds confirmed received in customer bank account',
           threeStateOutcome: {
@@ -361,7 +346,7 @@ export const CaseDetailPage: React.FC = () => {
             },
           },
         });
-        await caseRepository.addTimelineEvent(caseData.id, {
+        await caseService.addTimelineEvent(caseData.id, {
           title: 'Outcome verified and confirmed by you',
           detail: `Customer checked bank account and confirmed ₹${numAmount} received. Case resolved.`,
           source: 'customer',
@@ -671,7 +656,7 @@ export const CaseDetailPage: React.FC = () => {
               onDownload={async () => {
                 try {
                   toast(`Preparing download for ${item.name}...`, 'info');
-                  const blob = await downloadAndDecryptDocument(item.id, item.name);
+                  const blob = await documentService.downloadDocument(item.id, item.name, item);
                   const url = URL.createObjectURL(blob);
                   const a = document.createElement('a');
                   a.href = url;

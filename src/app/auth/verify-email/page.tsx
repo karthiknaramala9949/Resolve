@@ -7,6 +7,7 @@ import { AuthLayout } from '@/features/auth/components/AuthLayout';
 import { Button } from '@/design-system';
 import { Mail, CheckCircle2, AlertCircle, RefreshCw, ArrowRight } from 'lucide-react';
 import { useAuth } from '@/features/auth/context/AuthContext';
+import { authService } from '@/services/authService';
 
 function VerifyEmailContent() {
   const router = useRouter();
@@ -31,20 +32,13 @@ function VerifyEmailContent() {
     const runVerification = async () => {
       try {
         setState('verifying');
-        const res = await fetch(`/api/auth/verify-email?token=${encodeURIComponent(token)}`);
-        const data = await res.json();
-
-        if (res.ok && data.success) {
-          setState('success');
-          setMessage(data.message || 'Email address successfully verified.');
-          await refreshUser();
-        } else {
-          setState('error');
-          setMessage(data.error || 'Failed to verify email link.');
-        }
-      } catch {
+        const res = await authService.verifyEmail(token);
+        setState('success');
+        setMessage(res.message || 'Email address successfully verified.');
+        await refreshUser();
+      } catch (err: any) {
         setState('error');
-        setMessage('Network error while verifying email.');
+        setMessage(err.message || 'Failed to verify email link.');
       }
     };
 
@@ -86,7 +80,7 @@ function VerifyEmailContent() {
   return (
     <AuthLayout
       title="Verify your email"
-      subtitle="Confirming your email ensures you receive proof pack PDFs and statutory milestone notices."
+      subtitle="Confirming your email helps ensure you receive important case updates and deadline reminders."
     >
       {state === 'verifying' && (
         <div className="text-center py-6 space-y-3">
@@ -94,7 +88,7 @@ function VerifyEmailContent() {
             <RefreshCw className="w-6 h-6 animate-spin" />
           </div>
           <h3 className="text-base font-semibold text-charcoal">Verifying your email...</h3>
-          <p className="text-xs text-steel-grey-500">Checking verification token authenticity</p>
+          <p className="text-xs text-steel-grey-500">Checking your verification link...</p>
         </div>
       )}
 

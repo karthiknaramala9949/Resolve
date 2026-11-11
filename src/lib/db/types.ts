@@ -9,6 +9,9 @@ export const EvidenceMetaSchema = z.object({
   addedAt: z.string(),
   sha256: z.string().optional(),
   redactionHint: z.string().optional(),
+  storageId: z.string().optional(),
+  encryptedKey: z.string().optional(),
+  iv: z.string().optional(),
 });
 export type EvidenceMeta = z.infer<typeof EvidenceMetaSchema>;
 

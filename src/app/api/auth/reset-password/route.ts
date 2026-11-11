@@ -3,6 +3,7 @@ import { z } from 'zod';
 import { authStore } from '@/lib/server/db/authStore';
 import { hashPassword } from '@/lib/server/auth/crypto';
 import { setSessionCookie } from '@/lib/server/auth/session';
+import { syncSessionToConvex } from '@/lib/server/convex/convexClient';
 
 const ResetPasswordSchema = z.object({
   identifier: z.string().min(3, 'Email or phone number is required'),
@@ -78,6 +79,14 @@ export async function POST(req: NextRequest) {
       userAgent: req.headers.get('user-agent') || undefined,
       ipAddress: ip,
     });
+
+    // Synchronize session with Convex cloud database
+    await syncSessionToConvex(
+      updatedUser || user,
+      session.token,
+      req.headers.get('user-agent') || undefined,
+      ip
+    );
 
     const response = NextResponse.json({
       success: true,

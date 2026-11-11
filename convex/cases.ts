@@ -468,3 +468,85 @@ export const setArchived = mutation({
   },
 });
 
+/**
+ * Add evidence metadata to a case.
+ */
+export const addEvidence = mutation({
+  args: {
+    sessionToken: v.string(),
+    caseId: v.string(),
+    evidence: EvidenceMetaValidator,
+  },
+  handler: async (ctx, args) => {
+    const { user } = await getAuthenticatedUser(ctx, args.sessionToken);
+
+    let existing: Doc<'cases'> | null = null;
+    try {
+      existing = await ctx.db.get(args.caseId as Id<'cases'>);
+    } catch {}
+
+    if (!existing) {
+      existing = await ctx.db
+        .query('cases')
+        .withIndex('by_client_id', (q) => q.eq('clientGeneratedId', args.caseId))
+        .first();
+    }
+
+    if (!existing || existing.userId !== user._id) {
+      throw new Error('Case not found or permission denied.');
+    }
+
+    const now = new Date().toISOString();
+    const updatedEvidence = [...(existing.evidence || []), args.evidence];
+
+    await ctx.db.patch(existing._id, {
+      evidence: updatedEvidence,
+      updatedAt: now,
+      version: existing.version + 1,
+    });
+
+    return { success: true };
+  },
+});
+
+/**
+ * Remove evidence metadata from a case.
+ */
+export const removeEvidence = mutation({
+  args: {
+    sessionToken: v.string(),
+    caseId: v.string(),
+    evidenceId: v.string(),
+  },
+  handler: async (ctx, args) => {
+    const { user } = await getAuthenticatedUser(ctx, args.sessionToken);
+
+    let existing: Doc<'cases'> | null = null;
+    try {
+      existing = await ctx.db.get(args.caseId as Id<'cases'>);
+    } catch {}
+
+    if (!existing) {
+      existing = await ctx.db
+        .query('cases')
+        .withIndex('by_client_id', (q) => q.eq('clientGeneratedId', args.caseId))
+        .first();
+    }
+
+    if (!existing || existing.userId !== user._id) {
+      throw new Error('Case not found or permission denied.');
+    }
+
+    const now = new Date().toISOString();
+    const updatedEvidence = (existing.evidence || []).filter((e) => e.id !== args.evidenceId);
+
+    await ctx.db.patch(existing._id, {
+      evidence: updatedEvidence,
+      updatedAt: now,
+      version: existing.version + 1,
+    });
+
+    return { success: true };
+  },
+});
+
