@@ -19,6 +19,11 @@ export function getConvexClient(): ConvexReactClient {
   return convexClientInstance;
 }
 
+function ConvexConnectedProvider({ children }: { children: ReactNode }) {
+  const client = useMemo(() => getConvexClient(), []);
+  return <ConvexProvider client={client}>{children}</ConvexProvider>;
+}
+
 export function ConvexClientProvider({ children }: { children: ReactNode }) {
   if (!CONVEX_URL) {
     return (
@@ -39,8 +44,6 @@ export function ConvexClientProvider({ children }: { children: ReactNode }) {
     );
   }
 
-  const client = useMemo(() => getConvexClient(), []);
-
-  return <ConvexProvider client={client}>{children}</ConvexProvider>;
+  return <ConvexConnectedProvider>{children}</ConvexConnectedProvider>;
 }
 
