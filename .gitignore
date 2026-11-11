@@ -7,3 +7,5 @@ out
 .env*
 !.env.example
 data/
+docs/audit/
+*.tsbuildinfo

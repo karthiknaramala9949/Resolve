@@ -1,6 +1,6 @@
 import { mutation, query } from './_generated/server';
 import { v } from 'convex/values';
-import { Doc } from './_generated/dataModel';
+import { Doc, DataModel } from './_generated/dataModel';
 import {
   hashPassword,
   verifyPassword,
@@ -8,6 +8,93 @@ import {
   generateOtp,
 } from './crypto';
 import { getAuthenticatedUser, toSafeUserProfile } from './authHelper';
+import { createClient } from '@convex-dev/better-auth';
+import { convex } from '@convex-dev/better-auth/plugins';
+import { betterAuth } from 'better-auth';
+import { componentsGeneric } from 'convex/server';
+
+const components = componentsGeneric() as unknown as { betterAuth: any };
+import type { GenericCtx } from '@convex-dev/better-auth';
+import authConfig from './auth.config';
+
+/**
+ * Better Auth Component Client for Convex
+ */
+export const authComponent = createClient<DataModel>(components.betterAuth);
+
+/**
+ * Validates Better Auth environment configuration and fail-safe defaults
+ */
+export const validateAuthConfig = (config?: { secret?: string; siteUrl?: string }) => {
+  const secret =
+    config?.secret ||
+    process.env.BETTER_AUTH_SECRET ||
+    process.env.AUTH_SECRET;
+
+  if (process.env.NODE_ENV === 'production') {
+    if (!secret) {
+      throw new Error('BETTER_AUTH_SECRET or AUTH_SECRET environment variable is required in production.');
+    }
+    if (secret.length < 32) {
+      throw new Error('BETTER_AUTH_SECRET must be at least 32 characters long in production.');
+    }
+  }
+
+  return {
+    secret: secret || 'dev_better_auth_secret_must_be_at_least_32_characters_long_for_security',
+    siteUrl:
+      config?.siteUrl ||
+      process.env.SITE_URL ||
+      process.env.BETTER_AUTH_URL ||
+      process.env.NEXT_PUBLIC_APP_URL ||
+      'http://localhost:3000',
+  };
+};
+
+/**
+ * Create Better Auth server instance bound to Convex database adapter
+ */
+export const createAuth = (ctx: GenericCtx<DataModel>) => {
+  const config = validateAuthConfig();
+  const siteUrl = config.siteUrl;
+  const secret = config.secret;
+
+  const googleClientId = process.env.GOOGLE_CLIENT_ID || '';
+  const googleClientSecret = process.env.GOOGLE_CLIENT_SECRET || '';
+  const isGoogleEnabled = Boolean(googleClientId && googleClientSecret);
+
+  return betterAuth({
+    baseURL: siteUrl,
+    database: authComponent.adapter(ctx),
+    secret,
+    emailAndPassword: {
+      enabled: true,
+      requireEmailVerification: false,
+      minPasswordLength: 8,
+      maxPasswordLength: 128,
+    },
+    socialProviders: {
+      google: {
+        clientId: googleClientId,
+        clientSecret: googleClientSecret,
+        enabled: isGoogleEnabled,
+      },
+    },
+    session: {
+      expiresIn: 60 * 60 * 24 * 30, // 30 days
+      updateAge: 60 * 60 * 24, // 1 day
+    },
+    account: {
+      accountLinking: {
+        enabled: true,
+        trustedProviders: ['google'],
+      },
+    },
+    plugins: [convex({ authConfig })],
+  });
+};
+
+export const { getAuthUser } = authComponent.clientApi();
 
 const SESSION_TTL_DAYS = 30;
 

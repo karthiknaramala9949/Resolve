@@ -8,12 +8,14 @@
     "build": "next build",
     "start": "next start -H 0.0.0.0 -p 3000",
     "preview": "next start -H 0.0.0.0 -p 3000",
+    "typecheck": "tsc --noEmit",
     "test": "vitest run",
     "test:watch": "vitest",
     "convex:dev": "convex dev",
     "convex:deploy": "convex deploy"
   },
   "dependencies": {
+    "@convex-dev/better-auth": "^0.13.0",
     "@radix-ui/react-dialog": "^1.1.2",
     "@radix-ui/react-dropdown-menu": "^2.1.2",
     "@radix-ui/react-popover": "^1.1.2",
@@ -21,6 +23,7 @@
     "@radix-ui/react-slot": "^1.1.0",
     "@radix-ui/react-tabs": "^1.1.1",
     "@radix-ui/react-tooltip": "^1.1.4",
+    "better-auth": "^1.7.20",
     "clsx": "^2.1.1",
     "convex": "^1.49.0",
     "dexie": "^4.0.10",

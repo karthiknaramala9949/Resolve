@@ -1,12 +1,49 @@
 import { NextResponse, type NextRequest } from 'next/server';
+import { getSessionCookie } from 'better-auth/cookies';
 
 const SESSION_COOKIE_NAME = 'resolve_session';
+
+/**
+ * Checks and cryptographically validates a Better Auth session cookie at the Edge.
+ * When signed (`<token>.<signature>`), verifies HMAC-SHA256 against BETTER_AUTH_SECRET or AUTH_SECRET.
+ * Rejects forged, malformed, or missing signatures.
+ */
+export async function hasBetterAuthSession(
+  req: NextRequest | { headers: Headers },
+  secret?: string
+): Promise<boolean> {
+  try {
+    const token = getSessionCookie(req as any);
+    if (!token || token.trim().length === 0) return false;
+
+    // Better Auth signs cookies when secret is provided: `<token>.<signature>`
+    if (token.includes('.')) {
+      const authSecret =
+        secret ||
+        process.env.BETTER_AUTH_SECRET ||
+        process.env.AUTH_SECRET;
+      if (!authSecret || authSecret.length < 32) return false;
+      return await verifySessionCookie(token, authSecret);
+    }
+
+    // In production, un-signed cookie tokens are strictly prohibited
+    if (process.env.NODE_ENV === 'production') {
+      return false;
+    }
+
+    // In dev without cookie signing, require minimum token entropy
+    return token.length >= 16;
+  } catch {
+    return false;
+  }
+}
 
 /**
  * Verifies the HMAC-SHA256 signature of a signed session cookie using WebCrypto.
  * Format: `<payload>.<signature>` (where signature is base64url-encoded HMAC-SHA256).
  * Note: Valid signature proves only that the cookie was not forged; active session
  * validity is still verified against the database by server API routes.
+ * Preserved for backward compatibility until M2.3 migration is complete.
  */
 export async function verifySessionCookie(
   cookieValue?: string | null,
@@ -60,10 +97,15 @@ export async function verifySessionCookie(
 
 export async function middleware(req: NextRequest) {
   const { pathname, search } = req.nextUrl;
-  const sessionCookie = req.cookies.get(SESSION_COOKIE_NAME)?.value;
+  
+  // 1. Check for Better Auth session cookie (cryptographically verified)
+  const isBetterAuthAuthenticated = await hasBetterAuthSession(req);
 
-  // Cryptographically verify session cookie signature using WebCrypto HMAC-SHA256
-  const isAuthenticated = await verifySessionCookie(sessionCookie);
+  // 2. Check for legacy signed session cookie (backward compatibility during M2.2)
+  const legacySessionCookie = req.cookies.get(SESSION_COOKIE_NAME)?.value;
+  const isLegacyAuthenticated = await verifySessionCookie(legacySessionCookie);
+
+  const isAuthenticated = isBetterAuthAuthenticated || isLegacyAuthenticated;
 
   const isProtectedRoute = pathname.startsWith('/app');
   const isAuthPage =
@@ -111,4 +153,3 @@ export const config = {
     '/account-setup',
   ],
 };
-
