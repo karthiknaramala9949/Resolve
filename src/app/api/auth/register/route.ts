@@ -84,21 +84,20 @@ export async function POST(req: NextRequest) {
     });
 
     // Generate verification tokens
-    let debugVerificationToken: string | undefined;
-    let debugOtp: string | undefined;
-
     if (email) {
       const emailToken = generateRandomToken(32);
       await authStore.createToken(email, emailToken, 'email_verification', 24 * 60); // 24 hours
-      debugVerificationToken = emailToken;
-      console.log(`[RESOLVE-ONE AUTH] Email verification link generated for ${email}: /auth/verify-email?token=${emailToken}`);
+      if (process.env.NODE_ENV === 'development') {
+        console.log(`[RESOLVE-ONE AUTH] Email verification link generated for ${email}: /auth/verify-email?token=${emailToken}`);
+      }
     }
 
     if (phoneNumber) {
       const otp = generateNumericOtp(6);
       await authStore.createToken(phoneNumber, otp, 'phone_otp', 10); // 10 minutes
-      debugOtp = otp;
-      console.log(`[RESOLVE-ONE AUTH] Phone OTP generated for ${phoneNumber}: ${otp}`);
+      if (process.env.NODE_ENV === 'development') {
+        console.log(`[RESOLVE-ONE AUTH] Phone OTP generated for ${phoneNumber}: ${otp}`);
+      }
     }
 
     // Create session and set cookie
@@ -112,8 +111,6 @@ export async function POST(req: NextRequest) {
         success: true,
         user: authStore.toUserProfile(user),
         verificationRequired: phoneNumber ? 'phone' : 'email',
-        debugVerificationToken,
-        debugOtp,
         message: 'Account created successfully.',
       },
       { status: 201 }

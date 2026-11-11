@@ -123,14 +123,15 @@ export async function POST(req: NextRequest) {
     const emailToken = generateRandomToken(32);
     await authStore.createToken(targetEmail, emailToken, 'email_verification', 24 * 60);
 
-    console.log(
-      `[RESOLVE-ONE AUTH] Resent verification link for ${targetEmail}: /auth/verify-email?token=${emailToken}`
-    );
+    if (process.env.NODE_ENV === 'development') {
+      console.log(
+        `[RESOLVE-ONE AUTH] Resent verification link for ${targetEmail}: /auth/verify-email?token=${emailToken}`
+      );
+    }
 
     return NextResponse.json({
       success: true,
       message: 'A fresh verification link has been sent to your email address.',
-      debugVerificationToken: emailToken,
     });
   } catch (err) {
     console.error('[Resend Email Verification Error]:', err);

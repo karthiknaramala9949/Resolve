@@ -14,8 +14,6 @@ interface AuthContextValue {
     success: boolean;
     user?: UserProfile;
     verificationRequired?: 'email' | 'phone';
-    debugOtp?: string;
-    debugVerificationToken?: string;
     error?: string;
   }>;
   logout: () => Promise<void>;
@@ -100,8 +98,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         success: true,
         user: result.user,
         verificationRequired: result.verificationRequired,
-        debugOtp: result.debugOtp,
-        debugVerificationToken: result.debugVerificationToken,
       };
     } catch {
       return {

@@ -13,10 +13,7 @@ export default function ForgotPasswordPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [sentInfo, setSentInfo] = useState<{
-    type: 'email' | 'phone';
     message: string;
-    debugToken?: string;
-    debugOtp?: string;
   } | null>(null);
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -44,23 +41,8 @@ export default function ForgotPasswordPage() {
       }
 
       setSentInfo({
-        type: data.type,
-        message: data.message,
-        debugToken: data.debugToken,
-        debugOtp: data.debugOtp,
+        message: data.message || 'If an account exists, we have sent instructions.',
       });
-
-      // If phone, auto-forward to reset-password with phone parameter
-      if (data.type === 'phone') {
-        const query = new URLSearchParams({
-          identifier: identifier.trim(),
-          type: 'phone',
-        });
-        if (data.debugOtp) query.set('code', data.debugOtp);
-        setTimeout(() => {
-          router.push(`/auth/reset-password?${query.toString()}`);
-        }, 1200);
-      }
     } catch {
       setErrorMessage('A network error occurred. Please try again.');
     } finally {
@@ -104,24 +86,6 @@ export default function ForgotPasswordPage() {
               {sentInfo.message}
             </p>
           </div>
-
-          {sentInfo.type === 'email' && sentInfo.debugToken && (
-            <div className="p-3 bg-steel-grey-50 rounded-xl border border-steel-grey-200 text-xs space-y-1">
-              <p className="font-semibold text-charcoal">Quick testing link:</p>
-              <Link
-                href={`/auth/reset-password?token=${sentInfo.debugToken}&identifier=${encodeURIComponent(identifier.trim())}`}
-                className="text-coral hover:underline font-mono text-[11px] break-all"
-              >
-                /auth/reset-password?token={sentInfo.debugToken.slice(0, 16)}...
-              </Link>
-            </div>
-          )}
-
-          {sentInfo.type === 'phone' && (
-            <p className="text-xs text-center text-steel-grey-500">
-              Redirecting to verification code entry...
-            </p>
-          )}
 
           <Button
             type="button"

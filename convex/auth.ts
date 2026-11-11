@@ -116,8 +116,6 @@ export const register = mutation({
     });
 
     // Generate verification tokens
-    let debugOtp: string | undefined;
-    let debugVerificationToken: string | undefined;
     let verificationRequired: 'email' | 'phone' = cleanEmail ? 'email' : 'phone';
 
     if (cleanEmail) {
@@ -130,7 +128,6 @@ export const register = mutation({
         attempts: 0,
         createdAt: now,
       });
-      debugVerificationToken = emailToken;
     }
 
     if (cleanPhone) {
@@ -143,7 +140,6 @@ export const register = mutation({
         attempts: 0,
         createdAt: now,
       });
-      debugOtp = otp;
     }
 
     // Audit log
@@ -161,8 +157,6 @@ export const register = mutation({
       user: toSafeUserProfile(user),
       sessionToken,
       verificationRequired,
-      debugOtp,
-      debugVerificationToken,
     };
   },
 });
@@ -315,7 +309,6 @@ export const sendOtp = mutation({
       success: true,
       message: `Verification code sent to ${cleanPhone}.`,
       expiresInMinutes: 10,
-      debugOtp: otp,
     };
   },
 });
@@ -434,58 +427,40 @@ export const forgotPassword = mutation({
         .withIndex('by_email', (q) => q.eq('email', email))
         .first();
 
-      if (!user) {
-        // Return success for security to prevent user enumeration
-        return {
-          type: 'email' as const,
-          message: 'If an account exists with this email, recovery instructions have been sent.',
-        };
+      if (user) {
+        const token = generateToken(32);
+        await ctx.db.insert('verificationTokens', {
+          identifier: email,
+          token,
+          type: 'password_reset_email',
+          expiresAt: getMinutesExpiration(60), // 1 hour
+          attempts: 0,
+          createdAt: now,
+        });
       }
-
-      const token = generateToken(32);
-      await ctx.db.insert('verificationTokens', {
-        identifier: email,
-        token,
-        type: 'password_reset_email',
-        expiresAt: getMinutesExpiration(60), // 1 hour
-        attempts: 0,
-        createdAt: now,
-      });
-
-      return {
-        type: 'email' as const,
-        message: 'Password reset instructions have been sent to your email.',
-        debugToken: token,
-      };
     } else {
       const user = await ctx.db
         .query('users')
         .withIndex('by_phone', (q) => q.eq('phoneNumber', cleanId))
         .first();
 
-      if (!user) {
-        return {
-          type: 'phone' as const,
-          message: 'If an account exists with this phone number, a reset OTP has been sent.',
-        };
+      if (user) {
+        const otp = generateOtp(6);
+        await ctx.db.insert('verificationTokens', {
+          identifier: cleanId,
+          token: otp,
+          type: 'password_reset_phone',
+          expiresAt: getMinutesExpiration(10), // 10 minutes
+          attempts: 0,
+          createdAt: now,
+        });
       }
-
-      const otp = generateOtp(6);
-      await ctx.db.insert('verificationTokens', {
-        identifier: cleanId,
-        token: otp,
-        type: 'password_reset_phone',
-        expiresAt: getMinutesExpiration(10), // 10 minutes
-        attempts: 0,
-        createdAt: now,
-      });
-
-      return {
-        type: 'phone' as const,
-        message: `Password reset verification code sent to ${cleanId}.`,
-        debugOtp: otp,
-      };
     }
+
+    return {
+      success: true,
+      message: 'If an account exists, we have sent instructions.',
+    };
   },
 });
 
