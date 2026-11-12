@@ -29,12 +29,11 @@ export const authComponent = createClient<DataModel>(components.betterAuth);
 export const validateAuthConfig = (config?: { secret?: string; siteUrl?: string }) => {
   const secret =
     config?.secret ||
-    process.env.BETTER_AUTH_SECRET ||
-    process.env.AUTH_SECRET;
+    process.env.BETTER_AUTH_SECRET;
 
   if (process.env.NODE_ENV === 'production') {
     if (!secret) {
-      throw new Error('BETTER_AUTH_SECRET or AUTH_SECRET environment variable is required in production.');
+      throw new Error('BETTER_AUTH_SECRET environment variable is required in production.');
     }
     if (secret.length < 32) {
       throw new Error('BETTER_AUTH_SECRET must be at least 32 characters long in production.');

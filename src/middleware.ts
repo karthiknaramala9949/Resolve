@@ -6,7 +6,7 @@ const SESSION_COOKIE_NAME = 'resolve_session';
 
 /**
  * Checks and cryptographically validates a Better Auth session cookie at the Edge.
- * When signed (`<token>.<signature>`), verifies HMAC-SHA256 against BETTER_AUTH_SECRET or AUTH_SECRET.
+ * When signed (`<token>.<signature>`), verifies HMAC-SHA256 against BETTER_AUTH_SECRET.
  * Rejects forged, malformed, or missing signatures.
  */
 export async function hasBetterAuthSession(
@@ -21,8 +21,7 @@ export async function hasBetterAuthSession(
     if (token.includes('.')) {
       const authSecret =
         secret ||
-        process.env.BETTER_AUTH_SECRET ||
-        process.env.AUTH_SECRET;
+        process.env.BETTER_AUTH_SECRET;
       if (!authSecret || authSecret.length < 32) return false;
       return await verifySessionCookie(token, authSecret);
     }
@@ -54,7 +53,6 @@ export async function verifySessionCookie(
 
   const authSecret =
     secret ??
-    process.env.AUTH_SECRET ??
     process.env.BETTER_AUTH_SECRET;
   if (!authSecret || authSecret.length < 32) {
     return false;

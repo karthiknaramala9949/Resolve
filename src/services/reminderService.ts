@@ -25,10 +25,18 @@ export const reminderService = {
    * Retrieves all scheduled reminders for the user from Convex.
    */
   async listReminders(): Promise<Reminder[]> {
-    const sessionToken = await ensureSessionToken();
-    const convex = getConvexClient();
-    const items = await convex.query(api.reminders.list, { sessionToken });
-    return items.map(mapConvexReminderToAppReminder);
+    try {
+      const sessionToken = await ensureSessionToken();
+      if (!sessionToken || sessionToken === 'default-session-token') {
+        return [];
+      }
+      const convex = getConvexClient();
+      const items = await convex.query(api.reminders.list, { sessionToken });
+      return (items || []).map(mapConvexReminderToAppReminder);
+    } catch (err) {
+      console.warn('[ReminderService] Deferred query (offline or unauthenticated):', err);
+      return [];
+    }
   },
 
   /**

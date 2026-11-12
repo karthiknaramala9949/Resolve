@@ -31,10 +31,18 @@ export const purchaseService = {
    * Retrieves all saved purchases directly from Convex.
    */
   async listPurchases(): Promise<Purchase[]> {
-    const sessionToken = await ensureSessionToken();
-    const convex = getConvexClient();
-    const items = await convex.query(api.purchases.list, { sessionToken });
-    return items.map(mapConvexPurchaseToAppPurchase);
+    try {
+      const sessionToken = await ensureSessionToken();
+      if (!sessionToken || sessionToken === 'default-session-token') {
+        return [];
+      }
+      const convex = getConvexClient();
+      const items = await convex.query(api.purchases.list, { sessionToken });
+      return (items || []).map(mapConvexPurchaseToAppPurchase);
+    } catch (err) {
+      console.warn('[PurchaseService] Deferred query (offline or unauthenticated):', err);
+      return [];
+    }
   },
 
   /**

@@ -49,7 +49,7 @@ jobs:
       - name: Next.js Production Build Validation
         env:
           NEXT_PUBLIC_CONVEX_URL: https://dev-placeholder.convex.cloud
-          AUTH_SECRET: dev_ci_test_secret_must_be_at_least_32_characters_for_ci
+          BETTER_AUTH_SECRET: dev_ci_test_secret_must_be_at_least_32_characters_for_ci
         run: npm run build
 
       - name: Dependency Vulnerability & Supply-Chain Policy Gate

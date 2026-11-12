@@ -70,32 +70,32 @@ describe('RESOLVE-ONE Authentication Engine', () => {
       expect(otp.length).toBe(6);
     });
 
-    it('enforces AUTH_SECRET constraints in production and development', () => {
-      const originalSecret = process.env.AUTH_SECRET;
+    it('enforces BETTER_AUTH_SECRET constraints in production and development', () => {
+      const originalSecret = process.env.BETTER_AUTH_SECRET;
       const originalEnv = process.env.NODE_ENV;
 
       try {
         // Missing secret in production throws
         (process.env as any).NODE_ENV = 'production';
-        delete process.env.AUTH_SECRET;
-        expect(() => getAuthSecret()).toThrow(/AUTH_SECRET environment variable is missing/);
+        delete process.env.BETTER_AUTH_SECRET;
+        expect(() => getAuthSecret()).toThrow(/BETTER_AUTH_SECRET environment variable is missing/);
 
         // Short secret (< 32 chars) in production throws
-        process.env.AUTH_SECRET = 'short_secret';
-        expect(() => getAuthSecret()).toThrow(/AUTH_SECRET environment variable is missing/);
+        process.env.BETTER_AUTH_SECRET = 'short_secret';
+        expect(() => getAuthSecret()).toThrow(/BETTER_AUTH_SECRET environment variable is missing/);
 
         // Valid secret in production works
-        process.env.AUTH_SECRET = 'a_very_long_production_secret_with_more_than_32_characters';
+        process.env.BETTER_AUTH_SECRET = 'a_very_long_production_secret_with_more_than_32_characters';
         expect(getAuthSecret()).toBe('a_very_long_production_secret_with_more_than_32_characters');
 
         // Development fallback generates a random per-process secret
         (process.env as any).NODE_ENV = 'development';
-        delete process.env.AUTH_SECRET;
+        delete process.env.BETTER_AUTH_SECRET;
         const fallback = getAuthSecret();
         expect(fallback).toBeDefined();
         expect(fallback.length).toBeGreaterThanOrEqual(32);
       } finally {
-        process.env.AUTH_SECRET = originalSecret;
+        process.env.BETTER_AUTH_SECRET = originalSecret;
         (process.env as any).NODE_ENV = originalEnv;
       }
     });

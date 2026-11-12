@@ -79,3 +79,27 @@ export function sanitizeRedirectUrl(
   return fallback;
 }
 
+/**
+ * Resolves the application origin dynamically from request headers or environment.
+ * Ensures compatibility across local development, custom ports, and production deployments.
+ */
+export function resolveRequestOrigin(req: { headers: Headers | { get(name: string): string | null } }): string {
+  const forwardedHost = req.headers.get('x-forwarded-host');
+  const host = forwardedHost || req.headers.get('host');
+  const forwardedProto = req.headers.get('x-forwarded-proto');
+
+  if (host) {
+    const proto =
+      forwardedProto ||
+      (host.startsWith('localhost') || host.startsWith('127.0.0.1') ? 'http' : 'https');
+    return `${proto}://${host}`.replace(/\/$/, '');
+  }
+
+  if (process.env.NEXT_PUBLIC_APP_URL) {
+    return process.env.NEXT_PUBLIC_APP_URL.replace(/\/$/, '');
+  }
+
+  return 'http://localhost:3000';
+}
+
+

@@ -63,18 +63,37 @@ export const dashboardService = {
    * Computes accurate summary metrics directly from persistent Convex user records.
    */
   async getStats(): Promise<DashboardStats> {
-    const sessionToken = await ensureSessionToken();
-    const convex = getConvexClient();
-    const stats = await convex.query(api.dashboard.getStats, { sessionToken });
-
-    return {
-      activeCount: stats.activeCount,
-      actionRequiredCount: stats.actionRequiredCount,
-      waitingCompanyCount: stats.waitingCompanyCount,
-      resolvedCount: stats.resolvedCount,
-      totalClaimAmount: stats.totalClaimAmount,
-      recentCases: (stats.recentCases || []).map(mapConvexCaseToAppCase),
-      upcomingReminders: (stats.upcomingReminders || []).map(mapConvexReminderToAppReminder),
+    const fallbackStats: DashboardStats = {
+      activeCount: 0,
+      actionRequiredCount: 0,
+      waitingCompanyCount: 0,
+      resolvedCount: 0,
+      totalClaimAmount: 0,
+      recentCases: [],
+      upcomingReminders: [],
     };
+
+    try {
+      const sessionToken = await ensureSessionToken();
+      if (!sessionToken || sessionToken === 'default-session-token') {
+        return fallbackStats;
+      }
+      const convex = getConvexClient();
+      const stats = await convex.query(api.dashboard.getStats, { sessionToken });
+      if (!stats) return fallbackStats;
+
+      return {
+        activeCount: stats.activeCount ?? 0,
+        actionRequiredCount: stats.actionRequiredCount ?? 0,
+        waitingCompanyCount: stats.waitingCompanyCount ?? 0,
+        resolvedCount: stats.resolvedCount ?? 0,
+        totalClaimAmount: stats.totalClaimAmount ?? 0,
+        recentCases: (stats.recentCases || []).map(mapConvexCaseToAppCase),
+        upcomingReminders: (stats.upcomingReminders || []).map(mapConvexReminderToAppReminder),
+      };
+    } catch (err) {
+      console.warn('[DashboardService] Deferred query (offline or unauthenticated):', err);
+      return fallbackStats;
+    }
   },
 };

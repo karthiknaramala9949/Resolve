@@ -20,21 +20,21 @@ function hexToBytes(hex: string): Uint8Array {
 
 /**
  * Returns the secret key used for signing session cookies and tokens.
- * Throws in production if AUTH_SECRET is missing or < 32 chars.
+ * Throws in production if BETTER_AUTH_SECRET is missing or < 32 chars.
  * In development, generates a random per-process secret and logs a warning.
  */
 export function getAuthSecret(): string {
-  const secret = process.env.AUTH_SECRET || process.env.BETTER_AUTH_SECRET;
+  const secret = process.env.BETTER_AUTH_SECRET;
   if (!secret || secret.length < 32) {
     if (process.env.NODE_ENV === 'production') {
       throw new Error(
-        'AUTH_SECRET environment variable is missing or shorter than 32 characters.'
+        'BETTER_AUTH_SECRET environment variable is missing or shorter than 32 characters.'
       );
     }
     if (!devFallbackSecret) {
       devFallbackSecret = crypto.randomBytes(32).toString('hex');
       console.warn(
-        '[RESOLVE-ONE AUTH WARNING] AUTH_SECRET is not set or shorter than 32 characters. Generated a random per-process secret for development.'
+        '[RESOLVE-ONE AUTH WARNING] BETTER_AUTH_SECRET is not set or shorter than 32 characters. Generated a random per-process secret for development.'
       );
     }
     return devFallbackSecret;

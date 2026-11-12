@@ -10,7 +10,6 @@ describe('RESOLVE-ONE: Landing Page & Authentication Navigation Routing', () => 
   let validCookie: string;
 
   beforeEach(() => {
-    process.env.AUTH_SECRET = secret;
     process.env.BETTER_AUTH_SECRET = secret;
     validCookie = signPayload(validToken, secret);
   });

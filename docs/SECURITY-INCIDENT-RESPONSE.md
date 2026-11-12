@@ -67,12 +67,12 @@
 
 ## 3. Cryptographic Secret & Key Compromise Procedures
 
-### 3.1. Compromise of `AUTH_SECRET` / `BETTER_AUTH_SECRET`
+### 3.1. Compromise of `BETTER_AUTH_SECRET`
 1. Generate a new high-entropy 256-bit secret:
    ```bash
    node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"
    ```
-2. Update `AUTH_SECRET` in Vercel environment variables and GitHub repository secrets.
+2. Update `BETTER_AUTH_SECRET` in Vercel environment variables, Convex deployment environment, and GitHub repository secrets.
 3. Trigger production deployment.
 4. **Impact**: All existing signed cookies are rendered invalid, safely forcing all active sessions to re-authenticate with the new secret.
 

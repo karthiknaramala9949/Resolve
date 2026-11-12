@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { authStore } from '@/lib/server/db/authStore';
 import { setSessionCookie } from '@/lib/server/auth/session';
 import { syncSessionToConvex } from '@/lib/server/convex/convexClient';
-import { sanitizeRedirectUrl } from '@/lib/server/auth/redirect';
+import { sanitizeRedirectUrl, resolveRequestOrigin } from '@/lib/server/auth/redirect';
 
 export const dynamic = 'force-dynamic';
 
@@ -15,10 +15,7 @@ interface GoogleUserInfo {
 }
 
 export async function GET(req: NextRequest) {
-  const origin =
-    process.env.NEXT_PUBLIC_APP_URL ||
-    req.headers.get('origin') ||
-    'http://localhost:3000';
+  const origin = resolveRequestOrigin(req);
 
   try {
     const { searchParams } = new URL(req.url);
@@ -61,7 +58,10 @@ export async function GET(req: NextRequest) {
 
     const clientId = process.env.GOOGLE_CLIENT_ID;
     const clientSecret = process.env.GOOGLE_CLIENT_SECRET;
-    const redirectUri = `${origin}/api/auth/google/callback`;
+    const storedRedirectUri = req.cookies.get('oauth_redirect_uri')?.value;
+    const redirectUri =
+      storedRedirectUri ||
+      `${origin}${req.nextUrl?.pathname || '/api/auth/google/callback'}`;
     const storedCodeVerifier = req.cookies.get('oauth_code_verifier')?.value;
 
     let userInfo: GoogleUserInfo;
@@ -184,10 +184,11 @@ export async function GET(req: NextRequest) {
 
     setSessionCookie(response, session.token);
 
-    // Clear OAuth state, PKCE verifier, and nonce cookies
+    // Clear OAuth state, PKCE verifier, nonce, and redirect URI cookies
     response.cookies.delete('oauth_state');
     response.cookies.delete('oauth_code_verifier');
     response.cookies.delete('oauth_nonce');
+    response.cookies.delete('oauth_redirect_uri');
     return response;
   } catch (err) {
     console.error('[Google Callback Exception]:', err);

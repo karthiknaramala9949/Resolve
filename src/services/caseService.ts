@@ -43,14 +43,22 @@ export const caseService = {
    * Retrieves all cases matching optional filter criteria directly from Convex.
    */
   async listCases(filter?: { status?: string; search?: string }): Promise<Case[]> {
-    const sessionToken = await ensureSessionToken();
-    const convex = getConvexClient();
-    const result = await convex.query(api.cases.list, {
-      sessionToken,
-      status: filter?.status && filter.status !== 'all' ? filter.status : undefined,
-      search: filter?.search && filter.search.trim().length > 0 ? filter.search.trim() : undefined,
-    });
-    return result.map(mapConvexCaseToAppCase);
+    try {
+      const sessionToken = await ensureSessionToken();
+      if (!sessionToken || sessionToken === 'default-session-token') {
+        return [];
+      }
+      const convex = getConvexClient();
+      const result = await convex.query(api.cases.list, {
+        sessionToken,
+        status: filter?.status && filter.status !== 'all' ? filter.status : undefined,
+        search: filter?.search && filter.search.trim().length > 0 ? filter.search.trim() : undefined,
+      });
+      return (result || []).map(mapConvexCaseToAppCase);
+    } catch (err) {
+      console.warn('[CaseService] Deferred query (offline or unauthenticated):', err);
+      return [];
+    }
   },
 
   /**

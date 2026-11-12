@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import crypto from 'node:crypto';
 import { generateRandomToken } from '@/lib/server/auth/crypto';
-import { sanitizeRedirectUrl } from '@/lib/server/auth/redirect';
+import { sanitizeRedirectUrl, resolveRequestOrigin } from '@/lib/server/auth/redirect';
 
 export const dynamic = 'force-dynamic';
 
@@ -11,13 +11,13 @@ export async function GET(req: NextRequest) {
     const returnTo = searchParams.get('returnTo');
 
     const clientId = process.env.GOOGLE_CLIENT_ID;
-    const origin =
-      process.env.NEXT_PUBLIC_APP_URL ||
-      req.headers.get('origin') ||
-      'http://localhost:3000';
+    const origin = resolveRequestOrigin(req);
 
     const safeReturnTo = sanitizeRedirectUrl(returnTo, origin, '/app/overview');
-    const redirectUri = `${origin}/api/auth/google/callback`;
+    const redirectPath = process.env.GOOGLE_REDIRECT_PATH || '/api/auth/google/callback';
+    const redirectUri =
+      process.env.GOOGLE_REDIRECT_URI ||
+      `${origin}${redirectPath.startsWith('/') ? redirectPath : `/${redirectPath}`}`;
 
     // Generate random CSRF state token and PKCE code_verifier
     const stateToken = generateRandomToken(24);
@@ -83,6 +83,14 @@ export async function GET(req: NextRequest) {
     });
 
     response.cookies.set('oauth_nonce', nonce, {
+      httpOnly: true,
+      secure: isProd,
+      sameSite: 'lax',
+      path: '/',
+      maxAge: 10 * 60,
+    });
+
+    response.cookies.set('oauth_redirect_uri', redirectUri, {
       httpOnly: true,
       secure: isProd,
       sameSite: 'lax',

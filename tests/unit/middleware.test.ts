@@ -39,14 +39,14 @@ describe('Middleware Session Cookie Verification (WebCrypto HMAC-SHA256)', () =>
     const token = 'valid_session_token_1234567890abcdef';
     const signed = signPayload(token, secret);
 
-    const originalSecret = process.env.AUTH_SECRET;
+    const originalSecret = process.env.BETTER_AUTH_SECRET;
     try {
-      delete process.env.AUTH_SECRET;
+      delete process.env.BETTER_AUTH_SECRET;
       expect(await verifySessionCookie(signed, '')).toBe(false);
       expect(await verifySessionCookie(signed, undefined)).toBe(false);
       expect(await verifySessionCookie(signed, 'short_secret')).toBe(false);
     } finally {
-      process.env.AUTH_SECRET = originalSecret;
+      process.env.BETTER_AUTH_SECRET = originalSecret;
     }
   });
 
