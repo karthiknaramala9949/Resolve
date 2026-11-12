@@ -1,0 +1,201 @@
+{
+  "policyVersion": "1.0.0",
+  "organization": "RESOLVE-ONE Security Engineering",
+  "lastReviewed": "2026-11-12T14:40:00Z",
+  "enforcement": {
+    "blockUnapprovedCritical": true,
+    "blockUnapprovedHigh": true,
+    "blockExpiredExceptions": true,
+    "requireMitigation": true
+  },
+  "exceptions": [
+    {
+      "package": "next",
+      "severity": "critical",
+      "scope": "prod",
+      "advisories": [
+        "https://github.com/advisories/GHSA-9g78-v8wh-95hm",
+        "https://github.com/advisories/GHSA-8g9c-48cv-v9vh",
+        "https://github.com/advisories/GHSA-4v7x-pq47-2rmg"
+      ],
+      "reason": "Next.js 14.2.35 contains known advisories affecting image optimization and App Router cache handling. Upgrading to Next.js 15 requires breaking migration across async request headers, React 19, and Better Auth adapter.",
+      "exploitability": "Low in RESOLVE-ONE architecture: remote image optimization is restricted to trusted origins, App Router routes enforce Cache-Control: no-store, and server actions are not used for privileged mutations (Convex is used directly).",
+      "compensatingControls": [
+        "Reverse proxy / Next.js config enforces no-store cache directives on authenticated routes",
+        "Strict Content-Security-Policy with nonce-based strict-dynamic and isolated frame-ancestors",
+        "Input schemas strictly bound by Zod before processing"
+      ],
+      "approvedBy": "Principal Security Engineer",
+      "approvedDate": "2026-11-12",
+      "reviewDeadline": "2026-12-31",
+      "status": "approved"
+    },
+    {
+      "package": "zod",
+      "severity": "high",
+      "scope": "prod",
+      "advisories": [
+        "https://github.com/advisories/GHSA-mrhx-c7xc-m3w5"
+      ],
+      "reason": "Zod < 4.6.6 memory exhaustion when validating unbounded collection constraints. Fix requires Zod 4.x which introduces breaking API changes across existing schemas.",
+      "exploitability": "Low in RESOLVE-ONE: all HTTP request bodies are hard-capped at 1MB by Next.js / Edge runtime, preventing transmission of massive collections before Zod validation executes.",
+      "compensatingControls": [
+        "JSON payload size restricted to 1MB at server gateway",
+        "Array fields in schemas have explicit small lengths (e.g. tags: max 10)",
+        "Distributed rate limiter throttles incoming requests per IP/account"
+      ],
+      "approvedBy": "Principal Security Engineer",
+      "approvedDate": "2026-11-12",
+      "reviewDeadline": "2026-12-31",
+      "status": "approved"
+    },
+    {
+      "package": "dompurify",
+      "severity": "high",
+      "scope": "prod",
+      "advisories": [
+        "https://github.com/advisories/GHSA-vhxf-7vqr-mrjg",
+        "https://github.com/advisories/GHSA-crv5-9vww-q3g8",
+        "https://github.com/advisories/GHSA-hpcv-96wg-7vj8",
+        "https://github.com/advisories/GHSA-r47g-fvhr-h676",
+        "https://github.com/advisories/GHSA-p435-585r-9v4v"
+      ],
+      "reason": "DOMPurify is pulled as a transitive dependency of jspdf for SVG rendering. Resolving requires upstream jspdf release.",
+      "exploitability": "Zero in RESOLVE-ONE: the application does not invoke jspdf.html() or render untrusted HTML/SVG strings into PDFs. PDF generation uses explicit programmatic text layout API only.",
+      "compensatingControls": [
+        "PDF generator does not invoke DOMPurify or jspdf.html()",
+        "Evidence files are stored as client-side encrypted blobs and never rendered as DOM trees"
+      ],
+      "approvedBy": "Principal Security Engineer",
+      "approvedDate": "2026-11-12",
+      "reviewDeadline": "2026-12-31",
+      "status": "approved"
+    },
+    {
+      "package": "jspdf",
+      "severity": "critical",
+      "scope": "prod",
+      "advisories": [
+        "https://github.com/advisories/GHSA-vhxf-7vqr-mrjg"
+      ],
+      "reason": "Flagged transitively via bundled dompurify. Upgrading requires jspdf v4 major rewrite.",
+      "exploitability": "Zero in RESOLVE-ONE: only programmatic text layout is used, no untrusted HTML/SVG inputs.",
+      "compensatingControls": [
+        "No HTML/DOM parsing invoked in PDF export",
+        "Strict input validation on dispute export strings"
+      ],
+      "approvedBy": "Principal Security Engineer",
+      "approvedDate": "2026-11-12",
+      "reviewDeadline": "2026-12-31",
+      "status": "approved"
+    },
+    {
+      "package": "postcss",
+      "severity": "high",
+      "scope": "prod",
+      "advisories": [
+        "https://github.com/advisories/GHSA-7fh5-64p2-3v2j"
+      ],
+      "reason": "Transitive build-time tool of Next.js CSS compilation pipeline.",
+      "exploitability": "Zero in production runtime: executed strictly during npm run build on trusted static CSS stylesheets.",
+      "compensatingControls": [
+        "Build-time only CSS processing; no dynamic user CSS compilation allowed"
+      ],
+      "approvedBy": "Principal Security Engineer",
+      "approvedDate": "2026-11-12",
+      "reviewDeadline": "2026-12-31",
+      "status": "approved"
+    },
+    {
+      "package": "vitest",
+      "severity": "critical",
+      "scope": "dev",
+      "advisories": [
+        "https://github.com/advisories/GHSA-5xrq-8626-4rwp",
+        "https://github.com/advisories/GHSA-82fw-gwwq-j7x9"
+      ],
+      "reason": "Vitest < 3.2.6 UI server arbitrary file read advisory. Upgrading to Vitest 5 requires Vite 6 major upgrade.",
+      "exploitability": "Zero in production: Vitest is a devDependency never bundled into production build. In CI, Vitest runs in headless batch mode (`vitest run`) without launching the vulnerable UI server socket.",
+      "compensatingControls": [
+        "Vitest excluded from production bundle and Vercel deployments",
+        "CI executes headless runner `vitest run` exclusively",
+        "No UI server ports are bound or exposed"
+      ],
+      "approvedBy": "Principal Security Engineer",
+      "approvedDate": "2026-11-12",
+      "reviewDeadline": "2026-12-31",
+      "status": "approved"
+    },
+    {
+      "package": "tinypool",
+      "severity": "critical",
+      "scope": "dev",
+      "advisories": [
+        "https://github.com/advisories/GHSA-pxg6-pf52-xh8x"
+      ],
+      "reason": "Tinypool transitive dependency of vitest worker pool. Upstream upgrade linked to vitest major.",
+      "exploitability": "Zero in production: Dev dependency only, not included in production runtime.",
+      "compensatingControls": [
+        "Excluded from production deployment bundle",
+        "CI sandbox execution isolated"
+      ],
+      "approvedBy": "Principal Security Engineer",
+      "approvedDate": "2026-11-12",
+      "reviewDeadline": "2026-12-31",
+      "status": "approved"
+    },
+    {
+      "package": "vite",
+      "severity": "moderate",
+      "scope": "dev",
+      "advisories": [
+        "https://github.com/advisories/GHSA-fx2h-pf6j-xcff",
+        "https://github.com/advisories/GHSA-rq7h-c2jc-7f22"
+      ],
+      "reason": "Vite dev server alternate path file access advisory. Dev dependency only.",
+      "exploitability": "Zero in production: RESOLVE-ONE uses Next.js runtime; Vite is only used as Vitest test runner.",
+      "compensatingControls": [
+        "Vite dev server is never started; only Vitest test runner executes"
+      ],
+      "approvedBy": "Principal Security Engineer",
+      "approvedDate": "2026-11-12",
+      "reviewDeadline": "2026-12-31",
+      "status": "approved"
+    },
+    {
+      "package": "vite-node",
+      "severity": "moderate",
+      "scope": "dev",
+      "advisories": [
+        "https://github.com/advisories/GHSA-fx2h-pf6j-xcff"
+      ],
+      "reason": "Transitive dev dependency of vitest.",
+      "exploitability": "Zero in production: Dev dependency only.",
+      "compensatingControls": [
+        "Excluded from production bundle"
+      ],
+      "approvedBy": "Principal Security Engineer",
+      "approvedDate": "2026-11-12",
+      "reviewDeadline": "2026-12-31",
+      "status": "approved"
+    },
+    {
+      "package": "@vitest/mocker",
+      "severity": "moderate",
+      "scope": "dev",
+      "advisories": [
+        "https://github.com/advisories/GHSA-82fw-gwwq-j7x9",
+        "https://github.com/advisories/GHSA-qxg6-89mg-rqv8"
+      ],
+      "reason": "Vitest internal mocking utility.",
+      "exploitability": "Zero in production: Dev dependency only.",
+      "compensatingControls": [
+        "Excluded from production bundle"
+      ],
+      "approvedBy": "Principal Security Engineer",
+      "approvedDate": "2026-11-12",
+      "reviewDeadline": "2026-12-31",
+      "status": "approved"
+    }
+  ]
+}

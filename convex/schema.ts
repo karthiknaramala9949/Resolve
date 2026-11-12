@@ -428,4 +428,13 @@ export default defineSchema({
     description: v.string(),
     defaultWindowDays: v.number(),
   }).index('by_code', ['code']),
+
+  rate_limits: defineTable({
+    key: v.string(),
+    count: v.number(),
+    resetAt: v.number(),
+    updatedAt: v.string(),
+  })
+    .index('by_key', ['key'])
+    .index('by_resetAt', ['resetAt']),
 });

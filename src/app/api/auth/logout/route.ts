@@ -1,10 +1,16 @@
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import { getSessionTokenFromCookies, clearSessionCookie } from '@/lib/server/auth/session';
 import { authStore } from '@/lib/server/db/authStore';
 import { deleteSessionFromConvex } from '@/lib/server/convex/convexClient';
+import { validateCsrf } from '@/lib/server/auth/csrf';
 
-export async function POST() {
+export async function POST(req: NextRequest) {
   try {
+    const csrfCheck = validateCsrf(req);
+    if (!csrfCheck.valid && csrfCheck.errorResponse) {
+      return csrfCheck.errorResponse;
+    }
+
     const token = await getSessionTokenFromCookies();
     if (token) {
       await Promise.all([
@@ -18,6 +24,9 @@ export async function POST() {
       message: 'Signed out successfully.',
     });
 
+    response.headers.set('Cache-Control', 'no-store, no-cache, must-revalidate, private');
+    response.headers.set('Pragma', 'no-cache');
+
     clearSessionCookie(response);
     response.cookies.set('resolve_guest', '', {
       path: '/',
@@ -30,6 +39,7 @@ export async function POST() {
       { error: 'An error occurred during logout.' },
       { status: 500 }
     );
+    response.headers.set('Cache-Control', 'no-store, no-cache, must-revalidate, private');
     clearSessionCookie(response);
     return response;
   }

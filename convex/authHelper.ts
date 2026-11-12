@@ -93,3 +93,45 @@ export async function getAuthenticatedUser(
   return { user, session };
 }
 
+/**
+ * Synchronizes the profiles record with the authoritative users document.
+ * Ensures both User and Profile records remain synchronized in real time.
+ */
+export async function syncUserProfileRecord(
+  ctx: MutationCtx,
+  user: Doc<'users'>,
+  timestamp?: string
+): Promise<Doc<'profiles'>> {
+  const now = timestamp || new Date().toISOString();
+
+  const existingProfile = await ctx.db
+    .query('profiles')
+    .withIndex('by_userId', (q) => q.eq('userId', user._id))
+    .first();
+
+  const profileData = {
+    name: user.name,
+    email: user.email || null,
+    phoneNumber: user.phoneNumber || null,
+    image: user.image || null,
+    role: user.role || 'consumer',
+    phoneVerified: Boolean(user.phoneVerified),
+    phoneVerifiedAt: user.phoneVerifiedAt || null,
+    preferences: user.preferences,
+    updatedAt: now,
+  };
+
+  if (existingProfile) {
+    await ctx.db.patch(existingProfile._id, profileData);
+    return (await ctx.db.get(existingProfile._id))!;
+  } else {
+    const profileId = await ctx.db.insert('profiles', {
+      userId: user._id,
+      createdAt: user.createdAt || now,
+      ...profileData,
+    });
+    return (await ctx.db.get(profileId))!;
+  }
+}
+
+

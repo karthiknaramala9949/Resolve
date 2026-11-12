@@ -1,6 +1,6 @@
 import { mutation, query } from './_generated/server';
 import { v } from 'convex/values';
-import { getAuthenticatedUser, toSafeUserProfile } from './authHelper';
+import { getAuthenticatedUser, toSafeUserProfile, syncUserProfileRecord } from './authHelper';
 
 /**
  * Get profile of current user.
@@ -11,12 +11,21 @@ export const getProfile = query({
   },
   handler: async (ctx, args) => {
     const { user } = await getAuthenticatedUser(ctx, args.sessionToken);
-    return toSafeUserProfile(user);
+    const profile = await ctx.db
+      .query('profiles')
+      .withIndex('by_userId', (q) => q.eq('userId', user._id))
+      .first();
+
+    return {
+      ...toSafeUserProfile(user),
+      profileRecord: profile || null,
+    };
   },
 });
 
 /**
  * Update user preferences (theme, simple language, etc.).
+ * Simultaneously updates both the users record and the profiles record.
  */
 export const updatePreferences = mutation({
   args: {
@@ -40,6 +49,9 @@ export const updatePreferences = mutation({
       preferences: merged,
       updatedAt: now,
     });
+
+    const updatedUser = (await ctx.db.get(user._id))!;
+    await syncUserProfileRecord(ctx, updatedUser, now);
 
     return merged;
   },

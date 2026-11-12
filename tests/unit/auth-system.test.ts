@@ -39,11 +39,11 @@ describe('RESOLVE-ONE Authentication Engine', () => {
       expect(verifyPassword('WrongPassword#91', hash, salt)).toBe(false);
 
       // Tampered salt
-      const tamperedSalt = salt.slice(0, -2) + 'aa';
+      const tamperedSalt = salt.endsWith('aa') ? salt.slice(0, -2) + 'bb' : salt.slice(0, -2) + 'aa';
       expect(verifyPassword(pass, hash, tamperedSalt)).toBe(false);
 
       // Tampered hash
-      const tamperedHash = hash.slice(0, -2) + '00';
+      const tamperedHash = hash.endsWith('00') ? hash.slice(0, -2) + 'ff' : hash.slice(0, -2) + '00';
       expect(verifyPassword(pass, tamperedHash, salt)).toBe(false);
     });
 
@@ -262,6 +262,43 @@ describe('RESOLVE-ONE Authentication Engine', () => {
       await authStore.consumeToken(tokenRecord.id);
       const afterConsume = await authStore.findToken(phone, otp, 'phone_otp');
       expect(afterConsume).toBeNull();
+    });
+
+    it('enforces brute-force lockout and revokes tokens after 5 failed attempts', async () => {
+      const phone = '+919876500000';
+      const validOtp = '123456';
+      const tokenRecord = await authStore.createToken(phone, validOtp, 'phone_otp', 10);
+
+      // 4 wrong attempts
+      for (let i = 1; i <= 4; i++) {
+        const attempts = await authStore.incrementTokenAttempts(tokenRecord.id);
+        expect(attempts).toBe(i);
+        const check = await authStore.findActiveTokenByIdentifier(phone, 'phone_otp');
+        expect(check).not.toBeNull();
+      }
+
+      // 5th wrong attempt triggers permanent token revocation
+      const finalAttempts = await authStore.incrementTokenAttempts(tokenRecord.id);
+      expect(finalAttempts).toBe(5);
+
+      // Token should now be completely deleted
+      const revoked = await authStore.findActiveTokenByIdentifier(phone, 'phone_otp');
+      expect(revoked).toBeNull();
+    });
+
+    it('Distributed rate limiter emits Retry-After and X-RateLimit headers', async () => {
+      const res = new Response(JSON.stringify({ error: 'rate limited' }), { status: 429 });
+      const rateLimitResult = {
+        allowed: false,
+        remaining: 0,
+        retryAfterSec: 42,
+        resetAt: Date.now() + 42000,
+      };
+
+      rateLimiter.applyRateLimitHeaders(res, rateLimitResult);
+      expect(res.headers.get('Retry-After')).toBe('42');
+      expect(res.headers.get('X-RateLimit-Remaining')).toBe('0');
+      expect(res.headers.get('X-RateLimit-Reset')).toBeDefined();
     });
   });
 });

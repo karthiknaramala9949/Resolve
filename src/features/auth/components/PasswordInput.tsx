@@ -39,10 +39,16 @@ export const PasswordInput = React.forwardRef<HTMLInputElement, PasswordInputPro
           />
           <button
             type="button"
-            onClick={() => setShowPassword(!showPassword)}
-            className="absolute inset-y-0 right-0 pr-3.5 flex items-center text-steel-grey-400 hover:text-charcoal focus:outline-none focus:text-coral transition-colors"
-            tabIndex={-1}
+            onClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              setShowPassword((prev) => !prev);
+            }}
+            className="absolute inset-y-0 right-0 flex items-center justify-center w-11 h-full cursor-pointer text-steel-grey-400 hover:text-charcoal focus:outline-none focus:text-coral transition-colors"
+            tabIndex={0}
             aria-label={showPassword ? 'Hide password' : 'Show password'}
+            aria-pressed={showPassword}
+            title={showPassword ? 'Hide password' : 'Show password'}
           >
             {showPassword ? (
               <EyeOff className="w-4 h-4 shrink-0" />

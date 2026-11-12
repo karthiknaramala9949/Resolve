@@ -2,9 +2,9 @@ import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import { authStore } from '@/lib/server/db/authStore';
 import { verifyPassword } from '@/lib/server/auth/crypto';
-import { setSessionCookie } from '@/lib/server/auth/session';
-import { rateLimiter, RATE_LIMITS } from '@/lib/server/auth/rateLimit';
-import { getServerConvexClient } from '@/lib/server/convex/convexClient';
+import { setSessionCookie, getSessionTokenFromCookies } from '@/lib/server/auth/session';
+import { rateLimiter, RATE_LIMITS, applyRateLimitHeaders } from '@/lib/server/auth/rateLimit';
+import { getServerConvexClient, deleteSessionFromConvex } from '@/lib/server/convex/convexClient';
 import { validateCsrf } from '@/lib/server/auth/csrf';
 import { api } from '../../../../../convex/_generated/api';
 
@@ -37,14 +37,25 @@ export async function POST(req: NextRequest) {
 
     // Check rate limit for this identifier and IP
     const rlKey = `login:${cleanId}:${ip}`;
-    const rlCheck = rateLimiter.check(rlKey, RATE_LIMITS.LOGIN.max, RATE_LIMITS.LOGIN.windowMs);
+    const rlCheck = await rateLimiter.check(rlKey, RATE_LIMITS.LOGIN.max, RATE_LIMITS.LOGIN.windowMs);
     if (!rlCheck.allowed) {
-      return NextResponse.json(
+      const res = NextResponse.json(
         {
           error: `Too many unsuccessful sign-in attempts. Please try again in ${rlCheck.retryAfterSec} seconds.`,
         },
         { status: 429 }
       );
+      applyRateLimitHeaders(res.headers, RATE_LIMITS.LOGIN.max, rlCheck.remaining, rlCheck.resetAt, rlCheck.retryAfterSec);
+      return res;
+    }
+
+    // Protection against session fixation: invalidate any existing pre-authentication session
+    const prevToken = await getSessionTokenFromCookies();
+    if (prevToken) {
+      await Promise.all([
+        authStore.deleteSession(prevToken),
+        deleteSessionFromConvex(prevToken),
+      ]).catch(() => {});
     }
 
     // 1. Authoritative Convex Cloud Authentication
@@ -60,26 +71,30 @@ export async function POST(req: NextRequest) {
         });
 
         if (convexRes?.sessionToken && convexRes?.user) {
-          rateLimiter.reset(rlKey);
+          await rateLimiter.reset(rlKey);
           const response = NextResponse.json({
             success: true,
             user: convexRes.user,
             sessionToken: convexRes.sessionToken,
             message: 'Signed in successfully.',
           });
+          response.headers.set('Cache-Control', 'no-store, no-cache, must-revalidate, private');
+          response.headers.set('Pragma', 'no-cache');
+          applyRateLimitHeaders(response.headers, RATE_LIMITS.LOGIN.max, rlCheck.remaining, rlCheck.resetAt);
           setSessionCookie(response, convexRes.sessionToken);
           return response;
         }
       } catch (err: any) {
-        if (
-          err?.message?.includes('Invalid email') ||
-          err?.message?.includes('password')
-        ) {
-          return NextResponse.json(
-            { error: 'Invalid email, phone number, or password.' },
-            { status: 401 }
-          );
-        }
+        console.warn('[Convex Login Auth Error]:', err?.data || err?.message || err);
+        const errorMessage =
+          err?.data ||
+          (err?.message?.includes('Invalid') ? err.message : 'Invalid email, phone number, or password.');
+        const res = NextResponse.json(
+          { error: errorMessage },
+          { status: 401 }
+        );
+        applyRateLimitHeaders(res.headers, RATE_LIMITS.LOGIN.max, rlCheck.remaining, rlCheck.resetAt);
+        return res;
       }
     }
 
@@ -117,6 +132,9 @@ export async function POST(req: NextRequest) {
       sessionToken: session.token,
       message: 'Signed in successfully.',
     });
+    response.headers.set('Cache-Control', 'no-store, no-cache, must-revalidate, private');
+    response.headers.set('Pragma', 'no-cache');
+    applyRateLimitHeaders(response.headers, RATE_LIMITS.LOGIN.max, rlCheck.remaining, rlCheck.resetAt);
 
     setSessionCookie(response, session.token);
     return response;

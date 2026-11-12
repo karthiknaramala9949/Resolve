@@ -72,7 +72,7 @@ export async function verifyPassword(
 ): Promise<boolean> {
   try {
     const { hash } = await hashPassword(password, salt);
-    return timingSafeEqual(hash, storedHash);
+    return timingSafeEqual(hash.toLowerCase().trim(), storedHash.toLowerCase().trim());
   } catch {
     return false;
   }

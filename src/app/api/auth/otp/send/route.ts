@@ -2,8 +2,9 @@ import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import { authStore } from '@/lib/server/db/authStore';
 import { generateNumericOtp } from '@/lib/server/auth/crypto';
-import { rateLimiter, RATE_LIMITS } from '@/lib/server/auth/rateLimit';
+import { rateLimiter, RATE_LIMITS, applyRateLimitHeaders } from '@/lib/server/auth/rateLimit';
 import { getCurrentUser } from '@/lib/server/auth/session';
+import { validateCsrf } from '@/lib/server/auth/csrf';
 
 const SendOtpSchema = z.object({
   phoneNumber: z.string().min(10, 'Valid phone number is required').optional(),
@@ -12,6 +13,11 @@ const SendOtpSchema = z.object({
 
 export async function POST(req: NextRequest) {
   try {
+    const csrfCheck = validateCsrf(req);
+    if (!csrfCheck.valid && csrfCheck.errorResponse) {
+      return csrfCheck.errorResponse;
+    }
+
     const ip = req.headers.get('x-forwarded-for') || '127.0.0.1';
     const body = await req.json().catch(() => ({}));
     const parse = SendOtpSchema.safeParse(body);
@@ -45,18 +51,20 @@ export async function POST(req: NextRequest) {
 
     // Check rate limits: identifier + IP
     const rlKey = `otp-send:${cleanPhone}:${ip}`;
-    const rlCheck = rateLimiter.check(
+    const rlCheck = await rateLimiter.check(
       rlKey,
       RATE_LIMITS.OTP_SEND.max,
       RATE_LIMITS.OTP_SEND.windowMs
     );
     if (!rlCheck.allowed) {
-      return NextResponse.json(
+      const res = NextResponse.json(
         {
           error: `Too many OTP requests. Please wait ${rlCheck.retryAfterSec} seconds before requesting a new code.`,
         },
         { status: 429 }
       );
+      applyRateLimitHeaders(res.headers, RATE_LIMITS.OTP_SEND.max, rlCheck.remaining, rlCheck.resetAt, rlCheck.retryAfterSec);
+      return res;
     }
 
     // Generate 6-digit numeric OTP
@@ -69,11 +77,15 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    return NextResponse.json({
+    const response = NextResponse.json({
       success: true,
       message: `Verification code sent to ${cleanPhone}.`,
       expiresInMinutes: 10,
     });
+    response.headers.set('Cache-Control', 'no-store, no-cache, must-revalidate, private');
+    response.headers.set('Pragma', 'no-cache');
+    applyRateLimitHeaders(response.headers, RATE_LIMITS.OTP_SEND.max, rlCheck.remaining, rlCheck.resetAt);
+    return response;
   } catch (err) {
     console.error('[Send OTP Error]:', err);
     return NextResponse.json(

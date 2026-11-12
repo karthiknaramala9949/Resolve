@@ -36,6 +36,8 @@ import {
   Clock,
   UploadCloud,
   FileCheck,
+  Edit2,
+  Eye,
 } from 'lucide-react';
 import { caseService, documentService, reminderService } from '@/services';
 import { Case, TimelineEvent, EvidenceMeta } from '@/lib/db/types';
@@ -77,6 +79,28 @@ export const CaseDetailPage: React.FC = () => {
 
   // Official Channel Modal
   const [isChannelModalOpen, setIsChannelModalOpen] = useState(false);
+
+  // Evidence Preview Modal
+  const [isPreviewModalOpen, setIsPreviewModalOpen] = useState(false);
+  const [previewItem, setPreviewItem] = useState<EvidenceMeta | null>(null);
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+
+  // Edit Evidence Modal
+  const [isEditEvidenceOpen, setIsEditEvidenceOpen] = useState(false);
+  const [editEvidenceItem, setEditEvidenceItem] = useState<EvidenceMeta | null>(null);
+  const [editEvidenceName, setEditEvidenceName] = useState('');
+  const [editEvidenceHint, setEditEvidenceHint] = useState('');
+
+  // Edit Case Details Modal
+  const [isEditCaseOpen, setIsEditCaseOpen] = useState(false);
+  const [editTitle, setEditTitle] = useState('');
+  const [editCompany, setEditCompany] = useState('');
+  const [editOrderRef, setEditOrderRef] = useState('');
+  const [editAmount, setEditAmount] = useState('');
+  const [editDescription, setEditDescription] = useState('');
+
+  // Export Proof Pack Loading
+  const [isExportingPack, setIsExportingPack] = useState(false);
 
   const loadCase = async () => {
     if (!id) return;
@@ -245,6 +269,7 @@ export const CaseDetailPage: React.FC = () => {
         source: 'customer_upload',
         addedAt: new Date().toISOString(),
         sha256: uploadRes.sha256,
+        storageId: uploadRes.storageId,
         redactionHint: redactionNotice || undefined,
       };
 
@@ -263,6 +288,130 @@ export const CaseDetailPage: React.FC = () => {
       loadCase();
     } catch (err: any) {
       toast(`Upload error: ${err.message}`, 'error');
+    }
+  };
+
+  // Export Proof Pack PDF directly
+  const handleExportProofPack = async () => {
+    try {
+      setIsExportingPack(true);
+      toast('Compiling dispute proof pack PDF...', 'info');
+      const { generateProofPackPDF } = await import('@/lib/pdf/proofPackGenerator');
+      const doc = generateProofPackPDF(caseData);
+      doc.save(`RESOLVE-ONE-ProofPack-${caseData.id}.pdf`);
+      toast('Proof pack PDF exported successfully.', 'success');
+    } catch (err: any) {
+      toast(`Error exporting proof pack: ${err.message}`, 'error');
+    } finally {
+      setIsExportingPack(false);
+    }
+  };
+
+  // Evidence Preview handlers
+  const handleViewEvidence = async (item: EvidenceMeta) => {
+    try {
+      toast(`Preparing preview for ${item.name}...`, 'info');
+      const blob = await documentService.downloadDocument(item.id, item.name, item);
+      const url = URL.createObjectURL(blob);
+      setPreviewItem(item);
+      setPreviewUrl(url);
+      setIsPreviewModalOpen(true);
+    } catch (err: any) {
+      toast(`Could not preview ${item.name}: ${err.message}`, 'error');
+    }
+  };
+
+  const handleClosePreview = () => {
+    if (previewUrl) {
+      URL.revokeObjectURL(previewUrl);
+    }
+    setPreviewUrl(null);
+    setPreviewItem(null);
+    setIsPreviewModalOpen(false);
+  };
+
+  // Edit Evidence handlers
+  const handleOpenEditEvidence = (item: EvidenceMeta) => {
+    setEditEvidenceItem(item);
+    setEditEvidenceName(item.name);
+    setEditEvidenceHint(item.redactionHint || '');
+    setIsEditEvidenceOpen(true);
+  };
+
+  const handleSaveEvidenceEdit = async () => {
+    if (!editEvidenceItem || !editEvidenceName.trim()) {
+      toast('File name is required.', 'warning');
+      return;
+    }
+
+    try {
+      const updatedEvidence = (caseData.evidence || []).map((e) =>
+        e.id === editEvidenceItem.id
+          ? {
+              ...e,
+              name: editEvidenceName.trim(),
+              redactionHint: editEvidenceHint.trim() || undefined,
+            }
+          : e
+      );
+
+      await caseService.updateCase(caseData.id, { evidence: updatedEvidence });
+      await caseService.addTimelineEvent(caseData.id, {
+        title: `Evidence updated: ${editEvidenceName.trim()}`,
+        detail: `Renamed evidence record ${editEvidenceItem.id}.`,
+        source: 'evidence',
+      });
+
+      toast('Evidence details updated successfully.', 'success');
+      setIsEditEvidenceOpen(false);
+      setEditEvidenceItem(null);
+      loadCase();
+    } catch (err: any) {
+      toast(`Error updating evidence: ${err.message}`, 'error');
+    }
+  };
+
+  // Edit Case Details handlers
+  const handleOpenEditCase = () => {
+    setEditTitle(caseData.title);
+    setEditCompany(caseData.company);
+    setEditOrderRef(caseData.orderRef || '');
+    setEditAmount(caseData.amount ? String(caseData.amount) : '');
+    setEditDescription(caseData.description || '');
+    setIsEditCaseOpen(true);
+  };
+
+  const handleSaveCaseEdit = async () => {
+    if (!editTitle.trim()) {
+      toast('Case title is required.', 'warning');
+      return;
+    }
+    if (!editCompany.trim()) {
+      toast('Company name is required.', 'warning');
+      return;
+    }
+
+    try {
+      const parsedAmount = editAmount ? parseFloat(editAmount) : 0;
+      await caseService.updateCase(caseData.id, {
+        title: editTitle.trim(),
+        company: editCompany.trim(),
+        orderRef: editOrderRef.trim() || undefined,
+        amount: isNaN(parsedAmount) ? 0 : parsedAmount,
+        description: editDescription.trim() || undefined,
+      });
+
+      await caseService.addTimelineEvent(caseData.id, {
+        title: 'Case details updated',
+        detail: `Updated title to "${editTitle.trim()}", company "${editCompany.trim()}", amount ₹${parsedAmount}.`,
+        source: 'customer',
+      });
+
+      toast('Case details updated successfully.', 'success');
+      setIsEditCaseOpen(false);
+      loadCase();
+    } catch (err: any) {
+      toast(`Error updating case: ${err.message}`, 'error');
     }
   };
 
@@ -392,9 +541,9 @@ export const CaseDetailPage: React.FC = () => {
             <span>Official routes</span>
           </Button>
 
-          <Button variant="outline" size="sm" onClick={() => router.push('/app/documents')}>
+          <Button variant="outline" size="sm" onClick={handleExportProofPack} disabled={isExportingPack}>
             <Download className="w-3.5 h-3.5" />
-            <span>Export proof pack</span>
+            <span>{isExportingPack ? 'Exporting...' : 'Export proof pack'}</span>
           </Button>
         </div>
       </div>
@@ -412,7 +561,18 @@ export const CaseDetailPage: React.FC = () => {
             </span>
           </div>
 
-          <StatusChip status={caseData.status} size="sm" />
+          <div className="flex items-center gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleOpenEditCase}
+              className="gap-1.5"
+            >
+              <Edit2 className="w-3.5 h-3.5" />
+              <span>Edit case details</span>
+            </Button>
+            <StatusChip status={caseData.status} size="sm" />
+          </div>
         </div>
 
         <div>
@@ -653,6 +813,7 @@ export const CaseDetailPage: React.FC = () => {
             <EvidenceTile
               key={item.id}
               item={item}
+              onView={() => handleViewEvidence(item)}
               onDownload={async () => {
                 try {
                   toast(`Preparing download for ${item.name}...`, 'info');
@@ -668,6 +829,7 @@ export const CaseDetailPage: React.FC = () => {
                   toast(`Download error: ${err.message}`, 'error');
                 }
               }}
+              onEdit={() => handleOpenEditEvidence(item)}
               onDelete={() => handleRemoveEvidence(item.id)}
             />
           ))}
@@ -958,6 +1120,175 @@ export const CaseDetailPage: React.FC = () => {
             </Button>
             <Button variant="primary" onClick={handleConfirmOutcome}>
               Save outcome status
+            </Button>
+          </div>
+        </div>
+      </BottomSheet>
+
+      {/* Evidence Preview Modal */}
+      <BottomSheet
+        isOpen={isPreviewModalOpen}
+        onClose={handleClosePreview}
+        title={previewItem ? `Evidence: ${previewItem.name}` : 'Document preview'}
+        description={previewItem ? `Reference ID: ${previewItem.id} · Size: ${(previewItem.size / 1024).toFixed(1)} KB` : undefined}
+      >
+        <div className="space-y-4">
+          {previewItem && previewUrl && (
+            <div className="p-3 bg-steel-grey-50 rounded-xl border border-steel-grey-200 flex flex-col items-center justify-center min-h-[220px]">
+              {previewItem.mime.startsWith('image/') ? (
+                <img
+                  src={previewUrl}
+                  alt={previewItem.name}
+                  className="max-h-[55vh] max-w-full rounded-lg object-contain shadow-xs"
+                />
+              ) : previewItem.mime === 'application/pdf' ? (
+                <iframe
+                  src={previewUrl}
+                  title={previewItem.name}
+                  className="w-full h-[55vh] rounded-lg border border-steel-grey-300 bg-white"
+                />
+              ) : (
+                <div className="text-center py-8 space-y-3">
+                  <div className="w-12 h-12 rounded-xl bg-white border border-steel-grey-200 flex items-center justify-center mx-auto text-steel-grey-600">
+                    <FileText className="w-6 h-6 text-coral" />
+                  </div>
+                  <div>
+                    <p className="text-sm font-semibold text-charcoal">{previewItem.name}</p>
+                    <p className="text-xs text-steel-grey-500 font-mono mt-1">
+                      MIME: {previewItem.mime} · ID: {previewItem.id}
+                    </p>
+                    {previewItem.sha256 && (
+                      <p className="text-[11px] text-steel-grey-400 font-mono mt-1">
+                        SHA-256: {previewItem.sha256.slice(0, 24)}...
+                      </p>
+                    )}
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+
+          <div className="flex items-center justify-between gap-3 pt-2">
+            <Button
+              variant="outline"
+              size="md"
+              onClick={async () => {
+                if (!previewItem) return;
+                try {
+                  const blob = await documentService.downloadDocument(previewItem.id, previewItem.name, previewItem);
+                  const url = URL.createObjectURL(blob);
+                  const a = document.createElement('a');
+                  a.href = url;
+                  a.download = previewItem.name;
+                  a.click();
+                  URL.revokeObjectURL(url);
+                  toast(`Downloaded ${previewItem.name}`, 'success');
+                } catch (err: any) {
+                  toast(`Download error: ${err.message}`, 'error');
+                }
+              }}
+            >
+              <Download className="w-4 h-4 shrink-0" />
+              <span>Download copy</span>
+            </Button>
+
+            <Button variant="primary" size="md" onClick={handleClosePreview}>
+              Close preview
+            </Button>
+          </div>
+        </div>
+      </BottomSheet>
+
+      {/* Edit Evidence Details Modal */}
+      <BottomSheet
+        isOpen={isEditEvidenceOpen}
+        onClose={() => setIsEditEvidenceOpen(false)}
+        title="Edit evidence record"
+        description="Update file name or sensitivity notes"
+      >
+        <div className="space-y-4">
+          <Input
+            label="File display name"
+            value={editEvidenceName}
+            onChange={(e) => setEditEvidenceName(e.target.value)}
+            placeholder="e.g. return-pickup-receipt.png"
+            required
+          />
+
+          <Textarea
+            label="Redaction note / verification detail"
+            rows={2}
+            value={editEvidenceHint}
+            onChange={(e) => setEditEvidenceHint(e.target.value)}
+            placeholder="e.g. Delivery agent signature verified on physical slip"
+          />
+
+          <div className="flex justify-end gap-3 pt-2">
+            <Button variant="outline" onClick={() => setIsEditEvidenceOpen(false)}>
+              Cancel
+            </Button>
+            <Button variant="primary" onClick={handleSaveEvidenceEdit}>
+              Save changes
+            </Button>
+          </div>
+        </div>
+      </BottomSheet>
+
+      {/* Edit Case Details Modal */}
+      <BottomSheet
+        isOpen={isEditCaseOpen}
+        onClose={() => setIsEditCaseOpen(false)}
+        title="Edit case details"
+        description="Update dispute information, company reference, and claim amount"
+      >
+        <div className="space-y-4">
+          <Input
+            label="Dispute title"
+            value={editTitle}
+            onChange={(e) => setEditTitle(e.target.value)}
+            placeholder="e.g. Undelivered wireless earphones refund"
+            required
+          />
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <Input
+              label="Merchant / company name"
+              value={editCompany}
+              onChange={(e) => setEditCompany(e.target.value)}
+              placeholder="e.g. Flipkart"
+              required
+            />
+
+            <Input
+              label="Order reference / invoice number"
+              value={editOrderRef}
+              onChange={(e) => setEditOrderRef(e.target.value)}
+              placeholder="e.g. OD43210987654321"
+            />
+          </div>
+
+          <Input
+            label="Dispute claim amount (₹)"
+            type="number"
+            value={editAmount}
+            onChange={(e) => setEditAmount(e.target.value)}
+            placeholder="e.g. 1499"
+          />
+
+          <Textarea
+            label="Dispute summary & notes"
+            rows={3}
+            value={editDescription}
+            onChange={(e) => setEditDescription(e.target.value)}
+            placeholder="Explain the issue with order delivery, return refusal, or unfulfilled promise..."
+          />
+
+          <div className="flex justify-end gap-3 pt-2">
+            <Button variant="outline" onClick={() => setIsEditCaseOpen(false)}>
+              Cancel
+            </Button>
+            <Button variant="primary" onClick={handleSaveCaseEdit}>
+              Update case details
             </Button>
           </div>
         </div>

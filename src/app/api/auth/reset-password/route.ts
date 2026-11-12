@@ -4,6 +4,8 @@ import { authStore } from '@/lib/server/db/authStore';
 import { hashPassword } from '@/lib/server/auth/crypto';
 import { setSessionCookie } from '@/lib/server/auth/session';
 import { syncSessionToConvex } from '@/lib/server/convex/convexClient';
+import { validateCsrf } from '@/lib/server/auth/csrf';
+import { rateLimiter, applyRateLimitHeaders } from '@/lib/server/auth/rateLimit';
 
 const ResetPasswordSchema = z.object({
   identifier: z.string().min(3, 'Email or phone number is required'),
@@ -16,8 +18,13 @@ const ResetPasswordSchema = z.object({
     .regex(/[^A-Za-z0-9]/, 'Password must contain at least one special character'),
 });
 
-export async function POST(req: NextRequest) {
+export async function PUT(req: NextRequest) {
   try {
+    const csrfCheck = validateCsrf(req);
+    if (!csrfCheck.valid && csrfCheck.errorResponse) {
+      return csrfCheck.errorResponse;
+    }
+
     const ip = req.headers.get('x-forwarded-for') || '127.0.0.1';
     const body = await req.json().catch(() => ({}));
     const parse = ResetPasswordSchema.safeParse(body);
@@ -29,8 +36,22 @@ export async function POST(req: NextRequest) {
 
     const { identifier, token, newPassword } = parse.data;
     const cleanId = identifier.trim().toLowerCase();
-    const isEmail = cleanId.includes('@');
 
+    // Enforce rate limiting against brute force attempts
+    const rlKey = `reset-pw:${cleanId}:${ip}`;
+    const rlCheck = await rateLimiter.check(rlKey, 5, 15 * 60 * 1000);
+    if (!rlCheck.allowed) {
+      const res = NextResponse.json(
+        {
+          error: `Too many password reset attempts. Please wait ${rlCheck.retryAfterSec} seconds.`,
+        },
+        { status: 429 }
+      );
+      applyRateLimitHeaders(res.headers, 5, rlCheck.remaining, rlCheck.resetAt, rlCheck.retryAfterSec);
+      return res;
+    }
+
+    const isEmail = cleanId.includes('@');
     const tokenType = isEmail ? 'password_reset_email' : 'password_reset_phone';
 
     // Verify token
@@ -94,6 +115,9 @@ export async function POST(req: NextRequest) {
       user: updatedUser ? authStore.toUserProfile(updatedUser) : null,
     });
 
+    response.headers.set('Cache-Control', 'no-store, no-cache, must-revalidate, private');
+    response.headers.set('Pragma', 'no-cache');
+
     setSessionCookie(response, session.token);
     return response;
   } catch (err) {
@@ -104,4 +128,9 @@ export async function POST(req: NextRequest) {
     );
   }
 }
+
+export async function POST(req: NextRequest) {
+  return PUT(req);
+}
+
 

@@ -1,8 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import { authStore } from '@/lib/server/db/authStore';
-import { rateLimiter, RATE_LIMITS } from '@/lib/server/auth/rateLimit';
+import { rateLimiter, RATE_LIMITS, applyRateLimitHeaders } from '@/lib/server/auth/rateLimit';
 import { getCurrentUser } from '@/lib/server/auth/session';
+import { validateCsrf } from '@/lib/server/auth/csrf';
 
 const VerifyOtpSchema = z.object({
   phoneNumber: z.string().min(10, 'Valid phone number is required').optional(),
@@ -12,6 +13,11 @@ const VerifyOtpSchema = z.object({
 
 export async function POST(req: NextRequest) {
   try {
+    const csrfCheck = validateCsrf(req);
+    if (!csrfCheck.valid && csrfCheck.errorResponse) {
+      return csrfCheck.errorResponse;
+    }
+
     const ip = req.headers.get('x-forwarded-for') || '127.0.0.1';
     const body = await req.json().catch(() => ({}));
     const parse = VerifyOtpSchema.safeParse(body);
@@ -44,22 +50,40 @@ export async function POST(req: NextRequest) {
 
     // Check rate limit for verification attempts
     const rlKey = `otp-verify:${cleanPhone}:${ip}`;
-    const rlCheck = rateLimiter.check(
+    const rlCheck = await rateLimiter.check(
       rlKey,
       RATE_LIMITS.OTP_VERIFY.max,
       RATE_LIMITS.OTP_VERIFY.windowMs
     );
     if (!rlCheck.allowed) {
-      return NextResponse.json(
+      const res = NextResponse.json(
         {
           error: `Too many invalid attempts. Please wait ${rlCheck.retryAfterSec} seconds or request a new code.`,
         },
         { status: 429 }
       );
+      applyRateLimitHeaders(res.headers, RATE_LIMITS.OTP_VERIFY.max, rlCheck.remaining, rlCheck.resetAt, rlCheck.retryAfterSec);
+      return res;
     }
 
     const tokenRecord = await authStore.findToken(cleanPhone, otp, type);
     if (!tokenRecord) {
+      // Find active token and increment attempts
+      const activeToken = await authStore.findActiveTokenByIdentifier(cleanPhone, type);
+      if (activeToken) {
+        const attempts = await authStore.incrementTokenAttempts(activeToken.id);
+        if (attempts >= 5) {
+          return NextResponse.json(
+            { error: 'Too many invalid attempts. This verification code has been revoked. Please request a new one.' },
+            { status: 400 }
+          );
+        }
+        return NextResponse.json(
+          { error: `Invalid verification code. ${5 - attempts} attempt(s) remaining.` },
+          { status: 400 }
+        );
+      }
+
       return NextResponse.json(
         { error: 'Invalid or expired verification code. Please check and try again.' },
         { status: 400 }
@@ -67,7 +91,7 @@ export async function POST(req: NextRequest) {
     }
 
     // Token is valid! Reset rate limit
-    rateLimiter.reset(rlKey);
+    await rateLimiter.reset(rlKey);
 
     // Consume the token
     await authStore.consumeToken(tokenRecord.id);
@@ -84,11 +108,15 @@ export async function POST(req: NextRequest) {
       });
     }
 
-    return NextResponse.json({
+    const response = NextResponse.json({
       success: true,
       message: 'Phone number verified successfully.',
       user: updatedUser ? authStore.toUserProfile(updatedUser) : null,
     });
+    response.headers.set('Cache-Control', 'no-store, no-cache, must-revalidate, private');
+    response.headers.set('Pragma', 'no-cache');
+    applyRateLimitHeaders(response.headers, RATE_LIMITS.OTP_VERIFY.max, rlCheck.remaining, rlCheck.resetAt);
+    return response;
   } catch (err) {
     console.error('[Verify OTP Error]:', err);
     return NextResponse.json(

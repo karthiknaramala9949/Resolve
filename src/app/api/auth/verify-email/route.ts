@@ -2,8 +2,9 @@ import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import { authStore } from '@/lib/server/db/authStore';
 import { generateRandomToken } from '@/lib/server/auth/crypto';
-import { rateLimiter } from '@/lib/server/auth/rateLimit';
+import { rateLimiter, applyRateLimitHeaders } from '@/lib/server/auth/rateLimit';
 import { getCurrentUser } from '@/lib/server/auth/session';
+import { validateCsrf } from '@/lib/server/auth/csrf';
 
 export const dynamic = 'force-dynamic';
 
@@ -16,10 +17,7 @@ export async function GET(req: NextRequest) {
       return NextResponse.json({ error: 'Verification token is required.' }, { status: 400 });
     }
 
-    // Find the token across records
-    const foundToken = authStore['data']?.tokens.find(
-      (t) => t.token === token && t.type === 'email_verification'
-    );
+    const foundToken = await authStore.findTokenByValue(token, 'email_verification');
 
     if (!foundToken) {
       return NextResponse.json(
@@ -52,11 +50,14 @@ export async function GET(req: NextRequest) {
 
     await authStore.consumeToken(foundToken.id);
 
-    return NextResponse.json({
+    const response = NextResponse.json({
       success: true,
       message: 'Email address has been successfully verified.',
       user: updatedUser ? authStore.toUserProfile(updatedUser) : null,
     });
+    response.headers.set('Cache-Control', 'no-store, no-cache, must-revalidate, private');
+    response.headers.set('Pragma', 'no-cache');
+    return response;
   } catch (err) {
     console.error('[Verify Email GET Error]:', err);
     return NextResponse.json(
@@ -72,6 +73,11 @@ const ResendSchema = z.object({
 
 export async function POST(req: NextRequest) {
   try {
+    const csrfCheck = validateCsrf(req);
+    if (!csrfCheck.valid && csrfCheck.errorResponse) {
+      return csrfCheck.errorResponse;
+    }
+
     const body = await req.json().catch(() => ({}));
     const parse = ResendSchema.safeParse(body);
 
@@ -94,14 +100,16 @@ export async function POST(req: NextRequest) {
 
     // Rate limit resend requests (max 3 per 10 mins)
     const rlKey = `resend-email:${targetEmail.toLowerCase()}`;
-    const rlCheck = rateLimiter.check(rlKey, 3, 10 * 60 * 1000);
+    const rlCheck = await rateLimiter.check(rlKey, 3, 10 * 60 * 1000);
     if (!rlCheck.allowed) {
-      return NextResponse.json(
+      const res = NextResponse.json(
         {
           error: `Please wait ${rlCheck.retryAfterSec} seconds before requesting another email verification link.`,
         },
         { status: 429 }
       );
+      applyRateLimitHeaders(res.headers, 3, rlCheck.remaining, rlCheck.resetAt, rlCheck.retryAfterSec);
+      return res;
     }
 
     const user = await authStore.findUserByEmail(targetEmail);
@@ -129,10 +137,14 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    return NextResponse.json({
+    const response = NextResponse.json({
       success: true,
       message: 'A fresh verification link has been sent to your email address.',
     });
+    response.headers.set('Cache-Control', 'no-store, no-cache, must-revalidate, private');
+    response.headers.set('Pragma', 'no-cache');
+    applyRateLimitHeaders(response.headers, 3, rlCheck.remaining, rlCheck.resetAt);
+    return response;
   } catch (err) {
     console.error('[Resend Email Verification Error]:', err);
     return NextResponse.json(

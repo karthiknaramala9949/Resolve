@@ -24,23 +24,12 @@ import {
   SlidersHorizontal,
 } from 'lucide-react';
 import { parseComplaintText } from '@/lib/rules/intakeParser';
-import { useAuth } from '@/features/auth/context/AuthContext';
 
 export const LandingPage: React.FC = () => {
   const router = useRouter();
-  const { isAuthenticated, continueAsGuest } = useAuth();
 
-  const handleOpenWorkspace = (target = '/app/overview') => {
-    if (!isAuthenticated) {
-      if (process.env.NEXT_PUBLIC_ENABLE_GUEST_ACCESS !== 'false') {
-        continueAsGuest('Local Consumer');
-        router.push(target);
-      } else {
-        router.push('/auth/signin?next=' + encodeURIComponent(target));
-      }
-      return;
-    }
-    router.push(target);
+  const handleOpenWorkspace = () => {
+    router.push('/login');
   };
 
   // Interactive Live Demo tab state
@@ -92,8 +81,8 @@ export const LandingPage: React.FC = () => {
       a: 'We calculate the exact calendar days remaining from your confirmed delivery date using verified retailer policies (such as 7 days for electronics or 10 days for fashion). You get clear alerts before deadlines expire so you never lose your rights.',
     },
     {
-      q: 'Can I use RESOLVE-ONE completely offline?',
-      a: 'Yes. RESOLVE-ONE works offline on your device. You can draft complaints, check return deadlines, organize receipts, and prepare proof packs even without an active internet connection.',
+      q: 'How does authentication protect my dispute records?',
+      a: 'RESOLVE-ONE requires you to sign in to a secure account to access your workspace. All your evidence files, return countdowns, and generated legal letters are linked to your profile with 256-bit encryption and protected from unauthorized access.',
     },
     {
       q: 'What happens if I set a personal security password?',
@@ -152,20 +141,18 @@ export const LandingPage: React.FC = () => {
 
           <div className="flex items-center gap-3">
             <Link
-              href="/auth/signin"
+              href="/login"
               className="text-xs font-semibold text-steel-grey-700 hover:text-charcoal transition-colors px-2 py-1.5"
             >
               Sign in
             </Link>
-            <Button
-              variant="primary"
-              size="sm"
-              onClick={() => handleOpenWorkspace('/app/overview')}
-              className="flex items-center gap-1.5"
+            <Link
+              href="/login"
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-coral hover:bg-coral-600 text-white font-medium text-xs shadow-2xs transition-colors"
             >
               <span>Get started</span>
               <ArrowRight className="w-3.5 h-3.5 shrink-0" />
-            </Button>
+            </Link>
           </div>
         </div>
       </header>
@@ -173,7 +160,7 @@ export const LandingPage: React.FC = () => {
       {/* Hero Section: Asymmetric Split Layout */}
       <section className="px-4 sm:px-6 pt-12 md:pt-20 pb-16 max-w-6xl mx-auto">
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-12 items-center">
-          
+
           {/* Left Column: Calm Editorial Copy */}
           <div className="lg:col-span-6 space-y-6 text-left">
             <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-steel-grey-100 border border-steel-grey-200 text-steel-grey-700 text-xs font-normal">
@@ -190,23 +177,19 @@ export const LandingPage: React.FC = () => {
             </p>
 
             <div className="pt-2 flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
-              <Button
-                variant="primary"
-                size="lg"
-                onClick={() => handleOpenWorkspace('/app/cases?new=true')}
-                className="flex items-center justify-center gap-2 shadow-sm"
+              <Link
+                href="/login"
+                className="inline-flex items-center justify-center gap-2 px-5 py-3 min-h-[44px] rounded-xl bg-coral hover:bg-coral-600 text-white font-medium text-sm sm:text-base shadow-sm transition-colors text-center"
               >
                 <span>Tell us what happened</span>
                 <ArrowRight className="w-4 h-4 shrink-0" />
-              </Button>
-              <Button
-                variant="secondary"
-                size="lg"
-                onClick={() => handleOpenWorkspace('/app/overview')}
-                className="flex items-center justify-center"
+              </Link>
+              <Link
+                href="/login"
+                className="inline-flex items-center justify-center px-5 py-3 min-h-[44px] rounded-xl bg-steel-grey-100 hover:bg-steel-grey-200 text-charcoal border border-steel-grey-200 font-medium text-sm sm:text-base shadow-2xs transition-colors text-center"
               >
-                Explore demo workspace
-              </Button>
+                Explore workspace
+              </Link>
             </div>
 
             {/* Three Quiet Reassurance Points */}
@@ -221,7 +204,7 @@ export const LandingPage: React.FC = () => {
               </div>
               <div className="flex items-center gap-1.5">
                 <CheckCircle2 className="w-3.5 h-3.5 text-coral shrink-0" />
-                <span>No mandatory account</span>
+                <span>Verified account security</span>
               </div>
             </div>
           </div>
@@ -234,22 +217,20 @@ export const LandingPage: React.FC = () => {
                 <button
                   type="button"
                   onClick={() => setActiveTab('docket')}
-                  className={`px-3 py-2 text-xs font-medium border-b-2 transition-colors ${
-                    activeTab === 'docket'
+                  className={`px-3 py-2 text-xs font-medium border-b-2 transition-colors ${activeTab === 'docket'
                       ? 'border-coral text-charcoal'
                       : 'border-transparent text-steel-grey-500 hover:text-charcoal'
-                  }`}
+                    }`}
                 >
                   Dispute case preview
                 </button>
                 <button
                   type="button"
                   onClick={() => setActiveTab('try')}
-                  className={`px-3 py-2 text-xs font-medium border-b-2 transition-colors ${
-                    activeTab === 'try'
+                  className={`px-3 py-2 text-xs font-medium border-b-2 transition-colors ${activeTab === 'try'
                       ? 'border-coral text-charcoal'
                       : 'border-transparent text-steel-grey-500 hover:text-charcoal'
-                  }`}
+                    }`}
                 >
                   Try the complaint helper
                 </button>
@@ -330,15 +311,13 @@ export const LandingPage: React.FC = () => {
                     <span className="text-steel-grey-500">
                       Private & protected on this device
                     </span>
-                    <Button
-                      variant="primary"
-                      size="sm"
-                      onClick={() => handleOpenWorkspace('/app/overview')}
-                      className="shrink-0"
+                    <Link
+                      href="/login"
+                      className="inline-flex items-center gap-1.5 px-3.5 py-2 min-h-[36px] rounded-xl bg-coral hover:bg-coral-600 text-white font-medium text-xs sm:text-sm shadow-xs transition-colors shrink-0"
                     >
                       <span>Open this case</span>
                       <ArrowRight className="w-3.5 h-3.5" />
-                    </Button>
+                    </Link>
                   </div>
                 </div>
               ) : (
@@ -399,21 +378,13 @@ export const LandingPage: React.FC = () => {
                     <span className="text-xs text-steel-grey-500">
                       Analyzed instantly on this device without third-party AI.
                     </span>
-                    <Button
-                      variant="primary"
-                      size="sm"
-                      onClick={() =>
-                        router.push(
-                          `/app/cases?new=true&store=${encodeURIComponent(parsedDemo.company)}&orderRef=${encodeURIComponent(
-                            parsedDemo.orderRef
-                          )}&amount=${parsedDemo.amount || ''}&story=${encodeURIComponent(demoText)}`
-                        )
-                      }
-                      className="shrink-0"
+                    <Link
+                      href="/login"
+                      className="inline-flex items-center gap-1.5 px-3.5 py-2 min-h-[36px] rounded-xl bg-coral hover:bg-coral-600 text-white font-medium text-xs sm:text-sm shadow-xs transition-colors shrink-0"
                     >
                       <span>Start a case with this</span>
                       <ArrowRight className="w-3.5 h-3.5" />
-                    </Button>
+                    </Link>
                   </div>
                 </div>
               )}
@@ -667,26 +638,22 @@ export const LandingPage: React.FC = () => {
             Ready to organize your dispute?
           </h2>
           <p className="text-xs sm:text-sm text-steel-grey-600 max-w-lg mx-auto leading-relaxed">
-            Start instantly without an account, or sign in to sync across your devices. Turn order numbers and frustration into clear resolution.
+            Create your account or sign in to track and manage your dispute cases with verified proof. Turn order numbers and frustration into clear resolution.
           </p>
           <div className="pt-2 flex flex-col sm:flex-row items-center justify-center gap-3">
-            <Button
-              variant="primary"
-              size="lg"
-              onClick={() => handleOpenWorkspace('/app/cases?new=true')}
-              className="w-full sm:w-auto flex items-center justify-center gap-2"
+            <Link
+              href="/login"
+              className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-5 py-3 min-h-[44px] rounded-xl bg-coral hover:bg-coral-600 text-white font-medium text-sm sm:text-base shadow-xs transition-colors text-center"
             >
               <span>Start your case</span>
               <ArrowRight className="w-4 h-4" />
-            </Button>
-            <Button
-              variant="secondary"
-              size="lg"
-              onClick={() => handleOpenWorkspace('/app/overview')}
-              className="w-full sm:w-auto"
+            </Link>
+            <Link
+              href="/login"
+              className="w-full sm:w-auto inline-flex items-center justify-center px-5 py-3 min-h-[44px] rounded-xl bg-steel-grey-100 hover:bg-steel-grey-200 text-charcoal border border-steel-grey-200 font-medium text-sm sm:text-base shadow-2xs transition-colors text-center"
             >
               Open workspace
-            </Button>
+            </Link>
           </div>
         </div>
       </section>
@@ -700,13 +667,13 @@ export const LandingPage: React.FC = () => {
           Informational guidance only. Not formal legal advice. Direct formal disputes through official Consumer Commissions under the Consumer Protection Act, 2019.
         </p>
         <div className="pt-1 flex items-center justify-center gap-4 text-xs text-steel-grey-600">
-          <button type="button" onClick={() => handleOpenWorkspace('/app/overview')} className="hover:text-coral transition-colors">
+          <Link href="/login" className="hover:text-coral transition-colors">
             Workspace
-          </button>
+          </Link>
           <span className="text-steel-grey-300">•</span>
-          <button type="button" onClick={() => handleOpenWorkspace('/app/privacy')} className="hover:text-coral transition-colors">
+          <Link href="/login" className="hover:text-coral transition-colors">
             Privacy & security
-          </button>
+          </Link>
         </div>
       </footer>
     </div>

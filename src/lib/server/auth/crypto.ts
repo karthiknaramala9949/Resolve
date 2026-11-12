@@ -1,11 +1,22 @@
 import crypto from 'node:crypto';
+import { argon2id } from '@noble/hashes/argon2.js';
 
-const ITERATIONS = 100000;
-const KEY_LEN = 64; // 64 bytes = 512 bits
-const DIGEST = 'sha512';
+const PBKDF2_ITERATIONS = 100000;
+const PBKDF2_KEY_LEN = 64; // 64 bytes = 512 bits
+const PBKDF2_DIGEST = 'sha512';
 const SALT_BYTES = 32;
 
+export const ARGON2_PREFIX = '$argon2id$v=19$';
+
 let devFallbackSecret: string | null = null;
+
+function hexToBytes(hex: string): Uint8Array {
+  const bytes = new Uint8Array(hex.length / 2);
+  for (let i = 0; i < bytes.length; i++) {
+    bytes[i] = parseInt(hex.substr(i * 2, 2), 16);
+  }
+  return bytes;
+}
 
 /**
  * Returns the secret key used for signing session cookies and tokens.
@@ -32,9 +43,31 @@ export function getAuthSecret(): string {
 }
 
 /**
- * Hash a plain password using PBKDF2-HMAC-SHA512 with a cryptographically secure random salt.
+ * Hash a plain password using Argon2id (OWASP recommended memory-hard hashing).
  */
-export function hashPassword(
+export function hashPasswordArgon2id(
+  password: string,
+  existingSalt?: string
+): { hash: string; salt: string } {
+  const salt = existingSalt || crypto.randomBytes(16).toString('hex');
+  const saltBytes = hexToBytes(salt);
+  const derived = argon2id(password, saltBytes, {
+    t: 2,
+    m: 16384,
+    p: 1,
+    dkLen: 32,
+  });
+  const hashHex = Buffer.from(derived).toString('hex');
+  return {
+    hash: `${ARGON2_PREFIX}m=16384,t=2,p=1$${hashHex}`,
+    salt,
+  };
+}
+
+/**
+ * Hash a plain password using PBKDF2-HMAC-SHA512.
+ */
+export function hashPasswordPBKDF2(
   password: string,
   existingSalt?: string
 ): { hash: string; salt: string } {
@@ -42,9 +75,9 @@ export function hashPassword(
   const derivedKey = crypto.pbkdf2Sync(
     password,
     Buffer.from(salt, 'hex'),
-    ITERATIONS,
-    KEY_LEN,
-    DIGEST
+    PBKDF2_ITERATIONS,
+    PBKDF2_KEY_LEN,
+    PBKDF2_DIGEST
   );
   return {
     hash: derivedKey.toString('hex'),
@@ -53,7 +86,23 @@ export function hashPassword(
 }
 
 /**
+ * Primary password hashing function.
+ * Supports Argon2id and PBKDF2-HMAC-SHA512 algorithms.
+ */
+export function hashPassword(
+  password: string,
+  existingSalt?: string,
+  algo: 'pbkdf2' | 'argon2id' = 'pbkdf2'
+): { hash: string; salt: string } {
+  if (algo === 'argon2id') {
+    return hashPasswordArgon2id(password, existingSalt);
+  }
+  return hashPasswordPBKDF2(password, existingSalt);
+}
+
+/**
  * Verifies a plaintext password against the stored hash and salt using timing-safe comparison.
+ * Seamlessly validates both Argon2id and PBKDF2-HMAC-SHA512 hashes.
  */
 export function verifyPassword(
   password: string,
@@ -61,7 +110,27 @@ export function verifyPassword(
   salt: string
 ): boolean {
   try {
-    const { hash } = hashPassword(password, salt);
+    if (storedHash.startsWith(ARGON2_PREFIX)) {
+      const parts = storedHash.split('$');
+      const expectedHex = parts[4] || parts[3];
+      const saltBytes = hexToBytes(salt);
+      const derived = argon2id(password, saltBytes, {
+        t: 2,
+        m: 16384,
+        p: 1,
+        dkLen: 32,
+      });
+      const hashBuffer = Buffer.from(derived);
+      const storedBuffer = Buffer.from(expectedHex, 'hex');
+
+      if (hashBuffer.length !== storedBuffer.length) {
+        return false;
+      }
+      return crypto.timingSafeEqual(hashBuffer, storedBuffer);
+    }
+
+    // Standard PBKDF2-HMAC-SHA512 verification
+    const { hash } = hashPasswordPBKDF2(password, salt);
     const hashBuffer = Buffer.from(hash, 'hex');
     const storedBuffer = Buffer.from(storedHash, 'hex');
 
@@ -134,4 +203,3 @@ export function verifySignedPayload(
 
   return null;
 }
-

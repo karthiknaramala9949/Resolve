@@ -1,0 +1,65 @@
+name: Security Enforcement & Automated Gates
+
+on:
+  push:
+    branches:
+      - main
+      - master
+  pull_request:
+    branches:
+      - main
+      - master
+  workflow_dispatch:
+
+concurrency:
+  group: security-enforcement-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  security-audit-and-gates:
+    name: Security Hardening & Regression Suite
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: 'npm'
+
+      - name: Install dependencies from lockfile
+        run: npm ci
+
+      - name: TypeScript Static Typecheck
+        run: npm run typecheck
+
+      - name: Static Application Security Testing (SAST) & Secret Scanning
+        run: npm run security:scan
+
+      - name: Automated Unit, E2EE, and Security Regression Tests
+        run: npm test
+
+      - name: Next.js Production Build Validation
+        env:
+          NEXT_PUBLIC_CONVEX_URL: https://dev-placeholder.convex.cloud
+          AUTH_SECRET: dev_ci_test_secret_must_be_at_least_32_characters_for_ci
+        run: npm run build
+
+      - name: Dependency Vulnerability & Supply-Chain Policy Gate
+        run: npm run security:deps
+
+      - name: Archive Software Bill of Materials (SBOM)
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: sbom-cyclonedx
+          path: sbom.json
+          retention-days: 30
+

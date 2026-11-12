@@ -19,7 +19,8 @@ describe('End-to-End Encryption (E2EE) Subsystem', () => {
     expect(bundle.wrappedMasterKeyHex).toBeDefined();
     expect(bundle.saltHex).toHaveLength(32); // 16 bytes = 32 hex chars
     expect(bundle.ivHex).toHaveLength(24); // 12 bytes = 24 hex chars
-    expect(bundle.recoveryKey).toMatch(/^RS-[0-9A-F]{4}-[0-9A-F]{4}-[0-9A-F]{4}-[0-9A-F]{4}-[0-9A-F]{4}-[0-9A-F]{4}$/);
+    // 128-bit recovery key: 16 bytes = 32 hex chars formatted as 8 groups of 4 hex digits
+    expect(bundle.recoveryKey).toMatch(/^RS(-[0-9A-F]{4}){8}$/);
     expect(bundle.recoveryWrappedMasterKeyHex).toContain(':');
     expect(bundle.recoveryKeyHashHex).toHaveLength(64); // SHA-256 hex
   });

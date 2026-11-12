@@ -17,6 +17,7 @@ export const Header: React.FC = () => {
     if (path.includes('/app/cases')) return 'Cases';
     if (path.includes('/app/documents')) return 'Documents & proof';
     if (path.includes('/app/purchases')) return 'Purchases';
+    if (path.includes('/app/profile')) return 'Profile';
     if (path.includes('/app/help')) return 'Rights & official routes';
     if (path.includes('/app/reminders')) return 'Reminders';
     if (path.includes('/app/privacy')) return 'Privacy & trust';
@@ -27,7 +28,7 @@ export const Header: React.FC = () => {
     <header className="sticky top-0 z-30 flex items-center justify-between px-4 md:px-8 py-3 bg-white/95 backdrop-blur-md border-b border-steel-grey-200 select-none">
       {/* Left: Mobile Brand & Desktop Breadcrumbs */}
       <div className="flex items-center gap-3">
-        <Link href="/" className="md:hidden flex items-center gap-2">
+        <Link href="/app/overview" className="md:hidden flex items-center gap-2">
           <div className="w-7 h-7 rounded-lg bg-coral flex items-center justify-center text-white font-serif font-medium text-sm leading-none">
             R
           </div>

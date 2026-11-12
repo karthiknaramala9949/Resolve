@@ -306,33 +306,47 @@ export const PrivacyPage: React.FC = () => {
         </div>
 
         {!isEncrypted ? (
-          <div className="flex flex-col sm:flex-row gap-3 pt-1">
+          <form
+            onSubmit={(e) => {
+              e.preventDefault();
+              handleEnableEncryption();
+            }}
+            className="flex flex-col sm:flex-row gap-3 pt-1"
+          >
             <Input
               type="password"
               placeholder="Enter a security password (min 6 characters)"
               value={passphrase}
               onChange={(e) => setPassphrase(e.target.value)}
               className="max-w-md"
+              autoComplete="new-password"
             />
-            <Button variant="primary" className="w-full sm:w-auto shrink-0" onClick={handleEnableEncryption}>
+            <Button type="submit" variant="primary" className="w-full sm:w-auto shrink-0">
               <Lock className="w-3.5 h-3.5" />
               <span>Turn on password</span>
             </Button>
-          </div>
+          </form>
         ) : (
-          <div className="flex flex-col sm:flex-row gap-3 pt-1">
+          <form
+            onSubmit={(e) => {
+              e.preventDefault();
+              handleDisableEncryption();
+            }}
+            className="flex flex-col sm:flex-row gap-3 pt-1"
+          >
             <Input
               type="password"
               placeholder="Enter password to turn off"
               value={passphraseInput}
               onChange={(e) => setPassphraseInput(e.target.value)}
               className="max-w-md"
+              autoComplete="current-password"
             />
-            <Button variant="outline" className="w-full sm:w-auto shrink-0" onClick={handleDisableEncryption}>
+            <Button type="submit" variant="outline" className="w-full sm:w-auto shrink-0">
               <Unlock className="w-3.5 h-3.5" />
               <span>Turn off password</span>
             </Button>
-          </div>
+          </form>
         )}
       </Card>
 

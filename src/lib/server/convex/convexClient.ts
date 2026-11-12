@@ -61,7 +61,12 @@ export async function syncSessionToConvex(
 
   try {
     const expiresAt = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString();
+    const internalSecret =
+      process.env.BETTER_AUTH_SECRET ||
+      process.env.AUTH_SECRET ||
+      'dev_better_auth_secret_must_be_at_least_32_characters_long_for_security';
     await client.mutation(api.auth.syncExternalSession, {
+      internalSecret,
       userId: user.id,
       name: user.name,
       email: user.email,

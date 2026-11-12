@@ -8,6 +8,8 @@ import {
   EmptyState,
   BottomSheet,
   Select,
+  Input,
+  Textarea,
   useToast,
 } from '@/design-system';
 import {
@@ -19,6 +21,8 @@ import {
   FileText,
   UploadCloud,
   CheckCircle2,
+  Eye,
+  Edit2,
 } from 'lucide-react';
 import { caseService, documentService } from '@/services';
 import { Case, EvidenceMeta } from '@/lib/db/types';
@@ -41,6 +45,18 @@ export const DocumentsPage: React.FC = () => {
   const [uploadFile, setUploadFile] = useState<File | null>(null);
   const [targetCaseId, setTargetCaseId] = useState<string>('');
   const [redactionNotices, setRedactionNotices] = useState<any[]>([]);
+
+  // Preview Modal state
+  const [isPreviewModalOpen, setIsPreviewModalOpen] = useState(false);
+  const [previewItem, setPreviewItem] = useState<EvidenceMeta | null>(null);
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+
+  // Edit Evidence Modal state
+  const [isEditEvidenceOpen, setIsEditEvidenceOpen] = useState(false);
+  const [editEvidenceCaseId, setEditEvidenceCaseId] = useState<string>('');
+  const [editEvidenceItem, setEditEvidenceItem] = useState<EvidenceMeta | null>(null);
+  const [editEvidenceName, setEditEvidenceName] = useState('');
+  const [editEvidenceHint, setEditEvidenceHint] = useState('');
 
   const loadData = async () => {
     const allCases = await caseService.listCases();
@@ -112,6 +128,7 @@ export const DocumentsPage: React.FC = () => {
         source: 'customer_upload',
         addedAt: new Date().toISOString(),
         sha256: uploadRes.sha256,
+        storageId: uploadRes.storageId,
         redactionHint: redactionNotices.length > 0 ? redactionNotices[0].warning : undefined,
       };
 
@@ -157,22 +174,89 @@ export const DocumentsPage: React.FC = () => {
     toast('Formal complaint letter copied to clipboard.', 'success');
   };
 
-  const handleDownloadBlob = async (id: string, name: string) => {
+  const handleDownloadBlob = async (id: string, name: string, item?: EvidenceMeta) => {
     try {
-      const blob = await documentService.downloadDocument(id, name);
+      toast(`Preparing download for ${name}...`, 'info');
+      const blob = await documentService.downloadDocument(id, name, item);
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
       a.download = name;
       a.click();
       URL.revokeObjectURL(url);
-      toast(`Downloading ${name}`, 'info');
+      toast(`Downloaded ${name}`, 'success');
     } catch (err: any) {
       if (err.message?.includes('E2EE_VAULT_LOCKED') || err.message?.includes('Master Key')) {
         setIsUnlockModalOpen(true);
       } else {
         toast(`Download error: ${err.message}`, 'error');
       }
+    }
+  };
+
+  const handleViewEvidence = async (item: EvidenceMeta) => {
+    try {
+      toast(`Preparing preview for ${item.name}...`, 'info');
+      const blob = await documentService.downloadDocument(item.id, item.name, item);
+      const url = URL.createObjectURL(blob);
+      setPreviewItem(item);
+      setPreviewUrl(url);
+      setIsPreviewModalOpen(true);
+    } catch (err: any) {
+      toast(`Could not preview ${item.name}: ${err.message}`, 'error');
+    }
+  };
+
+  const handleClosePreview = () => {
+    if (previewUrl) {
+      URL.revokeObjectURL(previewUrl);
+    }
+    setPreviewUrl(null);
+    setPreviewItem(null);
+    setIsPreviewModalOpen(false);
+  };
+
+  const handleOpenEditEvidence = (caseId: string, item: EvidenceMeta) => {
+    setEditEvidenceCaseId(caseId);
+    setEditEvidenceItem(item);
+    setEditEvidenceName(item.name);
+    setEditEvidenceHint(item.redactionHint || '');
+    setIsEditEvidenceOpen(true);
+  };
+
+  const handleSaveEvidenceEdit = async () => {
+    if (!editEvidenceItem || !editEvidenceCaseId || !editEvidenceName.trim()) {
+      toast('File name is required.', 'warning');
+      return;
+    }
+
+    try {
+      const parentCase = cases.find((c) => c.id === editEvidenceCaseId);
+      if (!parentCase) throw new Error('Case not found');
+
+      const updatedEvidence = (parentCase.evidence || []).map((e) =>
+        e.id === editEvidenceItem.id
+          ? {
+              ...e,
+              name: editEvidenceName.trim(),
+              redactionHint: editEvidenceHint.trim() || undefined,
+            }
+          : e
+      );
+
+      await caseService.updateCase(editEvidenceCaseId, { evidence: updatedEvidence });
+      await caseService.addTimelineEvent(editEvidenceCaseId, {
+        title: `Evidence updated: ${editEvidenceName.trim()}`,
+        detail: `Renamed evidence record ${editEvidenceItem.id}.`,
+        source: 'evidence',
+      });
+
+      toast('Evidence details updated successfully.', 'success');
+      setIsEditEvidenceOpen(false);
+      setEditEvidenceItem(null);
+      loadData();
+    } catch (err: any) {
+      toast(`Error updating evidence: ${err.message}`, 'error');
     }
   };
 
@@ -261,7 +345,9 @@ export const DocumentsPage: React.FC = () => {
             <div key={item.id} className="relative group">
               <EvidenceTile
                 item={item}
-                onDownload={() => handleDownloadBlob(item.id, item.name)}
+                onView={() => handleViewEvidence(item)}
+                onDownload={() => handleDownloadBlob(item.id, item.name, item)}
+                onEdit={() => handleOpenEditEvidence(caseId, item)}
                 onDelete={() => handleDeleteEvidence(caseId, item.id)}
               />
               <div className="mt-1 text-[11px] text-steel-grey-500 font-mono px-1 truncate font-normal">
@@ -422,6 +508,104 @@ export const DocumentsPage: React.FC = () => {
             </div>
           </div>
         )}
+      </BottomSheet>
+
+      {/* Evidence Preview Modal */}
+      <BottomSheet
+        isOpen={isPreviewModalOpen}
+        onClose={handleClosePreview}
+        title={previewItem ? `Evidence: ${previewItem.name}` : 'Document preview'}
+        description={previewItem ? `Reference ID: ${previewItem.id} · Size: ${(previewItem.size / 1024).toFixed(1)} KB` : undefined}
+      >
+        <div className="space-y-4">
+          {previewItem && previewUrl && (
+            <div className="p-3 bg-steel-grey-50 rounded-xl border border-steel-grey-200 flex flex-col items-center justify-center min-h-[220px]">
+              {previewItem.mime.startsWith('image/') ? (
+                <img
+                  src={previewUrl}
+                  alt={previewItem.name}
+                  className="max-h-[55vh] max-w-full rounded-lg object-contain shadow-xs"
+                />
+              ) : previewItem.mime === 'application/pdf' ? (
+                <iframe
+                  src={previewUrl}
+                  title={previewItem.name}
+                  className="w-full h-[55vh] rounded-lg border border-steel-grey-300 bg-white"
+                />
+              ) : (
+                <div className="text-center py-8 space-y-3">
+                  <div className="w-12 h-12 rounded-xl bg-white border border-steel-grey-200 flex items-center justify-center mx-auto text-steel-grey-600">
+                    <FileText className="w-6 h-6 text-coral" />
+                  </div>
+                  <div>
+                    <p className="text-sm font-semibold text-charcoal">{previewItem.name}</p>
+                    <p className="text-xs text-steel-grey-500 font-mono mt-1">
+                      MIME: {previewItem.mime} · ID: {previewItem.id}
+                    </p>
+                    {previewItem.sha256 && (
+                      <p className="text-[11px] text-steel-grey-400 font-mono mt-1">
+                        SHA-256: {previewItem.sha256.slice(0, 24)}...
+                      </p>
+                    )}
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+
+          <div className="flex items-center justify-between gap-3 pt-2">
+            <Button
+              variant="outline"
+              size="md"
+              onClick={async () => {
+                if (!previewItem) return;
+                await handleDownloadBlob(previewItem.id, previewItem.name, previewItem);
+              }}
+            >
+              <Download className="w-4 h-4 shrink-0" />
+              <span>Download copy</span>
+            </Button>
+
+            <Button variant="primary" size="md" onClick={handleClosePreview}>
+              Close preview
+            </Button>
+          </div>
+        </div>
+      </BottomSheet>
+
+      {/* Edit Evidence Details Modal */}
+      <BottomSheet
+        isOpen={isEditEvidenceOpen}
+        onClose={() => setIsEditEvidenceOpen(false)}
+        title="Edit evidence record"
+        description="Update file name or sensitivity notes"
+      >
+        <div className="space-y-4">
+          <Input
+            label="File display name"
+            value={editEvidenceName}
+            onChange={(e) => setEditEvidenceName(e.target.value)}
+            placeholder="e.g. return-pickup-receipt.png"
+            required
+          />
+
+          <Textarea
+            label="Redaction note / verification detail"
+            rows={2}
+            value={editEvidenceHint}
+            onChange={(e) => setEditEvidenceHint(e.target.value)}
+            placeholder="e.g. Delivery agent signature verified on physical slip"
+          />
+
+          <div className="flex justify-end gap-3 pt-2">
+            <Button variant="outline" onClick={() => setIsEditEvidenceOpen(false)}>
+              Cancel
+            </Button>
+            <Button variant="primary" onClick={handleSaveEvidenceEdit}>
+              Save changes
+            </Button>
+          </div>
+        </div>
       </BottomSheet>
 
       {/* Zero-Knowledge E2EE Master Key Unlock Modal */}

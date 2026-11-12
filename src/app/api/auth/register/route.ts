@@ -46,12 +46,15 @@ export async function POST(req: NextRequest) {
     }
 
     // Check rate limit on IP
-    const rlCheck = rateLimiter.check(`reg:${ip}`, 10, 60 * 60 * 1000); // 10 registrations per hour
+    const rlCheck = await rateLimiter.check(`reg:${ip}`, 10, 60 * 60 * 1000); // 10 registrations per hour
     if (!rlCheck.allowed) {
-      return NextResponse.json(
+      const errRes = NextResponse.json(
         { error: 'Too many registration attempts. Please try again later.' },
         { status: 429 }
       );
+      rateLimiter.applyRateLimitHeaders(errRes, rlCheck);
+      errRes.headers.set('Cache-Control', 'no-store, no-cache, must-revalidate, private');
+      return errRes;
     }
 
     // 1. Authoritative Convex Registration
@@ -78,6 +81,9 @@ export async function POST(req: NextRequest) {
             },
             { status: 201 }
           );
+          response.headers.set('Cache-Control', 'no-store, no-cache, must-revalidate, private');
+          response.headers.set('Pragma', 'no-cache');
+          rateLimiter.applyRateLimitHeaders(response, rlCheck);
           setSessionCookie(response, convexRes.sessionToken);
           return response;
         }
@@ -109,8 +115,8 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    // Hash password
-    const { hash, salt } = hashPassword(password);
+    // Hash password with Argon2id for local storage
+    const { hash, salt } = hashPassword(password, undefined, 'argon2id');
     const providers = email ? (phoneNumber ? ['email', 'phone'] as const : ['email'] as const) : ['phone'] as const;
 
     // Create user
@@ -152,6 +158,9 @@ export async function POST(req: NextRequest) {
       { status: 201 }
     );
 
+    response.headers.set('Cache-Control', 'no-store, no-cache, must-revalidate, private');
+    response.headers.set('Pragma', 'no-cache');
+    rateLimiter.applyRateLimitHeaders(response, rlCheck);
     setSessionCookie(response, session.token);
     return response;
   } catch (err: any) {

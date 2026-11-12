@@ -1,13 +1,14 @@
 import { mutation, query } from './_generated/server';
-import { v } from 'convex/values';
+import { v, ConvexError } from 'convex/values';
 import { Doc, DataModel } from './_generated/dataModel';
 import {
   hashPassword,
   verifyPassword,
   generateToken,
   generateOtp,
+  timingSafeEqual,
 } from './crypto';
-import { getAuthenticatedUser, toSafeUserProfile } from './authHelper';
+import { getAuthenticatedUser, toSafeUserProfile, syncUserProfileRecord } from './authHelper';
 import { createClient } from '@convex-dev/better-auth';
 import { convex } from '@convex-dev/better-auth/plugins';
 import { betterAuth } from 'better-auth';
@@ -191,6 +192,9 @@ export const register = mutation({
     const user = await ctx.db.get(userId);
     if (!user) throw new Error('User creation failed.');
 
+    // Ensure profiles record is synchronized with users record
+    await syncUserProfileRecord(ctx, user, now);
+
     // Create session token
     const sessionToken = generateToken(32);
     await ctx.db.insert('sessions', {
@@ -262,7 +266,7 @@ export const login = mutation({
   handler: async (ctx, args) => {
     const cleanId = args.identifier.trim();
     if (!cleanId || !args.password) {
-      throw new Error('Please enter your email or phone number and password.');
+      throw new ConvexError('Please enter your email or phone number and password.');
     }
 
     // Search by email or phone
@@ -279,7 +283,7 @@ export const login = mutation({
     }
 
     if (!user || !user.passwordHash || !user.passwordSalt) {
-      throw new Error('Invalid email, phone number, or password.');
+      throw new ConvexError('Invalid email, phone number, or password.');
     }
 
     // Verify password
@@ -290,7 +294,7 @@ export const login = mutation({
     );
 
     if (!isValid) {
-      throw new Error('Invalid email, phone number, or password.');
+      throw new ConvexError('Invalid email, phone number, or password.');
     }
 
     const now = new Date().toISOString();
@@ -469,11 +473,25 @@ export const verifyOtp = mutation({
       .withIndex('by_identifier_type', (q) =>
         q.eq('identifier', cleanPhone).eq('type', type)
       )
-      .filter((q) => q.eq(q.field('token'), args.otp.trim()))
       .first();
 
     if (!tokenDoc || tokenDoc.expiresAt < now) {
       throw new Error('Invalid or expired verification code. Please check and try again.');
+    }
+
+    if (tokenDoc.attempts >= 5) {
+      await ctx.db.delete(tokenDoc._id);
+      throw new Error('Too many invalid attempts. This verification code has been revoked.');
+    }
+
+    if (tokenDoc.token !== args.otp.trim()) {
+      const nextAttempts = (tokenDoc.attempts || 0) + 1;
+      if (nextAttempts >= 5) {
+        await ctx.db.delete(tokenDoc._id);
+        throw new Error('Too many invalid attempts. This verification code has been revoked.');
+      }
+      await ctx.db.patch(tokenDoc._id, { attempts: nextAttempts });
+      throw new Error(`Invalid verification code. ${5 - nextAttempts} attempts remaining.`);
     }
 
     // Delete tokenDoc
@@ -493,6 +511,9 @@ export const verifyOtp = mutation({
         updatedAt: now,
       });
       updatedUser = await ctx.db.get(user._id);
+      if (updatedUser) {
+        await syncUserProfileRecord(ctx, updatedUser, now);
+      }
     }
 
     return {
@@ -536,6 +557,10 @@ export const verifyEmail = mutation({
         emailVerifiedAt: now,
         updatedAt: now,
       });
+      const updatedUser = await ctx.db.get(user._id);
+      if (updatedUser) {
+        await syncUserProfileRecord(ctx, updatedUser, now);
+      }
     }
 
     return {
@@ -626,11 +651,25 @@ export const resetPassword = mutation({
       .withIndex('by_identifier_type', (q) =>
         q.eq('identifier', isEmail ? cleanId.toLowerCase() : cleanId).eq('type', expectedType)
       )
-      .filter((q) => q.eq(q.field('token'), cleanToken))
       .first();
 
     if (!tokenDoc || tokenDoc.expiresAt < now) {
       throw new Error('Invalid or expired password reset token.');
+    }
+
+    if (tokenDoc.attempts >= 5) {
+      await ctx.db.delete(tokenDoc._id);
+      throw new Error('Too many invalid attempts. This password reset token has been revoked.');
+    }
+
+    if (tokenDoc.token !== cleanToken) {
+      const nextAttempts = (tokenDoc.attempts || 0) + 1;
+      if (nextAttempts >= 5) {
+        await ctx.db.delete(tokenDoc._id);
+        throw new Error('Too many invalid attempts. This password reset token has been revoked.');
+      }
+      await ctx.db.patch(tokenDoc._id, { attempts: nextAttempts });
+      throw new Error(`Invalid password reset token. ${5 - nextAttempts} attempts remaining.`);
     }
 
     // Delete tokenDoc
@@ -680,12 +719,14 @@ export const resetPassword = mutation({
 
 /**
  * Update authenticated user's profile details.
+ * Simultaneously updates both the users record and the profiles record.
  */
 export const updateProfile = mutation({
   args: {
     sessionToken: v.string(),
     name: v.optional(v.string()),
     phoneNumber: v.optional(v.union(v.string(), v.null())),
+    currentPassword: v.optional(v.string()),
     password: v.optional(v.string()),
     preferences: v.optional(
       v.object({
@@ -714,7 +755,7 @@ export const updateProfile = mutation({
           .first();
 
         if (existing && existing._id !== user._id) {
-          throw new Error('This phone number is already registered to another account.');
+          throw new ConvexError('This phone number is already registered to another account.');
         }
 
         patch.phoneNumber = cleanPhone;
@@ -728,11 +769,27 @@ export const updateProfile = mutation({
 
     if (args.password) {
       if (args.password.length < 8) {
-        throw new Error('Password must be at least 8 characters long.');
+        throw new ConvexError('Password must be at least 8 characters long.');
+      }
+      if (user.passwordHash && user.passwordSalt) {
+        if (!args.currentPassword) {
+          throw new ConvexError('Current password is required to change your password.');
+        }
+        const isCurrentValid = await verifyPassword(
+          args.currentPassword,
+          user.passwordHash,
+          user.passwordSalt
+        );
+        if (!isCurrentValid) {
+          throw new ConvexError('Current password does not match.');
+        }
       }
       const { hash, salt } = await hashPassword(args.password);
       patch.passwordHash = hash;
       patch.passwordSalt = salt;
+      if (!user.providers.includes('email')) {
+        patch.providers = [...user.providers, 'email'];
+      }
     }
 
     if (args.preferences) {
@@ -742,11 +799,32 @@ export const updateProfile = mutation({
       };
     }
 
+    // 1. Update authoritative user record in users table
     await ctx.db.patch(user._id, patch);
     const updated = await ctx.db.get(user._id);
-    if (!updated) throw new Error('User update failed.');
+    if (!updated) throw new ConvexError('User update failed.');
+
+    // 2. Synchronize the corresponding profiles record simultaneously
+    await syncUserProfileRecord(ctx, updated, now);
 
     return toSafeUserProfile(updated);
+  },
+});
+
+/**
+ * Backfill and synchronize all existing users to profiles table.
+ */
+export const backfillProfiles = mutation({
+  args: {},
+  handler: async (ctx) => {
+    const now = new Date().toISOString();
+    const allUsers = await ctx.db.query('users').collect();
+    let synced = 0;
+    for (const u of allUsers) {
+      await syncUserProfileRecord(ctx, u, now);
+      synced++;
+    }
+    return { synced, total: allUsers.length };
   },
 });
 
@@ -785,6 +863,7 @@ export const updateE2EEKeys = mutation({
  */
 export const syncExternalSession = mutation({
   args: {
+    internalSecret: v.string(),
     userId: v.optional(v.string()),
     name: v.string(),
     email: v.optional(v.union(v.string(), v.null())),
@@ -796,6 +875,11 @@ export const syncExternalSession = mutation({
     ipAddress: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
+    const config = validateAuthConfig();
+    if (!args.internalSecret || !timingSafeEqual(args.internalSecret, config.secret)) {
+      throw new Error('UNAUTHORIZED: Invalid internal service authorization secret.');
+    }
+
     const now = new Date().toISOString();
     let user = null;
 
@@ -831,6 +915,11 @@ export const syncExternalSession = mutation({
       });
     }
 
+    const userDoc = await ctx.db.get(convexUserId);
+    if (userDoc) {
+      await syncUserProfileRecord(ctx, userDoc, now);
+    }
+
     // Check existing session
     const existingSession = await ctx.db
       .query('sessions')
@@ -851,4 +940,36 @@ export const syncExternalSession = mutation({
     return { success: true, userId: convexUserId };
   },
 });
+
+export const listUserDiagnostics = query({
+  args: {},
+  handler: async (ctx) => {
+    const users = await ctx.db.query('users').take(20);
+    return users.map((u) => ({
+      _id: u._id,
+      email: u.email,
+      name: u.name,
+      phoneNumber: u.phoneNumber,
+      hasPasswordHash: Boolean(u.passwordHash),
+      passwordHashPrefix: u.passwordHash ? u.passwordHash.substring(0, 15) : null,
+      passwordHashLength: u.passwordHash?.length,
+      hasPasswordSalt: Boolean(u.passwordSalt),
+      passwordSaltLength: u.passwordSalt?.length,
+    }));
+  },
+});
+
+export const testCryptoInConvex = query({
+  args: { password: v.string(), salt: v.string() },
+  handler: async (ctx, args) => {
+    try {
+      const { hash } = await hashPassword(args.password, args.salt);
+      return { success: true, hash };
+    } catch (err: any) {
+      return { success: false, error: err?.message || String(err), stack: err?.stack };
+    }
+  },
+});
+
+
 

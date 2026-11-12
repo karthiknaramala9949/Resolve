@@ -21,7 +21,6 @@ export interface AuthContextValue {
     error?: string;
     isOffline?: boolean;
   }>;
-  continueAsGuest: (name?: string) => void;
   logout: () => Promise<void>;
   refreshUser: () => Promise<void>;
   setUser: (user: UserProfile | null) => void;
@@ -47,19 +46,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         window.removeEventListener('online', handleOnline);
         window.removeEventListener('offline', handleOffline);
       };
-    }
-  }, []);
-
-  const continueAsGuest = useCallback(async (name?: string) => {
-    try {
-      const res = await authService.continueAsGuest(name);
-      if (res?.user) {
-        setUser(res.user);
-        return;
-      }
-    } catch (err) {
-      console.warn('[AuthContext] Guest session creation error:', err);
-      throw err;
     }
   }, []);
 
@@ -100,7 +86,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       return {
         success: false,
         isOffline: true,
-        error: 'You are currently offline. You can continue on this device without signing in.',
+        error: 'You are currently offline. Please connect to the internet to sign in.',
       };
     }
 
@@ -122,7 +108,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         success: false,
         isOffline: isOfflineError,
         error: isOfflineError
-          ? 'You are currently offline. You can continue on this device without signing in.'
+          ? 'You are currently offline. Please connect to the internet to sign in.'
           : err.message || 'Could not sign in. Please check your credentials and try again.',
       };
     }
@@ -133,7 +119,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       return {
         success: false,
         isOffline: true,
-        error: 'You are currently offline. You can continue on this device without an account.',
+        error: 'You are currently offline. Please connect to the internet to create an account.',
       };
     }
 
@@ -159,7 +145,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         success: false,
         isOffline: isOfflineError,
         error: isOfflineError
-          ? 'You are currently offline. You can continue on this device without an account.'
+          ? 'You are currently offline. Please connect to the internet to create an account.'
           : err.message || 'Could not create account. Please try again.',
       };
     }
@@ -174,12 +160,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       // Ignore
     } finally {
       setUser(null);
-      router.push('/auth/signin');
+      router.push('/');
       router.refresh();
     }
   };
-
-  const isGuest = Boolean(user?.isGuest || user?.providers?.includes('local'));
 
   return (
     <AuthContext.Provider
@@ -187,11 +171,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         user,
         isLoading,
         isAuthenticated: Boolean(user),
-        isGuest,
+        isGuest: false,
         isOnline,
         login,
         register,
-        continueAsGuest,
         logout,
         refreshUser,
         setUser,

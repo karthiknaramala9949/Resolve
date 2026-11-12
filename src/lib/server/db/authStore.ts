@@ -54,6 +54,7 @@ class AuthStore {
       emailVerifiedAt: user.emailVerifiedAt,
       phoneVerified: user.phoneVerified,
       phoneVerifiedAt: user.phoneVerifiedAt,
+      preferences: user.preferences,
       createdAt: user.createdAt,
       updatedAt: user.updatedAt,
       lastLoginAt: user.lastLoginAt,
@@ -284,6 +285,24 @@ class AuthStore {
     return record;
   }
 
+  public async findTokenByValue(
+    token: string,
+    type?: TokenType
+  ): Promise<VerificationToken | null> {
+    this.loadSync();
+    const found = this.data.tokens.find(
+      (t) => t.token === token && (!type || t.type === type)
+    );
+    if (!found) return null;
+
+    if (new Date(found.expiresAt).getTime() < Date.now()) {
+      await this.consumeToken(found.id);
+      return null;
+    }
+
+    return found;
+  }
+
   public async findToken(
     identifier: string,
     token: string,
@@ -293,6 +312,25 @@ class AuthStore {
     const cleanId = identifier.trim().toLowerCase();
     const found = this.data.tokens.find(
       (t) => t.identifier === cleanId && t.token === token && t.type === type
+    );
+    if (!found) return null;
+
+    if (new Date(found.expiresAt).getTime() < Date.now()) {
+      await this.consumeToken(found.id);
+      return null;
+    }
+
+    return found;
+  }
+
+  public async findActiveTokenByIdentifier(
+    identifier: string,
+    type: TokenType
+  ): Promise<VerificationToken | null> {
+    this.loadSync();
+    const cleanId = identifier.trim().toLowerCase();
+    const found = this.data.tokens.find(
+      (t) => t.identifier === cleanId && t.type === type
     );
     if (!found) return null;
 

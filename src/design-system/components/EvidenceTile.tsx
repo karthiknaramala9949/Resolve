@@ -1,6 +1,6 @@
 import React from 'react';
 import { cn } from '@/lib/utils';
-import { FileText, Image as ImageIcon, Download, ShieldAlert, Fingerprint, Trash2 } from 'lucide-react';
+import { FileText, Image as ImageIcon, Download, ShieldAlert, Fingerprint, Trash2, Eye, Edit2 } from 'lucide-react';
 
 export interface EvidenceItem {
   id: string;
@@ -10,12 +10,15 @@ export interface EvidenceItem {
   addedAt: string;
   sha256?: string;
   redactionHint?: string;
+  storageId?: string;
 }
 
 interface EvidenceTileProps {
   item: EvidenceItem;
   onDownload?: () => void;
   onDelete?: () => void;
+  onView?: () => void;
+  onEdit?: () => void;
   className?: string;
 }
 
@@ -23,6 +26,8 @@ export const EvidenceTile: React.FC<EvidenceTileProps> = ({
   item,
   onDownload,
   onDelete,
+  onView,
+  onEdit,
   className,
 }) => {
   const isImage = item.mime.startsWith('image/');
@@ -59,22 +64,46 @@ export const EvidenceTile: React.FC<EvidenceTileProps> = ({
         </div>
 
         <div className="flex items-center gap-1 shrink-0">
+          {onView && (
+            <button
+              type="button"
+              onClick={onView}
+              className="p-1.5 text-steel-grey-500 hover:text-charcoal rounded-md hover:bg-steel-grey-100 transition-colors inline-flex items-center justify-center shrink-0 min-w-[34px] min-h-[34px]"
+              title="View evidence file"
+              aria-label={`View ${item.name}`}
+            >
+              <Eye className="w-4 h-4 shrink-0" />
+            </button>
+          )}
           {onDownload && (
             <button
               type="button"
               onClick={onDownload}
-              className="p-1.5 text-steel-grey-500 hover:text-charcoal rounded-md hover:bg-steel-grey-100 transition-colors inline-flex items-center justify-center shrink-0 min-w-[36px] min-h-[36px]"
+              className="p-1.5 text-steel-grey-500 hover:text-charcoal rounded-md hover:bg-steel-grey-100 transition-colors inline-flex items-center justify-center shrink-0 min-w-[34px] min-h-[34px]"
               title="Download evidence"
+              aria-label={`Download ${item.name}`}
             >
               <Download className="w-4 h-4 shrink-0" />
+            </button>
+          )}
+          {onEdit && (
+            <button
+              type="button"
+              onClick={onEdit}
+              className="p-1.5 text-steel-grey-500 hover:text-charcoal rounded-md hover:bg-steel-grey-100 transition-colors inline-flex items-center justify-center shrink-0 min-w-[34px] min-h-[34px]"
+              title="Rename / edit evidence"
+              aria-label={`Edit ${item.name}`}
+            >
+              <Edit2 className="w-3.5 h-3.5 shrink-0" />
             </button>
           )}
           {onDelete && (
             <button
               type="button"
               onClick={onDelete}
-              className="p-1.5 text-steel-grey-500 hover:text-coral rounded-md hover:bg-coral-50 transition-colors inline-flex items-center justify-center shrink-0 min-w-[36px] min-h-[36px]"
+              className="p-1.5 text-steel-grey-500 hover:text-coral rounded-md hover:bg-coral-50 transition-colors inline-flex items-center justify-center shrink-0 min-w-[34px] min-h-[34px]"
               title="Remove evidence"
+              aria-label={`Remove ${item.name}`}
             >
               <Trash2 className="w-4 h-4 shrink-0" />
             </button>

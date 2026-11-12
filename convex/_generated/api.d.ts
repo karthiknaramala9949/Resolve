@@ -21,6 +21,7 @@ import type * as folders from "../folders.js";
 import type * as http from "../http.js";
 import type * as notifications from "../notifications.js";
 import type * as purchases from "../purchases.js";
+import type * as rateLimits from "../rateLimits.js";
 import type * as reminders from "../reminders.js";
 import type * as search from "../search.js";
 import type * as storage from "../storage.js";
@@ -46,6 +47,7 @@ declare const fullApi: ApiFromModules<{
   http: typeof http;
   notifications: typeof notifications;
   purchases: typeof purchases;
+  rateLimits: typeof rateLimits;
   reminders: typeof reminders;
   search: typeof search;
   storage: typeof storage;

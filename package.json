@@ -11,6 +11,9 @@
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
     "test:watch": "vitest",
+    "security:scan": "node scripts/security-scan.mjs",
+    "security:deps": "node scripts/dependency-audit.mjs",
+    "security:check": "npm run typecheck && npm run test && node scripts/security-scan.mjs && node scripts/dependency-audit.mjs",
     "convex:dev": "convex dev",
     "convex:deploy": "convex deploy"
   },

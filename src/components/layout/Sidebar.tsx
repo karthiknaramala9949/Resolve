@@ -37,6 +37,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ className }) => {
   ];
 
   const secondaryNav = [
+    { to: '/app/profile', label: 'Profile', icon: User },
     { to: '/app/reminders', label: 'Reminders', icon: Clock },
     { to: '/app/privacy', label: 'Privacy & trust', icon: ShieldCheck },
   ];
@@ -50,7 +51,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ className }) => {
     >
       <div>
         {/* Brand / Logo */}
-        <Link href="/" className="flex items-center gap-3 px-2 mb-6 group focus-visible:outline-none">
+        <Link href="/app/overview" className="flex items-center gap-3 px-2 mb-6 group focus-visible:outline-none">
           <div className="w-8 h-8 rounded-lg bg-coral flex items-center justify-center text-white shadow-xs font-serif font-medium text-lg leading-none">
             R
           </div>
@@ -145,7 +146,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ className }) => {
       <div className="pt-4 border-t border-steel-grey-100 space-y-3">
         {isAuthenticated && user ? (
           <div className="flex items-center justify-between p-2 rounded-xl bg-steel-grey-50 border border-steel-grey-200">
-            <Link href="/auth/setup" className="flex items-center gap-2.5 min-w-0 hover:opacity-80 transition-opacity">
+            <Link href="/app/profile" title="View Profile" className="flex items-center gap-2.5 min-w-0 hover:opacity-80 transition-opacity">
               {user.image ? (
                 <img src={user.image} alt={user.name} className="w-7 h-7 rounded-full object-cover shrink-0" />
               ) : (
@@ -156,7 +157,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ className }) => {
               <div className="min-w-0">
                 <p className="text-xs font-semibold text-charcoal truncate">{user.name}</p>
                 <p className="text-[10px] text-steel-grey-500 truncate">
-                  {user.email || user.phoneNumber || 'Offline on this device'}
+                  {user.email || user.phoneNumber || 'Verified Account'}
                 </p>
               </div>
             </Link>
@@ -173,21 +174,13 @@ export const Sidebar: React.FC<SidebarProps> = ({ className }) => {
           </div>
         ) : (
           <Link
-            href="/auth/signin"
+            href="/login"
             className="flex items-center justify-center gap-2 w-full py-2 px-3 rounded-xl border border-steel-grey-200 bg-white hover:bg-steel-grey-50 text-xs font-semibold text-charcoal transition-colors shadow-2xs"
           >
             <User className="w-3.5 h-3.5 text-steel-grey-500" />
-            <span>Sign in to sync</span>
+            <span>Log in to sync</span>
           </Link>
         )}
-
-        <div className="flex items-center justify-between px-2 text-xs text-steel-grey-500 font-normal">
-          <div className="flex items-center gap-2">
-            <span className="w-2 h-2 rounded-full bg-emerald-600" />
-            <span className="text-xs text-steel-grey-600 font-medium">Saved on this device</span>
-          </div>
-          <span className="text-xs">v2.0</span>
-        </div>
       </div>
     </aside>
   );

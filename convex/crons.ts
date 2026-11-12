@@ -30,9 +30,22 @@ export const cleanupExpiredTokens = internalMutation({
       }
     }
 
+    // 3. Expired distributed rate limits
+    const nowMs = Date.now();
+    const expiredRateLimits = await ctx.db
+      .query('rate_limits')
+      .withIndex('by_resetAt', (q) => q.lt('resetAt', nowMs))
+      .take(500);
+    let deletedRateLimitsCount = 0;
+    for (const r of expiredRateLimits) {
+      await ctx.db.delete(r._id);
+      deletedRateLimitsCount++;
+    }
+
     return {
       deletedTokensCount,
       deletedSessionsCount,
+      deletedRateLimitsCount,
       timestamp: now,
     };
   },

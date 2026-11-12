@@ -1,5 +1,6 @@
 import { NextResponse, type NextRequest } from 'next/server';
 import { getSessionCookie } from 'better-auth/cookies';
+import { sanitizeRedirectUrl } from '@/lib/server/auth/redirect';
 
 const SESSION_COOKIE_NAME = 'resolve_session';
 
@@ -51,7 +52,10 @@ export async function verifySessionCookie(
 ): Promise<boolean> {
   if (!cookieValue) return false;
 
-  const authSecret = secret ?? process.env.AUTH_SECRET;
+  const authSecret =
+    secret ??
+    process.env.AUTH_SECRET ??
+    process.env.BETTER_AUTH_SECRET;
   if (!authSecret || authSecret.length < 32) {
     return false;
   }
@@ -105,37 +109,79 @@ export async function middleware(req: NextRequest) {
   const legacySessionCookie = req.cookies.get(SESSION_COOKIE_NAME)?.value;
   const isLegacyAuthenticated = await verifySessionCookie(legacySessionCookie);
 
-  // 3. Check for offline / local guest mode session
-  const isGuest =
-    req.cookies.get('resolve_guest')?.value === 'true' ||
-    req.cookies.get(SESSION_COOKIE_NAME)?.value?.startsWith('guest_');
+  // Guest Mode is completely removed: only authentic sessions are permitted
+  const isAuthenticated = isBetterAuthAuthenticated || isLegacyAuthenticated;
 
-  const isAuthenticated = isBetterAuthAuthenticated || isLegacyAuthenticated || isGuest;
+  const isProtectedRoute =
+    pathname.startsWith('/app') ||
+    pathname === '/auth/setup' ||
+    pathname.startsWith('/auth/setup') ||
+    pathname === '/account-setup';
 
-  const isProtectedRoute = pathname.startsWith('/app');
   const isAuthPage =
     pathname.startsWith('/auth/signin') ||
     pathname.startsWith('/auth/signup') ||
     pathname === '/login' ||
     pathname === '/signup';
 
-  // 1. Unauthenticated user trying to access protected workspace routes
+  const nonce = Buffer.from(crypto.randomUUID()).toString('base64');
+  const requestHeaders = new Headers(req.headers);
+  requestHeaders.set('x-nonce', nonce);
+
+  function applySecurityHeaders(res: NextResponse): NextResponse {
+    res.headers.set('X-Content-Type-Options', 'nosniff');
+    res.headers.set('X-Frame-Options', 'DENY');
+    res.headers.set('Referrer-Policy', 'strict-origin-when-cross-origin');
+    res.headers.set('Permissions-Policy', 'camera=(), microphone=(self), geolocation=(), payment=()');
+    res.headers.set('X-XSS-Protection', '1; mode=block');
+    res.headers.set('Strict-Transport-Security', 'max-age=63072000; includeSubDomains; preload');
+    res.headers.set('Cross-Origin-Opener-Policy', 'same-origin-allow-popups');
+
+    const isDev = process.env.NODE_ENV !== 'production';
+    const scriptSrc = isDev
+      ? `'self' 'unsafe-inline' 'unsafe-eval' https://accounts.google.com https://*.convex.cloud`
+      : `'self' 'unsafe-inline' 'wasm-unsafe-eval' https://accounts.google.com https://*.convex.cloud`;
+
+    const connectSrc = isDev
+      ? `'self' https://*.convex.cloud wss://*.convex.cloud https://*.convex.site https://accounts.google.com ws: wss:`
+      : `'self' https://*.convex.cloud wss://*.convex.cloud https://*.convex.site https://accounts.google.com`;
+
+    const csp = `
+      default-src 'self';
+      script-src ${scriptSrc};
+      style-src 'self' 'unsafe-inline' https://fonts.googleapis.com;
+      font-src 'self' data: https://fonts.gstatic.com;
+      img-src 'self' data: blob: https:;
+      connect-src ${connectSrc};
+      frame-src 'self' https://accounts.google.com;
+      object-src 'none';
+      base-uri 'self';
+      form-action 'self';
+      frame-ancestors 'none';
+    `.replace(/\s{2,}/g, ' ').trim();
+
+    res.headers.set('Content-Security-Policy', csp);
+    return res;
+  }
+
+  // 1. Unauthenticated user trying to access protected workspace routes or profile
   if (isProtectedRoute && !isAuthenticated) {
     const returnUrl = encodeURIComponent(`${pathname}${search}`);
-    const redirectUrl = new URL(`/auth/signin?next=${returnUrl}`, req.url);
-    return NextResponse.redirect(redirectUrl);
+    const redirectUrl = new URL(`/login?next=${returnUrl}`, req.url);
+    const response = NextResponse.redirect(redirectUrl);
+    if (req.cookies.has('resolve_guest')) {
+      response.cookies.delete('resolve_guest');
+    }
+    return applySecurityHeaders(response);
   }
 
-  // 2. Authenticated user (non-guest) trying to access sign-in or sign-up pages
-  // (Guests are allowed to visit auth pages if they wish to create or link a cloud account)
-  const isFullUser = isBetterAuthAuthenticated || isLegacyAuthenticated;
-  if (isAuthPage && isFullUser) {
-    const nextParam = req.nextUrl.searchParams.get('next');
-    const redirectTarget = nextParam || '/app/overview';
-    return NextResponse.redirect(new URL(redirectTarget, req.url));
-  }
-
-  return NextResponse.next();
+  // 2. Public and authentication routes are always rendered without automatic redirects.
+  // Visiting /login or /signup directly renders the respective page even if a prior session exists.
+  return applySecurityHeaders(NextResponse.next({
+    request: {
+      headers: requestHeaders,
+    },
+  }));
 }
 
 export const config = {
@@ -148,6 +194,7 @@ export const config = {
      * - public manifest or icons
      * - api routes
      */
+    '/',
     '/app/:path*',
     '/app',
     '/auth/:path*',

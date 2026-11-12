@@ -13,6 +13,13 @@ export const UserProfileSchema = z.object({
   emailVerifiedAt: z.string().nullable(),
   phoneVerified: z.boolean(),
   phoneVerifiedAt: z.string().nullable(),
+  preferences: z
+    .object({
+      theme: z.string().optional(),
+      simpleLanguageMode: z.boolean().optional(),
+      notificationsEnabled: z.boolean().optional(),
+    })
+    .optional(),
   createdAt: z.string(),
   updatedAt: z.string(),
   lastLoginAt: z.string(),

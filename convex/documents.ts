@@ -40,27 +40,54 @@ export const registerDocument = mutation({
     const { user } = await getAuthenticatedUser(ctx, args.sessionToken);
     const now = new Date().toISOString();
 
+    // Verify case ownership if attaching to a case
     let resolvedCaseId: Id<'cases'> | null = null;
+    let parentCase: Doc<'cases'> | null = null;
     if (args.caseId) {
       try {
-        resolvedCaseId = args.caseId as Id<'cases'>;
-      } catch {
-        // Fallback: lookup by clientGeneratedId
-        const c = await ctx.db
+        parentCase = await ctx.db.get(args.caseId as Id<'cases'>);
+      } catch {}
+
+      if (!parentCase) {
+        parentCase = await ctx.db
           .query('cases')
           .withIndex('by_client_id', (q) => q.eq('clientGeneratedId', args.caseId!))
           .first();
-        if (c && c.userId === user._id) {
-          resolvedCaseId = c._id;
+      }
+
+      if (!parentCase || parentCase.userId !== user._id || parentCase.deletedAt) {
+        throw new Error('Case not found or permission denied.');
+      }
+      resolvedCaseId = parentCase._id;
+    }
+
+    // Verify folder ownership if attaching to a folder
+    let resolvedFolderId: Id<'folders'> | null = null;
+    if (args.folderId) {
+      try {
+        const folder = await ctx.db.get(args.folderId as Id<'folders'>);
+        if (!folder || folder.userId !== user._id) {
+          throw new Error('Folder not found or permission denied.');
         }
+        resolvedFolderId = folder._id;
+      } catch (err: any) {
+        if (err?.message?.includes('permission denied')) throw err;
+        throw new Error('Folder not found or permission denied.');
       }
     }
+
+    // Sanitize filename against path traversal and control characters
+    const cleanName = args.name
+      .replace(/[\0\r\n\x00-\x1f\x7f]/g, '')
+      .replace(/^(\.\.(\/|\\|$))+/, '')
+      .replace(/[\/\\]/g, '_')
+      .trim() || 'unnamed_document.bin';
 
     const docId = await ctx.db.insert('documents', {
       userId: user._id,
       caseId: resolvedCaseId,
-      folderId: args.folderId ? (args.folderId as Id<'folders'>) : null,
-      name: args.name.trim(),
+      folderId: resolvedFolderId,
+      name: cleanName,
       mime: args.mime,
       size: args.size,
       sha256: args.sha256,
@@ -77,39 +104,36 @@ export const registerDocument = mutation({
     });
 
     // If attached to a case, also append to the case's evidence list
-    if (resolvedCaseId) {
-      const parentCase = await ctx.db.get(resolvedCaseId);
-      if (parentCase && parentCase.userId === user._id) {
-        const evidenceItem = {
-          id: `EV-${Date.now().toString().slice(-4)}`,
-          name: args.name,
-          mime: args.mime,
-          size: args.size,
-          source: 'customer_upload',
-          addedAt: now,
-          sha256: args.sha256,
-          redactionHint: args.redactionHint,
-          storageId: args.storageId,
-          encryptedKey: args.encryptedKey,
-          iv: args.iv,
-        };
+    if (parentCase && resolvedCaseId) {
+      const evidenceItem = {
+        id: `EV-${Date.now().toString().slice(-4)}`,
+        name: cleanName,
+        mime: args.mime,
+        size: args.size,
+        source: 'customer_upload',
+        addedAt: now,
+        sha256: args.sha256,
+        redactionHint: args.redactionHint,
+        storageId: args.storageId,
+        encryptedKey: args.encryptedKey,
+        iv: args.iv,
+      };
 
-        const updatedEvidence = [...(parentCase.evidence || []), evidenceItem];
-        const newTimelineEvent = {
-          id: `EV-${Date.now()}-${Math.random().toString(36).substring(2, 6).toUpperCase()}`,
-          at: now,
-          title: `Attached evidence: ${args.name}`,
-          detail: `File uploaded with SHA-256 fingerprint: ${args.sha256.slice(0, 16)}...`,
-          source: 'evidence',
-        };
+      const updatedEvidence = [...(parentCase.evidence || []), evidenceItem];
+      const newTimelineEvent = {
+        id: `EV-${Date.now()}-${Math.random().toString(36).substring(2, 6).toUpperCase()}`,
+        at: now,
+        title: `Attached evidence: ${cleanName}`,
+        detail: `File uploaded with SHA-256 fingerprint: ${args.sha256.slice(0, 16)}...`,
+        source: 'evidence',
+      };
 
-        await ctx.db.patch(parentCase._id, {
-          evidence: updatedEvidence,
-          timeline: [...parentCase.timeline, newTimelineEvent],
-          updatedAt: now,
-          version: parentCase.version + 1,
-        });
-      }
+      await ctx.db.patch(parentCase._id, {
+        evidence: updatedEvidence,
+        timeline: [...parentCase.timeline, newTimelineEvent],
+        updatedAt: now,
+        version: parentCase.version + 1,
+      });
     }
 
     // Activity log
@@ -227,9 +251,15 @@ export const rename = mutation({
       throw new Error('Document not found or permission denied.');
     }
 
+    const cleanName = args.newName
+      .replace(/[\0\r\n\x00-\x1f\x7f]/g, '')
+      .replace(/^(\.\.(\/|\\|$))+/, '')
+      .replace(/[\/\\]/g, '_')
+      .trim() || 'unnamed_document.bin';
+
     const now = new Date().toISOString();
     await ctx.db.patch(doc._id, {
-      name: args.newName.trim(),
+      name: cleanName,
       updatedAt: now,
     });
 

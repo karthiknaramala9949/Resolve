@@ -63,7 +63,6 @@ export function clearSessionToken(): void {
  * Ensures an active session token exists, resolving in order:
  * 1. Current in-memory or sessionStorage token.
  * 2. Authenticated user session via /api/auth/me.
- * 3. An authoritative guest session created directly in Convex.
  */
 export async function ensureSessionToken(): Promise<string> {
   const existing = getSessionToken();
@@ -85,31 +84,7 @@ export async function ensureSessionToken(): Promise<string> {
         }
       }
     } catch {
-      // Continue to fallback
-    }
-
-    // 2. If no session cookie exists and guest mode is enabled by policy, request server-issued guest session
-    const isGuestEnabled = process.env.NEXT_PUBLIC_ENABLE_GUEST_ACCESS !== 'false';
-    if (isGuestEnabled) {
-      try {
-        const guestRes = await fetch('/api/auth/guest', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Cache-Control': 'no-cache',
-          },
-          body: JSON.stringify({ name: 'Local Consumer' }),
-        });
-        if (guestRes.ok) {
-          const data = await guestRes.json();
-          if (data?.sessionToken) {
-            setSessionToken(data.sessionToken);
-            return data.sessionToken;
-          }
-        }
-      } catch (err) {
-        console.warn('[SessionToken] Server guest session issuance deferred:', err);
-      }
+      // Unauthenticated
     }
   }
 

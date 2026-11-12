@@ -35,7 +35,11 @@ describe('RESOLVE-ONE: Security, E2EE Lifecycle & Auth Consolidation', () => {
       expect(bundle.wrappedMasterKeyHex.length).toBeGreaterThan(32);
       expect(bundle.saltHex.length).toBe(32); // 16 bytes = 32 hex chars
       expect(bundle.ivHex.length).toBe(24); // 12 bytes = 24 hex chars
-      expect(bundle.recoveryKey).toMatch(/^RS-[0-9A-F]{4}-[0-9A-F]{4}-[0-9A-F]{4}-[0-9A-F]{4}-[0-9A-F]{4}-[0-9A-F]{4}$/);
+      // 128-bit entropy verified mathematically: 16 bytes * 8 bits/byte = 128 bits
+      // Formatted as 8 groups of 4 hexadecimal characters = 32 hex digits
+      expect(bundle.recoveryKey).toMatch(/^RS(-[0-9A-F]{4}){8}$/);
+      const hexOnly = bundle.recoveryKey.replace(/RS-|-/g, '');
+      expect(hexOnly.length).toBe(32); // 32 hex chars = 16 bytes = 128 bits entropy
       expect(bundle.recoveryWrappedMasterKeyHex.split(':')).toHaveLength(3);
       expect(bundle.recoveryKeyHashHex.length).toBe(64); // SHA-256
     });
@@ -171,6 +175,53 @@ describe('RESOLVE-ONE: Security, E2EE Lifecycle & Auth Consolidation', () => {
       await expect(
         decryptDocument(
           tamperedBytes.buffer,
+          encrypted.wrappedDekHex,
+          encrypted.ivHex,
+          encrypted.dekIvHex,
+          encrypted.sha256Hex,
+          masterKey
+        )
+      ).rejects.toThrow();
+    });
+
+    it('Envelope encryption with Authenticated Additional Data (AAD) binds metadata and rejects tampered AAD', async () => {
+      const { masterKey } = await setupUserMasterKey(originalPassword);
+      const plaintext = new TextEncoder().encode('Confidential dispute claim #49102').buffer;
+      const aad = new TextEncoder().encode('userId:user_123|docId:doc_456').buffer;
+
+      // Encrypt with AAD bound
+      const encrypted = await encryptDocument(plaintext, masterKey, aad);
+
+      // Decrypt with correct AAD succeeds
+      const decrypted = await decryptDocument(
+        encrypted.ciphertext,
+        encrypted.wrappedDekHex,
+        encrypted.ivHex,
+        encrypted.dekIvHex,
+        encrypted.sha256Hex,
+        masterKey,
+        aad
+      );
+      expect(new TextDecoder().decode(decrypted)).toBe('Confidential dispute claim #49102');
+
+      // Decrypt with tampered AAD (e.g. attacker changing document/user ownership binding) fails
+      const tamperedAad = new TextEncoder().encode('userId:attacker_999|docId:doc_456').buffer;
+      await expect(
+        decryptDocument(
+          encrypted.ciphertext,
+          encrypted.wrappedDekHex,
+          encrypted.ivHex,
+          encrypted.dekIvHex,
+          encrypted.sha256Hex,
+          masterKey,
+          tamperedAad
+        )
+      ).rejects.toThrow();
+
+      // Decrypt with missing AAD fails
+      await expect(
+        decryptDocument(
+          encrypted.ciphertext,
           encrypted.wrappedDekHex,
           encrypted.ivHex,
           encrypted.dekIvHex,

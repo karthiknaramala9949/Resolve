@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { authStore } from '@/lib/server/db/authStore';
 import { setSessionCookie } from '@/lib/server/auth/session';
 import { syncSessionToConvex } from '@/lib/server/convex/convexClient';
+import { sanitizeRedirectUrl } from '@/lib/server/auth/redirect';
 
 export const dynamic = 'force-dynamic';
 
@@ -61,21 +62,27 @@ export async function GET(req: NextRequest) {
     const clientId = process.env.GOOGLE_CLIENT_ID;
     const clientSecret = process.env.GOOGLE_CLIENT_SECRET;
     const redirectUri = `${origin}/api/auth/google/callback`;
+    const storedCodeVerifier = req.cookies.get('oauth_code_verifier')?.value;
 
     let userInfo: GoogleUserInfo;
 
     if (clientId && clientSecret) {
-      // Exchange code with Google
+      // Exchange code with Google with PKCE code_verifier
+      const tokenBody: Record<string, string> = {
+        code,
+        client_id: clientId,
+        client_secret: clientSecret,
+        redirect_uri: redirectUri,
+        grant_type: 'authorization_code',
+      };
+      if (storedCodeVerifier) {
+        tokenBody.code_verifier = storedCodeVerifier;
+      }
+
       const tokenRes = await fetch('https://oauth2.googleapis.com/token', {
         method: 'POST',
         headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-        body: new URLSearchParams({
-          code,
-          client_id: clientId,
-          client_secret: clientSecret,
-          redirect_uri: redirectUri,
-          grant_type: 'authorization_code',
-        }),
+        body: new URLSearchParams(tokenBody),
       });
 
       if (!tokenRes.ok) {
@@ -108,9 +115,9 @@ export async function GET(req: NextRequest) {
       );
     }
 
-    if (!userInfo.email) {
+    if (!userInfo.email || userInfo.email_verified !== true) {
       return NextResponse.redirect(
-        `${origin}/auth/signin?error=email_not_provided`
+        `${origin}/auth/signin?error=unverified_email`
       );
     }
 
@@ -163,16 +170,24 @@ export async function GET(req: NextRequest) {
       req.headers.get('x-forwarded-for') || '127.0.0.1'
     );
 
-    const targetUrl =
+    const rawTarget =
       !user.phoneNumber
         ? `${origin}/auth/setup?welcome=google`
         : decodedState.returnTo || `${origin}/app/overview`;
 
+    const sanitizedPath = sanitizeRedirectUrl(rawTarget, origin, '/app/overview');
+    const targetUrl = sanitizedPath.startsWith('http') ? sanitizedPath : `${origin}${sanitizedPath}`;
+
     const response = NextResponse.redirect(targetUrl);
+    response.headers.set('Cache-Control', 'no-store, no-cache, must-revalidate, private');
+    response.headers.set('Pragma', 'no-cache');
+
     setSessionCookie(response, session.token);
 
-    // Clear state cookie
+    // Clear OAuth state, PKCE verifier, and nonce cookies
     response.cookies.delete('oauth_state');
+    response.cookies.delete('oauth_code_verifier');
+    response.cookies.delete('oauth_nonce');
     return response;
   } catch (err) {
     console.error('[Google Callback Exception]:', err);

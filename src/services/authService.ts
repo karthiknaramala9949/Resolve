@@ -24,8 +24,13 @@ export interface AuthSuccessResponse {
 
 export interface SetupProfilePayload {
   name?: string;
-  phoneNumber?: string;
+  phoneNumber?: string | null;
+  currentPassword?: string;
   password?: string;
+  preferences?: {
+    notificationsEnabled?: boolean;
+    simpleLanguageMode?: boolean;
+  };
 }
 
 export const authService = {
@@ -133,21 +138,10 @@ export const authService = {
   },
 
   /**
-   * Creates an authoritative guest session in Convex via server-side HttpOnly cookie issuance.
-   */
-  async continueAsGuest(name?: string): Promise<AuthSuccessResponse> {
-    const res = await apiClient.post<AuthSuccessResponse>('/api/auth/guest', { name });
-    if (res.sessionToken) {
-      setSessionToken(res.sessionToken);
-    }
-    return res;
-  },
-
-  /**
    * Updates profile information (e.g. name, phone number, password).
    */
   async setupProfile(payload: SetupProfilePayload): Promise<{ success: boolean; user: UserProfile }> {
-    return apiClient.post<{ success: boolean; user: UserProfile }>('/api/auth/setup', payload);
+    return apiClient.put<{ success: boolean; user: UserProfile }>('/api/auth/setup', payload);
   },
 
   /**
@@ -179,7 +173,7 @@ export const authService = {
     token: string;
     newPassword: string;
   }): Promise<{ success: boolean; message: string; user?: UserProfile }> {
-    return apiClient.post('/api/auth/reset-password', data);
+    return apiClient.put('/api/auth/reset-password', data);
   },
 
   /**

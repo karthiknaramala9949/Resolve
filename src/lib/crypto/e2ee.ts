@@ -21,6 +21,7 @@ export interface EncryptedPayload {
   sha256Hex: string;
   originalSize: number;
   version?: number;
+  aadHex?: string;
 }
 
 export interface MasterKeyBundle {
@@ -31,6 +32,11 @@ export interface MasterKeyBundle {
   recoveryWrappedMasterKeyHex: string;
   recoveryKeyHashHex: string;
   version?: number;
+  kdfAlgo?: string;
+  kdfParams?: {
+    iterations: number;
+    hash: string;
+  };
 }
 
 /**
@@ -91,13 +97,15 @@ async function deriveKeyFromPassphrase(
 }
 
 /**
- * Generates a human-readable 24-character recovery phrase in grouped format
+ * Generates a human-readable 32-character recovery phrase in grouped format
+ * possessing a full 128 bits of cryptographic entropy (16 random bytes).
+ * Format: RS-XXXX-XXXX-XXXX-XXXX-XXXX-XXXX-XXXX-XXXX (8 groups of 4 hex chars).
  */
 export function generateRecoveryKey(): string {
   const bytes = new Uint8Array(16);
   crypto.getRandomValues(bytes);
   const hex = bufferToHex(bytes).toUpperCase();
-  return `RS-${hex.slice(0, 4)}-${hex.slice(4, 8)}-${hex.slice(8, 12)}-${hex.slice(12, 16)}-${hex.slice(16, 20)}-${hex.slice(20, 24)}`;
+  return `RS-${hex.slice(0, 4)}-${hex.slice(4, 8)}-${hex.slice(8, 12)}-${hex.slice(12, 16)}-${hex.slice(16, 20)}-${hex.slice(20, 24)}-${hex.slice(24, 28)}-${hex.slice(28, 32)}`;
 }
 
 /**
@@ -154,6 +162,12 @@ export async function setupUserMasterKey(passphrase: string): Promise<{
       recoveryKey,
       recoveryWrappedMasterKeyHex: `${bufferToHex(recoverySalt)}:${bufferToHex(recoveryIv)}:${bufferToHex(recoveryWrappedMasterKey)}`,
       recoveryKeyHashHex: recoveryKeyHash,
+      version: E2EE_KEY_VERSION,
+      kdfAlgo: 'pbkdf2_sha256',
+      kdfParams: {
+        iterations: PBKDF2_ITERATIONS,
+        hash: 'SHA-256',
+      },
     },
   };
 }
@@ -185,7 +199,8 @@ export async function unlockMasterKeyWithPassphrase(
 }
 
 /**
- * Unwraps the User Master Key using the user's recovery key
+ * Unwraps the User Master Key using the user's recovery key.
+ * Supports both full 128-bit (32 hex / 8 groups) and legacy 96-bit (24 hex / 6 groups) keys.
  */
 export async function unlockMasterKeyWithRecoveryKey(
   recoveryKey: string,
@@ -200,7 +215,15 @@ export async function unlockMasterKeyWithRecoveryKey(
   const iv = hexToBuffer(parts[1]);
   const wrappedKeyBytes = hexToBuffer(parts[2]);
 
-  const recoveryKek = await deriveKeyFromPassphrase(recoveryKey.trim(), salt);
+  const rawKey = recoveryKey.trim();
+  const hexOnly = rawKey.replace(/^RS-/, '').replace(/[^0-9A-Fa-f]/g, '');
+  if (hexOnly.length !== 32 && hexOnly.length !== 24) {
+    throw new Error(
+      `Invalid recovery key length (${hexOnly.length} hex digits). Expected 32 hexadecimal characters (128-bit entropy) or legacy 24 characters.`
+    );
+  }
+
+  const recoveryKek = await deriveKeyFromPassphrase(rawKey, salt);
 
   return await crypto.subtle.unwrapKey(
     'raw',
@@ -262,10 +285,14 @@ export function getActiveMasterKey(): CryptoKey | null {
  * Encrypt a file or ArrayBuffer using Envelope Encryption with AES-256-GCM.
  * Generates a random Document Encryption Key (DEK), encrypts the data,
  * and wraps the DEK with the user's Master Key.
+ *
+ * Supports Authenticated Additional Data (AAD) to bind document ID or user context
+ * directly to the ciphertext authentication tag.
  */
 export async function encryptDocument(
   data: ArrayBuffer,
-  masterKey: CryptoKey
+  masterKey: CryptoKey,
+  aad?: Uint8Array | ArrayBuffer | string
 ): Promise<EncryptedPayload> {
   // 1. Calculate SHA-256 fingerprint of plaintext file
   const sha256Hex = await calculateSHA256(data);
@@ -277,12 +304,26 @@ export async function encryptDocument(
     ['encrypt', 'decrypt']
   );
 
-  // 3. Encrypt data with DEK and unique 12-byte IV
+  // 3. Encrypt data with DEK, unique 12-byte IV, and optional AAD
   const iv = new Uint8Array(IV_LENGTH_BYTES);
   crypto.getRandomValues(iv);
 
+  let additionalDataBuffer: BufferSource | undefined = undefined;
+  if (aad) {
+    additionalDataBuffer =
+      typeof aad === 'string'
+        ? (new TextEncoder().encode(aad) as BufferSource)
+        : (aad as BufferSource);
+  }
+
+  const encryptParams: AesGcmParams = {
+    name: 'AES-GCM',
+    iv: iv,
+    ...(additionalDataBuffer ? { additionalData: additionalDataBuffer } : {}),
+  };
+
   const ciphertext = await crypto.subtle.encrypt(
-    { name: 'AES-GCM', iv: iv },
+    encryptParams,
     dek,
     data
   );
@@ -303,12 +344,21 @@ export async function encryptDocument(
     dekIvHex: bufferToHex(dekIv),
     sha256Hex,
     originalSize: data.byteLength,
+    version: E2EE_KEY_VERSION,
+    aadHex: additionalDataBuffer
+      ? bufferToHex(
+          additionalDataBuffer instanceof Uint8Array
+            ? additionalDataBuffer
+            : new Uint8Array(additionalDataBuffer as ArrayBuffer)
+        )
+      : undefined,
   };
 }
 
 /**
  * Decrypt an encrypted document buffer using the user's Master Key.
  * Unwraps the DEK, decrypts the ciphertext, and verifies the SHA-256 fingerprint.
+ * Validates GCM authentication tag and optional Authenticated Additional Data (AAD).
  */
 export async function decryptDocument(
   ciphertext: ArrayBuffer,
@@ -316,7 +366,8 @@ export async function decryptDocument(
   ivHex: string,
   dekIvHex: string,
   expectedSha256Hex?: string,
-  masterKey?: CryptoKey
+  masterKey?: CryptoKey,
+  aad?: Uint8Array | ArrayBuffer | string
 ): Promise<ArrayBuffer> {
   const activeKey = masterKey || inMemoryMasterKey;
   if (!activeKey) {
@@ -337,10 +388,25 @@ export async function decryptDocument(
     ['decrypt']
   );
 
-  // 2. Decrypt ciphertext with DEK and IV
+  // 2. Decrypt ciphertext with DEK, IV, and optional AAD
   const iv = hexToBuffer(ivHex);
+
+  let additionalDataBuffer: BufferSource | undefined = undefined;
+  if (aad) {
+    additionalDataBuffer =
+      typeof aad === 'string'
+        ? (new TextEncoder().encode(aad) as BufferSource)
+        : (aad as BufferSource);
+  }
+
+  const decryptParams: AesGcmParams = {
+    name: 'AES-GCM',
+    iv: iv,
+    ...(additionalDataBuffer ? { additionalData: additionalDataBuffer } : {}),
+  };
+
   const decrypted = await crypto.subtle.decrypt(
-    { name: 'AES-GCM', iv: iv },
+    decryptParams,
     dek,
     ciphertext
   );

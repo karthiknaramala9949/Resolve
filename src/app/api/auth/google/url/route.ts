@@ -1,12 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server';
+import crypto from 'node:crypto';
 import { generateRandomToken } from '@/lib/server/auth/crypto';
+import { sanitizeRedirectUrl } from '@/lib/server/auth/redirect';
 
 export const dynamic = 'force-dynamic';
 
 export async function GET(req: NextRequest) {
   try {
     const { searchParams } = new URL(req.url);
-    const returnTo = searchParams.get('returnTo') || '/app/overview';
+    const returnTo = searchParams.get('returnTo');
 
     const clientId = process.env.GOOGLE_CLIENT_ID;
     const origin =
@@ -14,12 +16,20 @@ export async function GET(req: NextRequest) {
       req.headers.get('origin') ||
       'http://localhost:3000';
 
+    const safeReturnTo = sanitizeRedirectUrl(returnTo, origin, '/app/overview');
     const redirectUri = `${origin}/api/auth/google/callback`;
 
-    // Generate random CSRF state token
+    // Generate random CSRF state token and PKCE code_verifier
     const stateToken = generateRandomToken(24);
+    const codeVerifier = crypto.randomBytes(32).toString('base64url');
+    const codeChallenge = crypto
+      .createHash('sha256')
+      .update(codeVerifier)
+      .digest('base64url');
+    const nonce = generateRandomToken(24);
+
     const statePayload = Buffer.from(
-      JSON.stringify({ state: stateToken, returnTo })
+      JSON.stringify({ state: stateToken, returnTo: safeReturnTo })
     ).toString('base64url');
 
     let authUrl: string;
@@ -32,12 +42,14 @@ export async function GET(req: NextRequest) {
       googleAuthEndpoint.searchParams.set('response_type', 'code');
       googleAuthEndpoint.searchParams.set('scope', 'openid email profile');
       googleAuthEndpoint.searchParams.set('state', statePayload);
+      googleAuthEndpoint.searchParams.set('code_challenge', codeChallenge);
+      googleAuthEndpoint.searchParams.set('code_challenge_method', 'S256');
+      googleAuthEndpoint.searchParams.set('nonce', nonce);
       googleAuthEndpoint.searchParams.set('access_type', 'offline');
       googleAuthEndpoint.searchParams.set('prompt', 'select_account');
       authUrl = googleAuthEndpoint.toString();
     } else {
       // Development fallback: interactive local Google authentication simulation
-      // allows reviewing and testing OAuth account creation and account linking without GCP keys
       const devEndpoint = new URL(`${origin}/auth/callback`);
       devEndpoint.searchParams.set('mock', 'google');
       devEndpoint.searchParams.set('state', statePayload);
@@ -48,14 +60,34 @@ export async function GET(req: NextRequest) {
       url: authUrl,
       isConfigured,
     });
+    response.headers.set('Cache-Control', 'no-store, no-cache, must-revalidate, private');
+    response.headers.set('Pragma', 'no-cache');
 
-    // Store state in HTTP-only cookie for CSRF verification
+    const isProd = process.env.NODE_ENV === 'production';
+
+    // Store state and PKCE verifier in HTTP-only cookies
     response.cookies.set('oauth_state', stateToken, {
       httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
+      secure: isProd,
       sameSite: 'lax',
       path: '/',
       maxAge: 10 * 60, // 10 minutes
+    });
+
+    response.cookies.set('oauth_code_verifier', codeVerifier, {
+      httpOnly: true,
+      secure: isProd,
+      sameSite: 'lax',
+      path: '/',
+      maxAge: 10 * 60,
+    });
+
+    response.cookies.set('oauth_nonce', nonce, {
+      httpOnly: true,
+      secure: isProd,
+      sameSite: 'lax',
+      path: '/',
+      maxAge: 10 * 60,
     });
 
     return response;
