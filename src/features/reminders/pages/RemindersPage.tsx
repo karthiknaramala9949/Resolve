@@ -9,6 +9,8 @@ import {
   Select,
   BottomSheet,
   useToast,
+  CheckboxStrike,
+  SwipeRow,
 } from '@/design-system';
 import {
   Clock,
@@ -82,8 +84,15 @@ export const RemindersPage: React.FC = () => {
 
   const handleDelete = async (id: string) => {
     await reminderService.deleteReminder(id);
-    toast('Reminder deleted.', 'info');
     loadData();
+    toast('Reminder deleted.', 'info', {
+      label: 'Undo',
+      onClick: async () => {
+        await reminderService.restoreReminder(id);
+        loadData();
+        toast('Reminder restored.', 'success');
+      },
+    });
   };
 
   const handleAddReminder = async () => {
@@ -176,54 +185,38 @@ export const RemindersPage: React.FC = () => {
               <Card
                 key={r.id}
                 variant="default"
-                className="p-4 flex items-center justify-between gap-4 bg-white border border-steel-grey-200 hover:border-steel-grey-300 transition-colors"
+                className="p-1 bg-white border border-steel-grey-200 hover:border-steel-grey-300 transition-colors shadow-2xs"
               >
-                <div className="flex items-center gap-3.5">
-                  <button
-                    type="button"
-                    onClick={() => handleToggleDone(r.id)}
-                    className={`w-5 h-5 rounded-full border flex items-center justify-center transition-colors shrink-0 ${
-                      r.done
-                        ? 'bg-emerald-600 border-emerald-600 text-white'
-                        : 'border-steel-grey-300 hover:border-coral'
-                    }`}
-                    aria-label={r.done ? 'Mark incomplete' : 'Mark completed'}
-                  >
-                    {r.done && <CheckCircle2 className="w-3.5 h-3.5 stroke-[2]" />}
-                  </button>
-
-                  <div>
-                    <h4
-                      className={`text-sm font-medium ${
-                        r.done
-                          ? 'line-through text-steel-grey-400'
-                          : 'text-charcoal'
-                      }`}
-                    >
-                      {r.title}
-                    </h4>
-                    <div className="flex flex-wrap items-center gap-2 mt-0.5 text-xs text-steel-grey-500 font-normal">
-                      {targetCase && (
-                        <>
-                          <span className="font-mono">{targetCase.id}</span>
-                          <span>•</span>
-                          <span>{targetCase.company}</span>
-                          <span>•</span>
-                        </>
-                      )}
-                      <span>Due {new Date(r.date).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })}</span>
-                    </div>
-                  </div>
-                </div>
-
-                <button
-                  type="button"
-                  onClick={() => handleDelete(r.id)}
-                  className="p-1.5 text-steel-grey-400 hover:text-coral rounded-lg hover:bg-steel-grey-50 transition-colors"
-                  aria-label="Delete reminder"
+                <SwipeRow
+                  onDelete={() => handleDelete(r.id)}
+                  deleteLabel={`Delete reminder: ${r.title}`}
                 >
-                  <Trash2 className="w-4 h-4" />
-                </button>
+                  <div className="p-3">
+                    <CheckboxStrike
+                      id={`reminder-check-${r.id}`}
+                      checked={r.done}
+                      onChange={() => handleToggleDone(r.id)}
+                      label={r.title}
+                      subtext={
+                        <div className="flex flex-wrap items-center gap-2 mt-1 text-xs text-steel-grey-500 font-normal">
+                          {targetCase && (
+                            <>
+                              <span className="font-mono bg-steel-grey-100 px-1.5 py-0.5 rounded text-[11px] font-semibold text-charcoal">
+                                {targetCase.id}
+                              </span>
+                              <span>•</span>
+                              <span className="font-medium text-charcoal">{targetCase.company}</span>
+                              <span>•</span>
+                            </>
+                          )}
+                          <span>
+                            Due {new Date(r.date).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })}
+                          </span>
+                        </div>
+                      }
+                    />
+                  </div>
+                </SwipeRow>
               </Card>
             );
           })}

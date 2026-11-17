@@ -86,12 +86,25 @@ export const reminderService = {
   },
 
   /**
-   * Deletes a reminder from Convex.
+   * Deletes a reminder from Convex (soft-delete with deletedAt timestamp).
    */
   async deleteReminder(id: string): Promise<void> {
     const sessionToken = await ensureSessionToken();
     const convex = getConvexClient();
     await convex.mutation(api.reminders.deleteReminder, {
+      sessionToken,
+      id,
+    });
+  },
+
+  /**
+   * Restores a soft-deleted reminder in Convex, keeping the exact document ID,
+   * creation timestamp, case relationship, and version lineage preserved.
+   */
+  async restoreReminder(id: string): Promise<void> {
+    const sessionToken = await ensureSessionToken();
+    const convex = getConvexClient();
+    await convex.mutation(api.reminders.restoreReminder, {
       sessionToken,
       id,
     });

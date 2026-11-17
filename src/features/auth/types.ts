@@ -27,16 +27,19 @@ export interface RegisterFormData {
   email?: string;
   phoneNumber?: string;
   password?: string;
+  turnstileToken?: string;
 }
 
 export interface LoginFormData {
   identifier: string;
   password: string;
   rememberMe?: boolean;
+  turnstileToken?: string;
 }
 
 export interface ForgotPasswordFormData {
   identifier: string;
+  turnstileToken?: string;
 }
 
 export interface ResetPasswordFormData {

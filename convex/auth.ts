@@ -1,4 +1,4 @@
-import { mutation, query } from './_generated/server';
+import { mutation, query, internalMutation, internalQuery } from './_generated/server';
 import { v, ConvexError } from 'convex/values';
 import { Doc, DataModel } from './_generated/dataModel';
 import {
@@ -7,8 +7,10 @@ import {
   generateToken,
   generateOtp,
   timingSafeEqual,
+  timingSafeEqualStrings,
 } from './crypto';
 import { getAuthenticatedUser, toSafeUserProfile, syncUserProfileRecord } from './authHelper';
+import { assertRateLimit, recordAndCheckRateLimit, clearRateLimit, peekRateLimit } from './rateLimits';
 import { createClient } from '@convex-dev/better-auth';
 import { convex } from '@convex-dev/better-auth/plugins';
 import { betterAuth } from 'better-auth';
@@ -119,23 +121,70 @@ export const register = mutation({
     email: v.optional(v.union(v.string(), v.null())),
     phoneNumber: v.optional(v.union(v.string(), v.null())),
     password: v.string(),
+    rememberMe: v.optional(v.boolean()),
     userAgent: v.optional(v.string()),
     ipAddress: v.optional(v.string()),
+    serverSecret: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
     const cleanEmail = args.email ? args.email.trim().toLowerCase() : null;
     const cleanPhone = args.phoneNumber ? args.phoneNumber.trim() : null;
+    const now = new Date().toISOString();
+    const { ip } = resolveTrustedIp(args.serverSecret, args.ipAddress);
+
+    // Fail-closed server-only authentication gate
+    const gate = verifyServerOnlyGate(args.serverSecret);
+    if (!gate.allowed) {
+      await ctx.db.insert('audit_logs', {
+        userId: 'unauthenticated',
+        entityType: 'auth',
+        entityId: (cleanEmail || cleanPhone || 'unknown').slice(0, 64),
+        action: 'unauthorized_direct_call',
+        details: 'Direct client call to auth:register blocked by server gate',
+        ipAddress: ip,
+        userAgent: args.userAgent,
+        timestamp: now,
+      });
+      return {
+        ok: false,
+        code: gate.code || 'UNAUTHORIZED_DIRECT_CALL',
+        error: gate.error || 'Direct authentication calls are forbidden. Authenticate via https://resolve.one.',
+      };
+    }
 
     if (!cleanEmail && !cleanPhone) {
-      throw new Error('Either email address or phone number is required.');
+      return {
+        ok: false,
+        code: 'INVALID_INPUT',
+        error: 'Either email address or phone number is required.',
+      };
     }
 
     if (args.name.trim().length < 2) {
-      throw new Error('Name must be at least 2 characters long.');
+      return {
+        ok: false,
+        code: 'INVALID_INPUT',
+        error: 'Name must be at least 2 characters long.',
+      };
     }
 
     if (args.password.length < 8) {
-      throw new Error('Password must be at least 8 characters long.');
+      return {
+        ok: false,
+        code: 'INVALID_INPUT',
+        error: 'Password must be at least 8 characters long.',
+      };
+    }
+
+    // Rate limiting: 5 registrations per hour per identifier
+    const rateLimitKey = `register:${(cleanEmail || cleanPhone || 'unknown').toLowerCase()}`;
+    const rlCheck = await recordAndCheckRateLimit(ctx, rateLimitKey, 5, 60 * 60 * 1000);
+    if (!rlCheck.allowed) {
+      return {
+        ok: false,
+        code: 'RATE_LIMIT_EXCEEDED',
+        error: `Too many registration attempts. Please try again in ${rlCheck.retryAfterSec} seconds.`,
+      };
     }
 
     // Check if email already registered
@@ -145,7 +194,11 @@ export const register = mutation({
         .withIndex('by_email', (q) => q.eq('email', cleanEmail))
         .first();
       if (existingEmail) {
-        throw new Error('An account with this email address already exists. Please sign in.');
+        return {
+          ok: false,
+          code: 'ALREADY_EXISTS',
+          error: 'An account with this email address already exists. Please sign in.',
+        };
       }
     }
 
@@ -156,13 +209,16 @@ export const register = mutation({
         .withIndex('by_phone', (q) => q.eq('phoneNumber', cleanPhone))
         .first();
       if (existingPhone) {
-        throw new Error('An account with this phone number already exists. Please sign in.');
+        return {
+          ok: false,
+          code: 'ALREADY_EXISTS',
+          error: 'An account with this phone number already exists. Please sign in.',
+        };
       }
     }
 
     // Hash password
     const { hash, salt } = await hashPassword(args.password);
-    const now = new Date().toISOString();
 
     const providers: string[] = [];
     if (cleanEmail) providers.push('email');
@@ -196,13 +252,14 @@ export const register = mutation({
 
     // Create session token
     const sessionToken = generateToken(32);
+    const ttlDays = args.rememberMe !== false ? 30 : 1;
     await ctx.db.insert('sessions', {
       userId,
       token: sessionToken,
-      expiresAt: getExpirationDate(SESSION_TTL_DAYS),
+      expiresAt: getExpirationDate(ttlDays),
       createdAt: now,
       userAgent: args.userAgent,
-      ipAddress: args.ipAddress,
+      ipAddress: ip,
     });
 
     // Generate verification tokens
@@ -239,17 +296,87 @@ export const register = mutation({
       entityId: userId,
       action: 'create',
       details: `User registered via ${providers.join('+')}`,
-      ipAddress: args.ipAddress,
+      ipAddress: ip,
+      timestamp: now,
+    });
+
+    await ctx.db.insert('audit_logs', {
+      userId,
+      entityType: 'auth',
+      entityId: userId,
+      action: 'create',
+      details: `User registered via ${providers.join('+')}`,
+      ipAddress: ip,
+      userAgent: args.userAgent,
       timestamp: now,
     });
 
     return {
+      ok: true,
       user: toSafeUserProfile(user),
       sessionToken,
       verificationRequired,
     };
   },
 });
+
+/**
+ * Verifies whether the request originates from an authoritative Next.js server route.
+ * Compares serverSecret against CONVEX_SERVER_SECRET in constant time.
+ * Fails closed unless ENFORCE_SERVER_ONLY_AUTH is explicitly "false" (or explicit dev deployment).
+ * Does not depend on NODE_ENV being set in Convex.
+ */
+export function verifyServerOnlyGate(serverSecret?: string): {
+  allowed: boolean;
+  isDevBypass: boolean;
+  code?: string;
+  error?: string;
+} {
+  const enforceEnv = process.env.ENFORCE_SERVER_ONLY_AUTH;
+  if (enforceEnv === 'false') {
+    return { allowed: true, isDevBypass: true };
+  }
+
+  const configuredSecret = process.env.CONVEX_SERVER_SECRET;
+  if (!configuredSecret || configuredSecret.length < 32) {
+    return {
+      allowed: false,
+      isDevBypass: false,
+      code: 'SERVER_GATE_MISCONFIGURED',
+      error: 'Convex server-only auth gate is misconfigured: CONVEX_SERVER_SECRET is missing or too short.',
+    };
+  }
+
+  if (!serverSecret || !timingSafeEqualStrings(serverSecret, configuredSecret)) {
+    return {
+      allowed: false,
+      isDevBypass: false,
+      code: 'UNAUTHORIZED_DIRECT_CALL',
+      error: 'Direct client authentication calls are forbidden. Authenticate via https://resolve.one.',
+    };
+  }
+
+  return { allowed: true, isDevBypass: false };
+}
+
+/**
+ * Resolves trusted client IP. If verified through the server gate, the IP provided by
+ * Next.js server headers is accepted as authentic. Otherwise, it is prefixed with 'unverified:'.
+ */
+function resolveTrustedIp(
+  serverSecret?: string,
+  clientIp?: string
+): { ip: string; isVerifiedServerRoute: boolean } {
+  const gate = verifyServerOnlyGate(serverSecret);
+  const isVerifiedServerRoute = gate.allowed && !gate.isDevBypass;
+
+  if (isVerifiedServerRoute && clientIp) {
+    return { ip: clientIp, isVerifiedServerRoute: true };
+  }
+
+  const unverifiedIp = clientIp ? `unverified:${clientIp}` : 'unverified:unknown';
+  return { ip: unverifiedIp, isVerifiedServerRoute: false };
+}
 
 /**
  * Sign in using email or phone number and password.
@@ -261,11 +388,103 @@ export const login = mutation({
     rememberMe: v.optional(v.boolean()),
     userAgent: v.optional(v.string()),
     ipAddress: v.optional(v.string()),
+    serverSecret: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
     const cleanId = args.identifier.trim();
     if (!cleanId || !args.password) {
-      throw new ConvexError('Please enter your email or phone number and password.');
+      return {
+        ok: false,
+        code: 'MISSING_FIELDS',
+        error: 'Please enter your email or phone number and password.',
+      };
+    }
+
+    const now = new Date().toISOString();
+    const { ip } = resolveTrustedIp(args.serverSecret, args.ipAddress);
+
+    // Fail-closed server-only authentication gate
+    const gate = verifyServerOnlyGate(args.serverSecret);
+    if (!gate.allowed) {
+      await ctx.db.insert('audit_logs', {
+        userId: 'unauthenticated',
+        entityType: 'auth',
+        entityId: cleanId.slice(0, 64),
+        action: 'unauthorized_direct_call',
+        details: 'Direct client call to auth:login blocked by server gate',
+        ipAddress: ip,
+        userAgent: args.userAgent,
+        timestamp: now,
+      });
+      return {
+        ok: false,
+        code: gate.code || 'UNAUTHORIZED_DIRECT_CALL',
+        error: gate.error || 'Direct authentication calls are forbidden. Authenticate via https://resolve.one.',
+      };
+    }
+
+    // 1. Per-account ceiling independent of IP (20 failed attempts / hour)
+    // Only counts failed attempts; peeks current count without incrementing until failure occurs
+    const accountRateLimitKey = `login:failed:account:${cleanId.toLowerCase()}`;
+    const accountLimit = await peekRateLimit(ctx, accountRateLimitKey, 20);
+    if (!accountLimit.allowed) {
+      await ctx.db.insert('audit_logs', {
+        userId: 'unauthenticated',
+        entityType: 'auth',
+        entityId: cleanId.slice(0, 64),
+        action: 'rate_limit_exceeded',
+        details: `Failed sign-in attempts exceeded per-account ceiling (20/hr). Retry after ${accountLimit.retryAfterSec}s.`,
+        ipAddress: ip,
+        userAgent: args.userAgent,
+        timestamp: now,
+      });
+      return {
+        ok: false,
+        code: 'RATE_LIMIT_EXCEEDED',
+        error: `Too many failed sign-in attempts for this account. Please try again in ${accountLimit.retryAfterSec} seconds or reset your password.`,
+      };
+    }
+
+    // 2. Strict identifier + IP rate limit (5 attempts / 15 min)
+    const idRateLimitKey = `login:${cleanId.toLowerCase()}:${ip}`;
+    const idLimit = await recordAndCheckRateLimit(ctx, idRateLimitKey, 5, 15 * 60 * 1000);
+    if (!idLimit.allowed) {
+      await ctx.db.insert('audit_logs', {
+        userId: 'unauthenticated',
+        entityType: 'auth',
+        entityId: cleanId.slice(0, 64),
+        action: 'rate_limit_exceeded',
+        details: `Sign-in attempts exceeded limit for identifier. Retry after ${idLimit.retryAfterSec}s.`,
+        ipAddress: ip,
+        userAgent: args.userAgent,
+        timestamp: now,
+      });
+      return {
+        ok: false,
+        code: 'RATE_LIMIT_EXCEEDED',
+        error: `Too many sign-in attempts. Please try again in ${idLimit.retryAfterSec} seconds.`,
+      };
+    }
+
+    // 3. Looser per-IP rate limit across all accounts (30 attempts / 15 min)
+    const ipRateLimitKey = `login:ip:${ip}`;
+    const ipLimit = await recordAndCheckRateLimit(ctx, ipRateLimitKey, 30, 15 * 60 * 1000);
+    if (!ipLimit.allowed) {
+      await ctx.db.insert('audit_logs', {
+        userId: 'unauthenticated',
+        entityType: 'auth',
+        entityId: cleanId.slice(0, 64),
+        action: 'rate_limit_exceeded',
+        details: `Sign-in attempts exceeded limit for IP. Retry after ${ipLimit.retryAfterSec}s.`,
+        ipAddress: ip,
+        userAgent: args.userAgent,
+        timestamp: now,
+      });
+      return {
+        ok: false,
+        code: 'RATE_LIMIT_EXCEEDED',
+        error: `Too many sign-in attempts from this network. Please try again in ${ipLimit.retryAfterSec} seconds.`,
+      };
     }
 
     // Search by email or phone
@@ -282,7 +501,22 @@ export const login = mutation({
     }
 
     if (!user || !user.passwordHash || !user.passwordSalt) {
-      throw new ConvexError('Invalid email, phone number, or password.');
+      await recordAndCheckRateLimit(ctx, accountRateLimitKey, 20, 60 * 60 * 1000);
+      await ctx.db.insert('audit_logs', {
+        userId: user?._id || 'unauthenticated',
+        entityType: 'auth',
+        entityId: cleanId.slice(0, 64),
+        action: 'login_failed',
+        details: 'Failed authentication attempt: invalid credentials',
+        ipAddress: ip,
+        userAgent: args.userAgent,
+        timestamp: now,
+      });
+      return {
+        ok: false,
+        code: 'INVALID_CREDENTIALS',
+        error: 'Invalid email, phone number, or password.',
+      };
     }
 
     // Verify password
@@ -293,10 +527,28 @@ export const login = mutation({
     );
 
     if (!isValid) {
-      throw new ConvexError('Invalid email, phone number, or password.');
+      await recordAndCheckRateLimit(ctx, accountRateLimitKey, 20, 60 * 60 * 1000);
+      await ctx.db.insert('audit_logs', {
+        userId: user._id,
+        entityType: 'auth',
+        entityId: user._id,
+        action: 'login_failed',
+        details: 'Failed authentication attempt: incorrect password',
+        ipAddress: ip,
+        userAgent: args.userAgent,
+        timestamp: now,
+      });
+      return {
+        ok: false,
+        code: 'INVALID_CREDENTIALS',
+        error: 'Invalid email, phone number, or password.',
+      };
     }
 
-    const now = new Date().toISOString();
+    // Reset failed attempt counters on success
+    await clearRateLimit(ctx, accountRateLimitKey);
+    await clearRateLimit(ctx, idRateLimitKey);
+
     const ttlDays = args.rememberMe ? 30 : 1;
 
     // Create session token
@@ -307,7 +559,7 @@ export const login = mutation({
       expiresAt: getExpirationDate(ttlDays),
       createdAt: now,
       userAgent: args.userAgent,
-      ipAddress: args.ipAddress,
+      ipAddress: ip,
     });
 
     // Update lastLoginAt
@@ -323,11 +575,23 @@ export const login = mutation({
       entityId: user._id,
       action: 'login',
       details: 'User signed in with credentials',
-      ipAddress: args.ipAddress,
+      ipAddress: ip,
+      timestamp: now,
+    });
+
+    await ctx.db.insert('audit_logs', {
+      userId: user._id,
+      entityType: 'auth',
+      entityId: user._id,
+      action: 'login',
+      details: 'User signed in with credentials',
+      ipAddress: ip,
+      userAgent: args.userAgent,
       timestamp: now,
     });
 
     return {
+      ok: true,
       user: toSafeUserProfile(user),
       sessionToken,
     };
@@ -429,9 +693,53 @@ export const sendOtp = mutation({
   args: {
     phoneNumber: v.string(),
     type: v.optional(v.string()), // 'phone_otp' | 'password_reset_phone'
+    ipAddress: v.optional(v.string()),
+    serverSecret: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
     const cleanPhone = args.phoneNumber.trim();
+    const { ip } = resolveTrustedIp(args.serverSecret, args.ipAddress);
+
+    // Fail-closed server-only authentication gate
+    const gate = verifyServerOnlyGate(args.serverSecret);
+    if (!gate.allowed) {
+      return {
+        ok: false,
+        code: gate.code || 'UNAUTHORIZED_DIRECT_CALL',
+        error: gate.error || 'Direct authentication calls are forbidden. Authenticate via https://resolve.one.',
+      };
+    }
+
+    // 1. Per-account ceiling independent of IP: 5 OTP sends per 10 minutes per phone
+    const accountLimit = await recordAndCheckRateLimit(ctx, `otp_send:account:${cleanPhone}`, 5, 10 * 60 * 1000);
+    if (!accountLimit.allowed) {
+      return {
+        ok: false,
+        code: 'RATE_LIMIT_EXCEEDED',
+        error: `Too many OTP requests for this phone number. Please wait ${accountLimit.retryAfterSec} seconds.`,
+      };
+    }
+
+    // 2. Strict identifier + IP rate limit: 3 OTP sends per 10 minutes per phone
+    const phoneLimit = await recordAndCheckRateLimit(ctx, `otp_send:${cleanPhone}:${ip}`, 3, 10 * 60 * 1000);
+    if (!phoneLimit.allowed) {
+      return {
+        ok: false,
+        code: 'RATE_LIMIT_EXCEEDED',
+        error: `Too many OTP requests. Please wait ${phoneLimit.retryAfterSec} seconds.`,
+      };
+    }
+
+    // 3. Looser per-IP limit across all numbers: 15 OTP sends per 15 minutes
+    const ipLimit = await recordAndCheckRateLimit(ctx, `otp_send:ip:${ip}`, 15, 15 * 60 * 1000);
+    if (!ipLimit.allowed) {
+      return {
+        ok: false,
+        code: 'RATE_LIMIT_EXCEEDED',
+        error: `Too many OTP requests from this network. Please wait ${ipLimit.retryAfterSec} seconds.`,
+      };
+    }
+
     const type = args.type || 'phone_otp';
     const now = new Date().toISOString();
 
@@ -446,6 +754,7 @@ export const sendOtp = mutation({
     });
 
     return {
+      ok: true,
       success: true,
       message: `Verification code sent to ${cleanPhone}.`,
       expiresInMinutes: 10,
@@ -461,9 +770,55 @@ export const verifyOtp = mutation({
     phoneNumber: v.string(),
     otp: v.string(),
     type: v.optional(v.string()),
+    ipAddress: v.optional(v.string()),
+    serverSecret: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
     const cleanPhone = args.phoneNumber.trim();
+    const { ip } = resolveTrustedIp(args.serverSecret, args.ipAddress);
+    const rateLimitKey = `otp_verify:${cleanPhone}:${ip}`;
+
+    // Fail-closed server-only authentication gate
+    const gate = verifyServerOnlyGate(args.serverSecret);
+    if (!gate.allowed) {
+      return {
+        ok: false,
+        code: gate.code || 'UNAUTHORIZED_DIRECT_CALL',
+        error: gate.error || 'Direct authentication calls are forbidden. Authenticate via https://resolve.one.',
+      };
+    }
+
+    // 1. Per-account ceiling independent of IP: 20 failed OTP verification attempts per hour
+    const accountRateLimitKey = `otp_verify:failed:account:${cleanPhone}`;
+    const accountCheck = await peekRateLimit(ctx, accountRateLimitKey, 20);
+    if (!accountCheck.allowed) {
+      return {
+        ok: false,
+        code: 'RATE_LIMIT_EXCEEDED',
+        error: `Too many failed verification attempts for this phone number. Please wait ${accountCheck.retryAfterSec} seconds.`,
+      };
+    }
+
+    // 2. Strict limit: 5 OTP verification attempts per 15 minutes per phone + IP
+    const rlCheck = await recordAndCheckRateLimit(ctx, rateLimitKey, 5, 15 * 60 * 1000);
+    if (!rlCheck.allowed) {
+      return {
+        ok: false,
+        code: 'RATE_LIMIT_EXCEEDED',
+        error: `Too many verification attempts. Please wait ${rlCheck.retryAfterSec} seconds.`,
+      };
+    }
+
+    // 3. Looser per-IP limit: 25 attempts per 15 minutes
+    const ipLimit = await recordAndCheckRateLimit(ctx, `otp_verify:ip:${ip}`, 25, 15 * 60 * 1000);
+    if (!ipLimit.allowed) {
+      return {
+        ok: false,
+        code: 'RATE_LIMIT_EXCEEDED',
+        error: `Too many verification attempts from this network. Please wait ${ipLimit.retryAfterSec} seconds.`,
+      };
+    }
+
     const type = args.type || 'phone_otp';
     const now = new Date().toISOString();
 
@@ -475,26 +830,45 @@ export const verifyOtp = mutation({
       .first();
 
     if (!tokenDoc || tokenDoc.expiresAt < now) {
-      throw new Error('Invalid or expired verification code. Please check and try again.');
+      return {
+        ok: false,
+        code: 'INVALID_OR_EXPIRED_OTP',
+        error: 'Invalid or expired verification code. Please check and try again.',
+      };
     }
 
     if (tokenDoc.attempts >= 5) {
       await ctx.db.delete(tokenDoc._id);
-      throw new Error('Too many invalid attempts. This verification code has been revoked.');
+      return {
+        ok: false,
+        code: 'OTP_REVOKED',
+        error: 'Too many invalid attempts. This verification code has been revoked.',
+      };
     }
 
     if (tokenDoc.token !== args.otp.trim()) {
+      await recordAndCheckRateLimit(ctx, accountRateLimitKey, 20, 60 * 60 * 1000);
       const nextAttempts = (tokenDoc.attempts || 0) + 1;
       if (nextAttempts >= 5) {
         await ctx.db.delete(tokenDoc._id);
-        throw new Error('Too many invalid attempts. This verification code has been revoked.');
+        return {
+          ok: false,
+          code: 'OTP_REVOKED',
+          error: 'Too many invalid attempts. This verification code has been revoked.',
+        };
       }
       await ctx.db.patch(tokenDoc._id, { attempts: nextAttempts });
-      throw new Error(`Invalid verification code. ${5 - nextAttempts} attempts remaining.`);
+      return {
+        ok: false,
+        code: 'INVALID_OTP',
+        error: `Invalid verification code. ${5 - nextAttempts} attempts remaining.`,
+      };
     }
 
-    // Delete tokenDoc
+    // Delete tokenDoc and reset rate limits on successful verification
     await ctx.db.delete(tokenDoc._id);
+    await clearRateLimit(ctx, accountRateLimitKey);
+    await clearRateLimit(ctx, rateLimitKey);
 
     // If phone verification, update user
     let updatedUser: Doc<'users'> | null = null;
@@ -516,6 +890,7 @@ export const verifyOtp = mutation({
     }
 
     return {
+      ok: true,
       success: true,
       message: 'Phone number verified successfully.',
       user: updatedUser ? toSafeUserProfile(updatedUser) : null,
@@ -575,9 +950,53 @@ export const verifyEmail = mutation({
 export const forgotPassword = mutation({
   args: {
     identifier: v.string(),
+    ipAddress: v.optional(v.string()),
+    serverSecret: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
     const cleanId = args.identifier.trim();
+    const { ip } = resolveTrustedIp(args.serverSecret, args.ipAddress);
+
+    // Fail-closed server-only authentication gate
+    const gate = verifyServerOnlyGate(args.serverSecret);
+    if (!gate.allowed) {
+      return {
+        ok: false,
+        code: gate.code || 'UNAUTHORIZED_DIRECT_CALL',
+        error: gate.error || 'Direct authentication calls are forbidden. Authenticate via https://resolve.one.',
+      };
+    }
+
+    // 1. Per-account ceiling independent of IP: 5 password reset requests per 15 minutes per identifier
+    const accountLimit = await recordAndCheckRateLimit(ctx, `forgot_pwd:account:${cleanId.toLowerCase()}`, 5, 15 * 60 * 1000);
+    if (!accountLimit.allowed) {
+      return {
+        ok: false,
+        code: 'RATE_LIMIT_EXCEEDED',
+        error: `Too many password reset requests for this account. Please wait ${accountLimit.retryAfterSec} seconds.`,
+      };
+    }
+
+    // 2. Strict limit: 3 password reset requests per 15 minutes per identifier + IP
+    const idLimit = await recordAndCheckRateLimit(ctx, `forgot_pwd:${cleanId.toLowerCase()}:${ip}`, 3, 15 * 60 * 1000);
+    if (!idLimit.allowed) {
+      return {
+        ok: false,
+        code: 'RATE_LIMIT_EXCEEDED',
+        error: `Too many password reset requests. Please wait ${idLimit.retryAfterSec} seconds.`,
+      };
+    }
+
+    // 3. Looser per-IP limit: 15 requests per 15 minutes
+    const ipLimit = await recordAndCheckRateLimit(ctx, `forgot_pwd:ip:${ip}`, 15, 15 * 60 * 1000);
+    if (!ipLimit.allowed) {
+      return {
+        ok: false,
+        code: 'RATE_LIMIT_EXCEEDED',
+        error: `Too many password reset requests from this network. Please wait ${ipLimit.retryAfterSec} seconds.`,
+      };
+    }
+
     const isEmail = cleanId.includes('@');
     const now = new Date().toISOString();
 
@@ -619,6 +1038,7 @@ export const forgotPassword = mutation({
     }
 
     return {
+      ok: true,
       success: true,
       message: 'If an account exists, we have sent instructions.',
     };
@@ -633,16 +1053,65 @@ export const resetPassword = mutation({
     identifier: v.string(),
     token: v.string(),
     newPassword: v.string(),
+    ipAddress: v.optional(v.string()),
+    serverSecret: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
     const cleanId = args.identifier.trim();
     const cleanToken = args.token.trim();
+    const { ip } = resolveTrustedIp(args.serverSecret, args.ipAddress);
+    const rateLimitKey = `reset_pwd:${cleanId.toLowerCase()}:${ip}`;
+
+    // Fail-closed server-only authentication gate
+    const gate = verifyServerOnlyGate(args.serverSecret);
+    if (!gate.allowed) {
+      return {
+        ok: false,
+        code: gate.code || 'UNAUTHORIZED_DIRECT_CALL',
+        error: gate.error || 'Direct authentication calls are forbidden. Authenticate via https://resolve.one.',
+      };
+    }
+
+    // 1. Per-account ceiling independent of IP: 5 password reset attempts per 15 minutes per identifier
+    const accountCheck = await recordAndCheckRateLimit(ctx, `reset_pwd:account:${cleanId.toLowerCase()}`, 5, 15 * 60 * 1000);
+    if (!accountCheck.allowed) {
+      return {
+        ok: false,
+        code: 'RATE_LIMIT_EXCEEDED',
+        error: `Too many password reset attempts for this account. Please wait ${accountCheck.retryAfterSec} seconds.`,
+      };
+    }
+
+    // 2. Strict limit: 5 password reset attempts per 15 minutes per identifier + IP
+    const rlCheck = await recordAndCheckRateLimit(ctx, rateLimitKey, 5, 15 * 60 * 1000);
+    if (!rlCheck.allowed) {
+      return {
+        ok: false,
+        code: 'RATE_LIMIT_EXCEEDED',
+        error: `Too many password reset attempts. Please wait ${rlCheck.retryAfterSec} seconds.`,
+      };
+    }
+
+    // 3. Looser per-IP limit: 25 attempts per 15 minutes
+    const ipLimit = await recordAndCheckRateLimit(ctx, `reset_pwd:ip:${ip}`, 25, 15 * 60 * 1000);
+    if (!ipLimit.allowed) {
+      return {
+        ok: false,
+        code: 'RATE_LIMIT_EXCEEDED',
+        error: `Too many password reset attempts from this network. Please wait ${ipLimit.retryAfterSec} seconds.`,
+      };
+    }
+
     const isEmail = cleanId.includes('@');
     const expectedType = isEmail ? 'password_reset_email' : 'password_reset_phone';
     const now = new Date().toISOString();
 
     if (args.newPassword.length < 8) {
-      throw new Error('New password must be at least 8 characters long.');
+      return {
+        ok: false,
+        code: 'WEAK_PASSWORD',
+        error: 'New password must be at least 8 characters long.',
+      };
     }
 
     const tokenDoc = await ctx.db
@@ -653,26 +1122,43 @@ export const resetPassword = mutation({
       .first();
 
     if (!tokenDoc || tokenDoc.expiresAt < now) {
-      throw new Error('Invalid or expired password reset token.');
+      return {
+        ok: false,
+        code: 'INVALID_TOKEN',
+        error: 'Invalid or expired password reset token.',
+      };
     }
 
     if (tokenDoc.attempts >= 5) {
       await ctx.db.delete(tokenDoc._id);
-      throw new Error('Too many invalid attempts. This password reset token has been revoked.');
+      return {
+        ok: false,
+        code: 'TOKEN_REVOKED',
+        error: 'Too many invalid attempts. This password reset token has been revoked.',
+      };
     }
 
     if (tokenDoc.token !== cleanToken) {
       const nextAttempts = (tokenDoc.attempts || 0) + 1;
       if (nextAttempts >= 5) {
         await ctx.db.delete(tokenDoc._id);
-        throw new Error('Too many invalid attempts. This password reset token has been revoked.');
+        return {
+          ok: false,
+          code: 'TOKEN_REVOKED',
+          error: 'Too many invalid attempts. This password reset token has been revoked.',
+        };
       }
       await ctx.db.patch(tokenDoc._id, { attempts: nextAttempts });
-      throw new Error(`Invalid password reset token. ${5 - nextAttempts} attempts remaining.`);
+      return {
+        ok: false,
+        code: 'INVALID_TOKEN',
+        error: `Invalid password reset token. ${5 - nextAttempts} attempts remaining.`,
+      };
     }
 
-    // Delete tokenDoc
+    // Delete tokenDoc and reset rate limit on successful verification
     await ctx.db.delete(tokenDoc._id);
+    await clearRateLimit(ctx, rateLimitKey);
 
     // Find user
     const user = isEmail
@@ -686,7 +1172,11 @@ export const resetPassword = mutation({
           .first();
 
     if (!user) {
-      throw new Error('User not found.');
+      return {
+        ok: false,
+        code: 'USER_NOT_FOUND',
+        error: 'User not found.',
+      };
     }
 
     // Update password
@@ -695,6 +1185,15 @@ export const resetPassword = mutation({
       passwordHash: hash,
       passwordSalt: salt,
       updatedAt: now,
+    });
+
+    await ctx.db.insert('audit_logs', {
+      userId: user._id,
+      entityType: 'auth',
+      entityId: user._id,
+      action: 'update',
+      details: 'Password was successfully reset',
+      timestamp: now,
     });
 
     // Invalidate existing sessions
@@ -708,9 +1207,56 @@ export const resetPassword = mutation({
     }
 
     return {
+      ok: true,
       success: true,
       message: 'Password reset successfully. Please sign in with your new password.',
     };
+  },
+});
+
+/**
+ * Emergency incident response: forcefully revokes all active sessions across all users.
+ * Accessible strictly as an internal mutation via CLI (npx convex run auth:forceRevokeAllSessions)
+ * or Convex Dashboard.
+ */
+export const forceRevokeAllSessions = internalMutation({
+  args: {
+    reason: v.optional(v.string()),
+  },
+  handler: async (ctx, args) => {
+    // 1. Purge custom application sessions table
+    const sessions = await ctx.db.query('sessions').collect();
+    let revokedCount = 0;
+    for (const session of sessions) {
+      await ctx.db.delete(session._id);
+      revokedCount++;
+    }
+
+    // 2. Purge Better Auth component sessions if component is registered
+    let betterAuthPurged = false;
+    try {
+      if (components?.betterAuth?.adapter?.deleteMany) {
+        await ctx.runMutation(components.betterAuth.adapter.deleteMany, {
+          input: {
+            model: 'session',
+          },
+        });
+        betterAuthPurged = true;
+      }
+    } catch (err) {
+      // Better Auth component may be unmounted in unit/mock test environments
+      console.warn('[AUTH INCIDENT] Better Auth session purge note:', err);
+    }
+
+    await ctx.db.insert('audit_logs', {
+      userId: 'system',
+      entityType: 'auth',
+      entityId: 'global_session_revocation',
+      action: 'security_incident_response',
+      details: `Forcefully revoked all active sessions (${revokedCount} app sessions, Better Auth component purged: ${betterAuthPurged}). Reason: ${args.reason || 'Security incident containment'}`,
+      timestamp: new Date().toISOString(),
+    });
+    return { success: true, revokedSessionsCount: revokedCount, betterAuthPurged };
   },
 });
 
@@ -812,8 +1358,9 @@ export const updateProfile = mutation({
 
 /**
  * Backfill and synchronize all existing users to profiles table.
+ * Restricted to internal administrative invocation (Dashboard / CLI).
  */
-export const backfillProfiles = mutation({
+export const backfillProfiles = internalMutation({
   args: {},
   handler: async (ctx) => {
     const now = new Date().toISOString();
@@ -850,6 +1397,18 @@ export const updateE2EEKeys = mutation({
       recoveryKeyHash: args.recoveryKeyHash,
       recoveryWrappedMasterKey: args.recoveryWrappedMasterKey,
       updatedAt: now,
+    });
+
+    // Audit log key management / recovery key configuration
+    await ctx.db.insert('audit_logs', {
+      userId: user._id,
+      entityType: 'crypto',
+      entityId: user._id,
+      action: args.recoveryKeyHash ? 'key_rotate' : 'update',
+      details: args.recoveryKeyHash
+        ? 'User E2EE master key bundle updated with recovery key'
+        : 'User E2EE master key bundle updated',
+      timestamp: now,
     });
 
     return { success: true };
@@ -940,7 +1499,7 @@ export const syncExternalSession = mutation({
   },
 });
 
-export const listUserDiagnostics = query({
+export const listUserDiagnostics = internalQuery({
   args: {},
   handler: async (ctx) => {
     const users = await ctx.db.query('users').take(20);
@@ -958,14 +1517,14 @@ export const listUserDiagnostics = query({
   },
 });
 
-export const testCryptoInConvex = query({
+export const testCryptoInConvex = internalQuery({
   args: { password: v.string(), salt: v.string() },
   handler: async (ctx, args) => {
     try {
       const { hash } = await hashPassword(args.password, args.salt);
       return { success: true, hash };
     } catch (err: any) {
-      return { success: false, error: err?.message || String(err), stack: err?.stack };
+      return { success: false, error: 'Cryptographic operation failed.' };
     }
   },
 });

@@ -14,6 +14,8 @@ import {
   Select,
   useToast,
   BottomSheet,
+  CopyButton,
+  ProgressRing,
 } from '@/design-system';
 import {
   ArrowLeft,
@@ -516,6 +518,8 @@ export const CaseDetailPage: React.FC = () => {
   const claimedAmt = caseData.amount || 0;
   const companyAmt = caseData.threeStateOutcome?.companyStated?.amount ?? null;
   const receivedAmt = caseData.threeStateOutcome?.customerConfirmed?.amountReceived ?? null;
+  const outcomeStepsCompleted = caseData.threeStateOutcome?.customerConfirmed ? 3 : (caseData.threeStateOutcome?.companyStated ? 2 : 1);
+  const outcomeProgressPercent = Math.round((outcomeStepsCompleted / 3) * 100);
 
   return (
     <div className="space-y-6 animate-in fade-in duration-150">
@@ -555,6 +559,7 @@ export const CaseDetailPage: React.FC = () => {
             <span className="font-mono text-xs text-steel-grey-600 bg-steel-grey-100 px-2 py-0.5 rounded leading-none">
               {caseData.id}
             </span>
+            <CopyButton value={caseData.id} label="case ID" />
             <span className="text-xs text-steel-grey-400">•</span>
             <span className="text-xs text-steel-grey-500">
               Created {new Date(caseData.createdAt).toLocaleDateString('en-IN')}
@@ -720,13 +725,22 @@ export const CaseDetailPage: React.FC = () => {
       {/* Refund Reality Check */}
       <Card variant="subtle" className="p-5 sm:p-6 space-y-4 bg-white border border-steel-grey-200 rounded-2xl shadow-xs">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-          <div>
-            <h3 className="text-xs font-medium text-steel-grey-600">
-              Refund reality check
-            </h3>
-            <p className="text-xs text-steel-grey-500 mt-0.5 font-normal">
-              Never confuse a store promise with money received. Always compare with your bank or UPI statement.
-            </p>
+          <div className="flex items-center gap-3.5">
+            <ProgressRing
+              progress={outcomeProgressPercent}
+              size={48}
+              strokeWidth={4}
+              variant={outcomeStepsCompleted === 3 ? 'success' : 'default'}
+              aria-label={`Verification progress: stage ${outcomeStepsCompleted} of 3`}
+            />
+            <div>
+              <h3 className="text-xs font-medium text-steel-grey-600">
+                Refund reality check ({outcomeStepsCompleted}/3 stages verified)
+              </h3>
+              <p className="text-xs text-steel-grey-500 mt-0.5 font-normal">
+                Never confuse a store promise with money received. Always compare with your bank statement.
+              </p>
+            </div>
           </div>
 
           <Button

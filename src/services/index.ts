@@ -9,4 +9,5 @@ export * from './documentService';
 export * from './purchaseService';
 export * from './reminderService';
 export * from './dashboardService';
+export * from './deviceService';
 

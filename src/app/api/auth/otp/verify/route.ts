@@ -4,6 +4,10 @@ import { authStore } from '@/lib/server/db/authStore';
 import { rateLimiter, RATE_LIMITS, applyRateLimitHeaders } from '@/lib/server/auth/rateLimit';
 import { getCurrentUser } from '@/lib/server/auth/session';
 import { validateCsrf } from '@/lib/server/auth/csrf';
+import { getServerConvexClient } from '@/lib/server/convex/convexClient';
+import { getClientIp } from '@/lib/server/auth/ip';
+import { getConvexServerSecret, checkGateError } from '@/lib/server/auth/serverSecret';
+import { api } from '../../../../../../convex/_generated/api';
 
 const VerifyOtpSchema = z.object({
   phoneNumber: z.string().min(10, 'Valid phone number is required').optional(),
@@ -18,7 +22,8 @@ export async function POST(req: NextRequest) {
       return csrfCheck.errorResponse;
     }
 
-    const ip = req.headers.get('x-forwarded-for') || '127.0.0.1';
+    const clientIpInfo = getClientIp(req);
+    const ip = clientIpInfo.ip;
     const body = await req.json().catch(() => ({}));
     const parse = VerifyOtpSchema.safeParse(body);
 
@@ -48,7 +53,25 @@ export async function POST(req: NextRequest) {
 
     const cleanPhone = phone.trim();
 
-    // Check rate limit for verification attempts
+    // 1. Per-account ceiling independent of IP: 10 attempts per 15 min
+    const accountRlKey = `otp-verify:account:${cleanPhone}`;
+    const accountRlCheck = await rateLimiter.check(
+      accountRlKey,
+      10,
+      RATE_LIMITS.OTP_VERIFY.windowMs
+    );
+    if (!accountRlCheck.allowed) {
+      const res = NextResponse.json(
+        {
+          error: `Too many invalid attempts for this phone number. Please wait ${accountRlCheck.retryAfterSec} seconds.`,
+        },
+        { status: 429 }
+      );
+      applyRateLimitHeaders(res.headers, 10, accountRlCheck.remaining, accountRlCheck.resetAt, accountRlCheck.retryAfterSec);
+      return res;
+    }
+
+    // 2. Check rate limit for verification attempts (phone + IP)
     const rlKey = `otp-verify:${cleanPhone}:${ip}`;
     const rlCheck = await rateLimiter.check(
       rlKey,
@@ -64,6 +87,43 @@ export async function POST(req: NextRequest) {
       );
       applyRateLimitHeaders(res.headers, RATE_LIMITS.OTP_VERIFY.max, rlCheck.remaining, rlCheck.resetAt, rlCheck.retryAfterSec);
       return res;
+    }
+
+    // Authoritative Convex verifyOtp invocation
+    const client = getServerConvexClient();
+    if (client) {
+      try {
+        const serverSecret = getConvexServerSecret();
+        const convexRes = await client.mutation(api.auth.verifyOtp, {
+          phoneNumber: cleanPhone,
+          otp,
+          type,
+          ipAddress: ip,
+          serverSecret,
+        });
+
+        // Fail-safe: map gate rejections to HTTP 500
+        const gateErrResponse = checkGateError(convexRes);
+        if (gateErrResponse) {
+          return gateErrResponse;
+        }
+
+        if (convexRes?.ok === false) {
+          return NextResponse.json(
+            { error: convexRes.error || 'Verification failed.' },
+            { status: convexRes.code === 'RATE_LIMIT_EXCEEDED' ? 429 : 400 }
+          );
+        }
+        if (convexRes?.ok === true) {
+          return NextResponse.json({
+            success: true,
+            message: convexRes.message || 'Phone number verified successfully.',
+            user: convexRes.user,
+          });
+        }
+      } catch (err: any) {
+        console.warn('[Convex verifyOtp deferred]:', err?.message || err);
+      }
     }
 
     const tokenRecord = await authStore.findToken(cleanPhone, otp, type);

@@ -6,14 +6,20 @@ import { CheckCircle2, AlertTriangle, Info, XCircle, X } from 'lucide-react';
 
 export type ToastType = 'success' | 'warning' | 'info' | 'error';
 
+export interface ToastAction {
+  label: string;
+  onClick: () => void;
+}
+
 interface Toast {
   id: string;
   message: string;
   type: ToastType;
+  action?: ToastAction;
 }
 
 interface ToastContextType {
-  toast: (message: string, type?: ToastType) => void;
+  toast: (message: string, type?: ToastType, action?: ToastAction) => void;
 }
 
 const ToastContext = createContext<ToastContextType | undefined>(undefined);
@@ -26,13 +32,14 @@ export const ToastProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   }, []);
 
   const toast = useCallback(
-    (message: string, type: ToastType = 'info') => {
+    (message: string, type: ToastType = 'info', action?: ToastAction) => {
       const id = `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
-      setToasts((prev) => [...prev, { id, message, type }]);
+      setToasts((prev) => [...prev, { id, message, type, action }]);
 
+      const timeout = action ? 6000 : 4000;
       setTimeout(() => {
         removeToast(id);
-      }, 4000);
+      }, timeout);
     },
     [removeToast]
   );
@@ -72,9 +79,23 @@ export const ToastProvider: React.FC<{ children: React.ReactNode }> = ({ childre
             >
               <div className="flex items-start gap-3 min-w-0">
                 <div className="mt-0.5 shrink-0">{icons[t.type]}</div>
-                <p className="text-xs sm:text-sm font-semibold text-charcoal leading-snug break-words">
-                  {t.message}
-                </p>
+                <div className="space-y-1">
+                  <p className="text-xs sm:text-sm font-semibold text-charcoal leading-snug break-words">
+                    {t.message}
+                  </p>
+                  {t.action && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        t.action!.onClick();
+                        removeToast(t.id);
+                      }}
+                      className="text-xs font-bold text-coral hover:text-coral-700 underline focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-coral/50 cursor-pointer"
+                    >
+                      {t.action.label}
+                    </button>
+                  )}
+                </div>
               </div>
               <button
                 type="button"

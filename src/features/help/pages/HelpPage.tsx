@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
-import { Button, Card, useToast } from '@/design-system';
+import { Button, Card, useToast, Accordion } from '@/design-system';
 import {
   Phone,
   ExternalLink,
@@ -272,6 +272,45 @@ export const HelpPage: React.FC = () => {
             </div>
           </Card>
         ))}
+      </div>
+
+      {/* Frequently Asked Questions Accordion */}
+      <div className="space-y-3 pt-2">
+        <h3 className="text-lg font-serif font-medium text-charcoal">
+          Frequently asked questions
+        </h3>
+        <p className="text-xs text-steel-grey-600 font-normal">
+          Answers to common questions regarding rights, dispute procedures, and platform security.
+        </p>
+
+        <Accordion
+          items={[
+            {
+              id: 'faq-nch-vs-court',
+              title: 'When should I contact NCH versus filing in Consumer Commission (e-Jagriti)?',
+              content:
+                'Start with the National Consumer Helpline (NCH - 1915). NCH is free, fast, and works directly with company grievance desks for 800+ consumer brands. If the company fails to respond satisfactorily within 15–30 days or rejects your legitimate claim, proceed to e-Jagriti to file a formal case before your District Consumer Commission.',
+            },
+            {
+              id: 'faq-e2ee',
+              title: 'How does RESOLVE-ONE protect my personal documents and evidence?',
+              content:
+                'All sensitive documents (receipts, chat logs, bank proofs) are client-side encrypted using AES-GCM (256-bit) via standard WebCrypto before leaving your browser. The storage server only sees encrypted ciphertext and SHA-256 integrity hashes; only you hold the decryption keys in your browser vault.',
+            },
+            {
+              id: 'faq-missing-refund',
+              title: 'What if a seller claims "refund processed" but money has not reached my account?',
+              content:
+                'Ask the seller for the 12-digit UTR (Unique Transaction Reference) or RRN number and the acquiring bank name. Contact your bank with this reference. If the bank confirms no funds arrived within 5-7 business days, lodge a grievance with your bank and escalate to the RBI Integrated Ombudsman (14448).',
+            },
+            {
+              id: 'faq-return-fees',
+              title: 'Can a seller refuse return or deduct fees for defective goods delivered?',
+              content:
+                'Under the Consumer Protection (E-Commerce) Rules 2020, no e-commerce entity may impose arbitrary cancellation charges or refuse returns if the delivered product was defective, deficient, delivered late, or not as described on the platform.',
+            },
+          ]}
+        />
       </div>
     </div>
   );

@@ -28,8 +28,10 @@ export async function GET(req: NextRequest) {
       .digest('base64url');
     const nonce = generateRandomToken(24);
 
+    const rememberMe = searchParams.get('rememberMe') !== 'false';
+
     const statePayload = Buffer.from(
-      JSON.stringify({ state: stateToken, returnTo: safeReturnTo })
+      JSON.stringify({ state: stateToken, returnTo: safeReturnTo, rememberMe })
     ).toString('base64url');
 
     let authUrl: string;

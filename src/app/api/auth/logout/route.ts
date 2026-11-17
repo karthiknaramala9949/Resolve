@@ -28,9 +28,12 @@ export async function POST(req: NextRequest) {
     response.headers.set('Pragma', 'no-cache');
 
     clearSessionCookie(response);
+    response.cookies.set('better-auth.session_token', '', { path: '/', maxAge: 0, expires: new Date(0) });
+    response.cookies.set('__Secure-better-auth.session_token', '', { path: '/', maxAge: 0, expires: new Date(0) });
     response.cookies.set('resolve_guest', '', {
       path: '/',
       maxAge: 0,
+      expires: new Date(0),
     });
     return response;
   } catch (err) {

@@ -125,7 +125,28 @@ export default {
         'subtle': '0 1px 2px rgba(31, 27, 22, 0.04)',
         'elevated': '0 4px 12px rgba(31, 27, 22, 0.06), 0 1px 3px rgba(31, 27, 22, 0.03)',
         'floating': '0 12px 28px rgba(31, 27, 22, 0.08), 0 2px 6px rgba(31, 27, 22, 0.04)',
-      }
+      },
+      keyframes: {
+        shake: {
+          '0%, 100%': { transform: 'translateX(0)' },
+          '20%, 60%': { transform: 'translateX(-4px)' },
+          '40%, 80%': { transform: 'translateX(4px)' },
+        },
+        scaleIn: {
+          '0%': { transform: 'scale(0.9)', opacity: '0' },
+          '100%': { transform: 'scale(1)', opacity: '1' },
+        },
+        pop: {
+          '0%': { transform: 'scale(0.95)' },
+          '50%': { transform: 'scale(1.05)' },
+          '100%': { transform: 'scale(1)' },
+        },
+      },
+      animation: {
+        shake: 'shake 250ms ease-in-out',
+        'scale-in': 'scaleIn 150ms ease-out',
+        pop: 'pop 200ms ease-out',
+      },
     },
   },
   plugins: [],

@@ -6,6 +6,9 @@ import { setSessionCookie } from '@/lib/server/auth/session';
 import { rateLimiter } from '@/lib/server/auth/rateLimit';
 import { getServerConvexClient } from '@/lib/server/convex/convexClient';
 import { validateCsrf } from '@/lib/server/auth/csrf';
+import { verifyTurnstileToken } from '@/lib/server/security/turnstile';
+import { getClientIp } from '@/lib/server/auth/ip';
+import { getConvexServerSecret, checkGateError } from '@/lib/server/auth/serverSecret';
 import { api } from '../../../../../convex/_generated/api';
 
 const RegisterSchema = z.object({
@@ -18,6 +21,8 @@ const RegisterSchema = z.object({
     .regex(/[A-Z]/, 'Password must contain at least one uppercase letter')
     .regex(/[0-9]/, 'Password must contain at least one number')
     .regex(/[^A-Za-z0-9]/, 'Password must contain at least one special character'),
+  rememberMe: z.boolean().optional(),
+  turnstileToken: z.string().optional(),
 });
 
 export async function POST(req: NextRequest) {
@@ -27,7 +32,8 @@ export async function POST(req: NextRequest) {
       return csrfCheck.errorResponse;
     }
 
-    const ip = req.headers.get('x-forwarded-for') || '127.0.0.1';
+    const clientIpInfo = getClientIp(req);
+    const ip = clientIpInfo.ip;
     const body = await req.json();
 
     const parseResult = RegisterSchema.safeParse(body);
@@ -36,7 +42,17 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: firstIssue }, { status: 400 });
     }
 
-    const { name, email, phoneNumber, password } = parseResult.data;
+    // Verify Cloudflare Turnstile CAPTCHA token
+    const turnstileCheck = await verifyTurnstileToken(parseResult.data.turnstileToken, ip);
+    if (!turnstileCheck.success) {
+      return NextResponse.json(
+        { error: turnstileCheck.error || 'Security challenge failed. Please complete the CAPTCHA.' },
+        { status: 400 }
+      );
+    }
+
+    const { name, email, phoneNumber, password, rememberMe } = parseResult.data;
+    const isRemembered = rememberMe !== false;
 
     if (!email && !phoneNumber) {
       return NextResponse.json(
@@ -61,14 +77,30 @@ export async function POST(req: NextRequest) {
     const client = getServerConvexClient();
     if (client) {
       try {
+        const serverSecret = getConvexServerSecret();
         const convexRes = await client.mutation(api.auth.register, {
           name,
           email: email || null,
           phoneNumber: phoneNumber || null,
           password,
+          rememberMe: isRemembered,
           userAgent: req.headers.get('user-agent') || undefined,
           ipAddress: ip,
+          serverSecret,
         });
+
+        // Fail-safe: map gate rejections to HTTP 500
+        const gateErrResponse = checkGateError(convexRes);
+        if (gateErrResponse) {
+          return gateErrResponse;
+        }
+
+        if (convexRes?.ok === false) {
+          return NextResponse.json(
+            { error: convexRes.error || 'Registration failed.' },
+            { status: convexRes.code === 'ALREADY_EXISTS' ? 409 : (convexRes.code === 'RATE_LIMIT_EXCEEDED' ? 429 : 400) }
+          );
+        }
 
         if (convexRes?.sessionToken && convexRes?.user) {
           const response = NextResponse.json(
@@ -84,7 +116,7 @@ export async function POST(req: NextRequest) {
           response.headers.set('Cache-Control', 'no-store, no-cache, must-revalidate, private');
           response.headers.set('Pragma', 'no-cache');
           rateLimiter.applyRateLimitHeaders(response, rlCheck);
-          setSessionCookie(response, convexRes.sessionToken);
+          setSessionCookie(response, convexRes.sessionToken, isRemembered);
           return response;
         }
       } catch (err: any) {
@@ -145,7 +177,7 @@ export async function POST(req: NextRequest) {
     const session = await authStore.createSession(user.id, {
       userAgent: req.headers.get('user-agent') || undefined,
       ipAddress: ip,
-    });
+    }, isRemembered);
 
     const response = NextResponse.json(
       {
@@ -161,7 +193,7 @@ export async function POST(req: NextRequest) {
     response.headers.set('Cache-Control', 'no-store, no-cache, must-revalidate, private');
     response.headers.set('Pragma', 'no-cache');
     rateLimiter.applyRateLimitHeaders(response, rlCheck);
-    setSessionCookie(response, session.token);
+    setSessionCookie(response, session.token, isRemembered);
     return response;
   } catch (err: any) {
     console.error('[Register API Error]:', err);

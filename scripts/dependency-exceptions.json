@@ -1,28 +1,229 @@
 {
   "policyVersion": "1.0.0",
   "organization": "RESOLVE-ONE Security Engineering",
-  "lastReviewed": "2026-11-12T14:40:00Z",
+  "lastReviewed": "2026-11-17T10:27:20.875Z",
   "enforcement": {
     "blockUnapprovedCritical": true,
     "blockUnapprovedHigh": true,
     "blockExpiredExceptions": true,
-    "requireMitigation": true
+    "requireMitigation": true,
+    "rejectPlaceholderIds": true
   },
   "exceptions": [
     {
       "package": "next",
+      "installedVersion": "14.2.35",
       "severity": "critical",
       "scope": "prod",
       "advisories": [
-        "https://github.com/advisories/GHSA-9g78-v8wh-95hm",
-        "https://github.com/advisories/GHSA-8g9c-48cv-v9vh",
-        "https://github.com/advisories/GHSA-4v7x-pq47-2rmg"
+        "GHSA-9g9p-9gw9-jx7f",
+        "GHSA-h25m-26qc-wcjf",
+        "GHSA-ggv3-7p47-pfv8",
+        "GHSA-3x4c-7xq6-9pq8",
+        "GHSA-q4gf-8mx6-v5v3",
+        "GHSA-8h8q-6873-q5fj",
+        "GHSA-3g8h-86w9-wvmq",
+        "GHSA-ffhc-5mcf-pf4q",
+        "GHSA-vfv6-92ff-j949",
+        "GHSA-gx5p-jg67-6x7h",
+        "GHSA-h64f-5h5j-jqjh",
+        "GHSA-c4j6-fc7j-m34r",
+        "GHSA-wfc6-r584-vfw7",
+        "GHSA-36qx-fr4f-26g5",
+        "GHSA-m99w-x7hq-7vfj",
+        "GHSA-89xv-2m56-2m9x",
+        "GHSA-68g3-v927-f742",
+        "GHSA-4633-3j49-mh5q",
+        "GHSA-4c39-4ccg-62r3",
+        "GHSA-p9j2-gv94-2wf4",
+        "GHSA-955p-x3mx-jcvp",
+        "GHSA-p293-qw3h-jr36",
+        "GHSA-2xp9-vwfh-vxw4",
+        "GHSA-2464-fhr4-w9xw",
+        "GHSA-p3m5-59mp-jv5r"
       ],
-      "reason": "Next.js 14.2.35 contains known advisories affecting image optimization and App Router cache handling. Upgrading to Next.js 15 requires breaking migration across async request headers, React 19, and Better Auth adapter.",
-      "exploitability": "Low in RESOLVE-ONE architecture: remote image optimization is restricted to trusted origins, App Router routes enforce Cache-Control: no-store, and server actions are not used for privileged mutations (Convex is used directly).",
+      "advisoryDetails": [
+        {
+          "id": "GHSA-9g9p-9gw9-jx7f",
+          "title": "Next.js self-hosted applications vulnerable to DoS via Image Optimizer remotePatterns configuration",
+          "affectedRange": ">=10.0.0 <15.5.10",
+          "url": "https://github.com/advisories/GHSA-9g9p-9gw9-jx7f",
+          "severity": "moderate"
+        },
+        {
+          "id": "GHSA-h25m-26qc-wcjf",
+          "title": "Next.js HTTP request deserialization can lead to DoS when using insecure React Server Components",
+          "affectedRange": ">=13.0.0 <15.0.8",
+          "url": "https://github.com/advisories/GHSA-h25m-26qc-wcjf",
+          "severity": "high"
+        },
+        {
+          "id": "GHSA-ggv3-7p47-pfv8",
+          "title": "Next.js: HTTP request smuggling in rewrites",
+          "affectedRange": ">=9.5.0 <15.5.13",
+          "url": "https://github.com/advisories/GHSA-ggv3-7p47-pfv8",
+          "severity": "moderate"
+        },
+        {
+          "id": "GHSA-3x4c-7xq6-9pq8",
+          "title": "Next.js: Unbounded next/image disk cache growth can exhaust storage",
+          "affectedRange": ">=10.0.0 <15.5.14",
+          "url": "https://github.com/advisories/GHSA-3x4c-7xq6-9pq8",
+          "severity": "moderate"
+        },
+        {
+          "id": "GHSA-q4gf-8mx6-v5v3",
+          "title": "Next.js has a Denial of Service with Server Components",
+          "affectedRange": ">=13.0.0 <15.5.15",
+          "url": "https://github.com/advisories/GHSA-q4gf-8mx6-v5v3",
+          "severity": "high"
+        },
+        {
+          "id": "GHSA-8h8q-6873-q5fj",
+          "title": "Next.js Vulnerable to Denial of Service with Server Components",
+          "affectedRange": ">=13.0.0 <15.5.16",
+          "url": "https://github.com/advisories/GHSA-8h8q-6873-q5fj",
+          "severity": "high"
+        },
+        {
+          "id": "GHSA-3g8h-86w9-wvmq",
+          "title": "Next.js's Middleware / Proxy redirects can be cache-poisoned",
+          "affectedRange": ">=12.2.0 <15.5.16",
+          "url": "https://github.com/advisories/GHSA-3g8h-86w9-wvmq",
+          "severity": "low"
+        },
+        {
+          "id": "GHSA-ffhc-5mcf-pf4q",
+          "title": "Next.js vulnerable to cross-site scripting in App Router applications using CSP nonces",
+          "affectedRange": ">=13.4.0 <15.5.16",
+          "url": "https://github.com/advisories/GHSA-ffhc-5mcf-pf4q",
+          "severity": "moderate"
+        },
+        {
+          "id": "GHSA-vfv6-92ff-j949",
+          "title": "Next.js vulnerable to cache poisoning via collisions in React Server Component cache-busting",
+          "affectedRange": ">=13.4.6 <15.5.16",
+          "url": "https://github.com/advisories/GHSA-vfv6-92ff-j949",
+          "severity": "low"
+        },
+        {
+          "id": "GHSA-gx5p-jg67-6x7h",
+          "title": "Next.js has cross-site scripting in beforeInteractive scripts with untrusted input",
+          "affectedRange": ">=13.0.0 <15.5.16",
+          "url": "https://github.com/advisories/GHSA-gx5p-jg67-6x7h",
+          "severity": "moderate"
+        },
+        {
+          "id": "GHSA-h64f-5h5j-jqjh",
+          "title": "Next.js has a Denial of Service in the Image Optimization API",
+          "affectedRange": ">=10.0.0 <15.5.16",
+          "url": "https://github.com/advisories/GHSA-h64f-5h5j-jqjh",
+          "severity": "moderate"
+        },
+        {
+          "id": "GHSA-c4j6-fc7j-m34r",
+          "title": "Next.js vulnerable to server-side request forgery in applications using WebSocket upgrades",
+          "affectedRange": ">=13.4.13 <15.5.16",
+          "url": "https://github.com/advisories/GHSA-c4j6-fc7j-m34r",
+          "severity": "high"
+        },
+        {
+          "id": "GHSA-wfc6-r584-vfw7",
+          "title": "Next.js vulnerable to cache poisoning in React Server Component responses",
+          "affectedRange": ">=14.2.0 <15.5.16",
+          "url": "https://github.com/advisories/GHSA-wfc6-r584-vfw7",
+          "severity": "moderate"
+        },
+        {
+          "id": "GHSA-36qx-fr4f-26g5",
+          "title": "Next.js has a Middleware / Proxy bypass in Pages Router applications using i18n",
+          "affectedRange": ">=12.2.0 <15.5.16",
+          "url": "https://github.com/advisories/GHSA-36qx-fr4f-26g5",
+          "severity": "high"
+        },
+        {
+          "id": "GHSA-m99w-x7hq-7vfj",
+          "title": "Next.js: Denial of Service in App Router using Server Actions",
+          "affectedRange": ">=13.0.0 <15.5.21",
+          "url": "https://github.com/advisories/GHSA-m99w-x7hq-7vfj",
+          "severity": "high"
+        },
+        {
+          "id": "GHSA-89xv-2m56-2m9x",
+          "title": "Next.js: Server-Side Request Forgery in Server Actions on custom servers",
+          "affectedRange": ">=14.1.1 <15.5.21",
+          "url": "https://github.com/advisories/GHSA-89xv-2m56-2m9x",
+          "severity": "high"
+        },
+        {
+          "id": "GHSA-68g3-v927-f742",
+          "title": "Next.js: Cache confusion of response bodies for requests with bodies",
+          "affectedRange": ">=13.0.0 <15.5.21",
+          "url": "https://github.com/advisories/GHSA-68g3-v927-f742",
+          "severity": "moderate"
+        },
+        {
+          "id": "GHSA-4633-3j49-mh5q",
+          "title": "Next.js: Cache confusion of response bodies for requests with bodies containing invalid UTF-8 byte sequences",
+          "affectedRange": ">=13.0.0 <15.5.21",
+          "url": "https://github.com/advisories/GHSA-4633-3j49-mh5q",
+          "severity": "moderate"
+        },
+        {
+          "id": "GHSA-4c39-4ccg-62r3",
+          "title": "Next.js: Unbounded Server Action payload in Edge runtime",
+          "affectedRange": ">=13.0.0 <15.5.21",
+          "url": "https://github.com/advisories/GHSA-4c39-4ccg-62r3",
+          "severity": "moderate"
+        },
+        {
+          "id": "GHSA-p9j2-gv94-2wf4",
+          "title": "Next.js: Server-Side Request Forgery in rewrites via attacker-controlled destination hostname",
+          "affectedRange": ">=12.0.0 <15.5.21",
+          "url": "https://github.com/advisories/GHSA-p9j2-gv94-2wf4",
+          "severity": "high"
+        },
+        {
+          "id": "GHSA-955p-x3mx-jcvp",
+          "title": "Next.js: Unauthenticated disclosure of internal Server Function endpoints",
+          "affectedRange": ">=13.0.0 <15.5.21",
+          "url": "https://github.com/advisories/GHSA-955p-x3mx-jcvp",
+          "severity": "moderate"
+        },
+        {
+          "id": "GHSA-p293-qw3h-jr36",
+          "title": "Next.js: Unauthenticated Remote Code Execution on windows-hosted servers",
+          "affectedRange": ">=13.4.0 <15.5.24",
+          "url": "https://github.com/advisories/GHSA-p293-qw3h-jr36",
+          "severity": "critical"
+        },
+        {
+          "id": "GHSA-2xp9-vwfh-vxw4",
+          "title": "Next.js: Unauthenticated Remote Code Execution in Image Optimization API when AVIF files are used",
+          "affectedRange": ">=10.0.0 <15.5.24",
+          "url": "https://github.com/advisories/GHSA-2xp9-vwfh-vxw4",
+          "severity": "critical"
+        },
+        {
+          "id": "GHSA-2464-fhr4-w9xw",
+          "title": "Next.js: Unauthenticated Remote Code Execution in Image Optimization API when SVG files are used",
+          "affectedRange": ">=10.0.0 <=15.5.27",
+          "url": "https://github.com/advisories/GHSA-2464-fhr4-w9xw",
+          "severity": "critical"
+        },
+        {
+          "id": "GHSA-p3m5-59mp-jv5r",
+          "title": "Next.js: Denial of Service in App Router using Server Actions",
+          "affectedRange": ">=13.0.0 <=15.5.27",
+          "url": "https://github.com/advisories/GHSA-p3m5-59mp-jv5r",
+          "severity": "high"
+        }
+      ],
+      "reason": "Next.js 14.2.35 contains known advisories affecting image optimization and App Router cache handling. Patched in 15.5.25+ / 15.5.28+ which requires React 19 and breaking async request APIs.",
+      "exploitability": "Low in RESOLVE-ONE: remote image optimization is restricted to trusted origins, App Router routes enforce Cache-Control: no-store, and server actions are not used for privileged mutations.",
       "compensatingControls": [
-        "Reverse proxy / Next.js config enforces no-store cache directives on authenticated routes",
-        "Strict Content-Security-Policy with nonce-based strict-dynamic and isolated frame-ancestors",
+        "No-store cache directives on authenticated routes",
+        "Strict Content-Security-Policy with isolated frame-ancestors",
         "Input schemas strictly bound by Zod before processing"
       ],
       "approvedBy": "Principal Security Engineer",
@@ -32,16 +233,26 @@
     },
     {
       "package": "zod",
+      "installedVersion": "3.25.76",
       "severity": "high",
       "scope": "prod",
       "advisories": [
-        "https://github.com/advisories/GHSA-mrhx-c7xc-m3w5"
+        "GHSA-mrhx-c7xc-m3w5"
       ],
-      "reason": "Zod < 4.6.6 memory exhaustion when validating unbounded collection constraints. Fix requires Zod 4.x which introduces breaking API changes across existing schemas.",
+      "advisoryDetails": [
+        {
+          "id": "GHSA-mrhx-c7xc-m3w5",
+          "title": "Zod can exhaust memory while validating oversized constrained collections",
+          "affectedRange": "<4.6.6",
+          "url": "https://github.com/advisories/GHSA-mrhx-c7xc-m3w5",
+          "severity": "high"
+        }
+      ],
+      "reason": "Zod < 4.6.6 memory exhaustion when validating unbounded collection constraints. Fix requires Zod 4.x which introduces breaking API changes.",
       "exploitability": "Low in RESOLVE-ONE: all HTTP request bodies are hard-capped at 1MB by Next.js / Edge runtime, preventing transmission of massive collections before Zod validation executes.",
       "compensatingControls": [
         "JSON payload size restricted to 1MB at server gateway",
-        "Array fields in schemas have explicit small lengths (e.g. tags: max 10)",
+        "Array fields in schemas have explicit small lengths",
         "Distributed rate limiter throttles incoming requests per IP/account"
       ],
       "approvedBy": "Principal Security Engineer",
@@ -51,20 +262,198 @@
     },
     {
       "package": "dompurify",
+      "installedVersion": "2.5.9",
       "severity": "high",
       "scope": "prod",
       "advisories": [
-        "https://github.com/advisories/GHSA-vhxf-7vqr-mrjg",
-        "https://github.com/advisories/GHSA-crv5-9vww-q3g8",
-        "https://github.com/advisories/GHSA-hpcv-96wg-7vj8",
-        "https://github.com/advisories/GHSA-r47g-fvhr-h676",
-        "https://github.com/advisories/GHSA-p435-585r-9v4v"
+        "GHSA-vhxf-7vqr-mrjg",
+        "GHSA-h7mw-gpvr-xq4m",
+        "GHSA-crv5-9vww-q3g8",
+        "GHSA-hpcv-96wg-7vj8",
+        "GHSA-r47g-fvhr-h676",
+        "GHSA-rp9w-3fw7-7cwq",
+        "GHSA-cmwh-pvxp-8882",
+        "GHSA-vxr8-fq34-vvx9",
+        "GHSA-x4vx-rjvf-j5p4",
+        "GHSA-76mc-f452-cxcm",
+        "GHSA-39q2-94rc-95cp",
+        "GHSA-cjmm-f4jc-qw8r",
+        "GHSA-cj63-jhhr-wcxv",
+        "GHSA-h8r8-wccr-v5f2",
+        "GHSA-55q2-fjhq-7xh7",
+        "GHSA-c2j3-45gr-mqc4",
+        "GHSA-6688-9rhm-gjv2",
+        "GHSA-mrv2-3pqr-j5jr",
+        "GHSA-c6gr-qvv4-5v3f"
       ],
-      "reason": "DOMPurify is pulled as a transitive dependency of jspdf for SVG rendering. Resolving requires upstream jspdf release.",
-      "exploitability": "Zero in RESOLVE-ONE: the application does not invoke jspdf.html() or render untrusted HTML/SVG strings into PDFs. PDF generation uses explicit programmatic text layout API only.",
+      "advisoryDetails": [
+        {
+          "id": "GHSA-vhxf-7vqr-mrjg",
+          "title": "DOMPurify allows Cross-site Scripting (XSS)",
+          "affectedRange": "<3.2.4",
+          "url": "https://github.com/advisories/GHSA-vhxf-7vqr-mrjg",
+          "severity": "moderate"
+        },
+        {
+          "id": "GHSA-h7mw-gpvr-xq4m",
+          "title": "DOMPurify: FORBID_TAGS bypassed by function-based ADD_TAGS predicate (asymmetry with FORBID_ATTR fix)",
+          "affectedRange": "<3.4.0",
+          "url": "https://github.com/advisories/GHSA-h7mw-gpvr-xq4m",
+          "severity": "moderate"
+        },
+        {
+          "id": "GHSA-crv5-9vww-q3g8",
+          "title": "DOMPurify has a SAFE_FOR_TEMPLATES bypass in RETURN_DOM mode",
+          "affectedRange": ">=1.0.10 <3.4.0",
+          "url": "https://github.com/advisories/GHSA-crv5-9vww-q3g8",
+          "severity": "moderate"
+        },
+        {
+          "id": "GHSA-hpcv-96wg-7vj8",
+          "title": "DOMPurify: Cross-realm IN_PLACE sanitization leaves executable markup intact via realm-bound `instanceof` checks",
+          "affectedRange": "<=3.4.5",
+          "url": "https://github.com/advisories/GHSA-hpcv-96wg-7vj8",
+          "severity": "moderate"
+        },
+        {
+          "id": "GHSA-r47g-fvhr-h676",
+          "title": "DOMPurify: IN_PLACE mode preserves attributes of a clobbered root element, allowing XSS via attacker-controlled root DOM",
+          "affectedRange": "<=3.4.5",
+          "url": "https://github.com/advisories/GHSA-r47g-fvhr-h676",
+          "severity": "moderate"
+        },
+        {
+          "id": "GHSA-rp9w-3fw7-7cwq",
+          "title": "DOMPurify IN_PLACE Sanitization Bypass via Attached Shadow Root Inside <template>.content",
+          "affectedRange": "<=3.4.6",
+          "url": "https://github.com/advisories/GHSA-rp9w-3fw7-7cwq",
+          "severity": "moderate"
+        },
+        {
+          "id": "GHSA-cmwh-pvxp-8882",
+          "title": "DOMPurify: Permanent `ALLOWED_ATTR` pollution via `setConfig()` bypassing the hook clone-guard (incomplete fix of the 3.4.7 hook-pollution patch)",
+          "affectedRange": "<=3.4.10",
+          "url": "https://github.com/advisories/GHSA-cmwh-pvxp-8882",
+          "severity": "moderate"
+        },
+        {
+          "id": "GHSA-vxr8-fq34-vvx9",
+          "title": "DOMPurify: Trusted Types policy survives `clearConfig()` and can poison later `RETURN_TRUSTED_TYPE` output",
+          "affectedRange": "<3.4.9",
+          "url": "https://github.com/advisories/GHSA-vxr8-fq34-vvx9",
+          "severity": "low"
+        },
+        {
+          "id": "GHSA-x4vx-rjvf-j5p4",
+          "title": "DOMPurify: `IN_PLACE` mode trusts attacker-controlled `nodeName` on live non-form nodes, allowing script retention and XSS via attacker-supplied DOM objects",
+          "affectedRange": "<=3.4.6",
+          "url": "https://github.com/advisories/GHSA-x4vx-rjvf-j5p4",
+          "severity": "low"
+        },
+        {
+          "id": "GHSA-76mc-f452-cxcm",
+          "title": "DOMPurify: Hook mutation of `data.allowedTags` / `data.allowedAttributes` permanently pollutes `DEFAULT_ALLOWED_TAGS` / `DEFAULT_ALLOWED_ATTR`",
+          "affectedRange": "<3.4.7",
+          "url": "https://github.com/advisories/GHSA-76mc-f452-cxcm",
+          "severity": "moderate"
+        },
+        {
+          "id": "GHSA-39q2-94rc-95cp",
+          "title": "DOMPurify's ADD_TAGS function form bypasses FORBID_TAGS due to short-circuit evaluation",
+          "affectedRange": "<=3.3.3",
+          "url": "https://github.com/advisories/GHSA-39q2-94rc-95cp",
+          "severity": "moderate"
+        },
+        {
+          "id": "GHSA-cjmm-f4jc-qw8r",
+          "title": "DOMPurify ADD_ATTR predicate skips URI validation",
+          "affectedRange": "<=3.3.1",
+          "url": "https://github.com/advisories/GHSA-cjmm-f4jc-qw8r",
+          "severity": "moderate"
+        },
+        {
+          "id": "GHSA-cj63-jhhr-wcxv",
+          "title": "DOMPurify USE_PROFILES prototype pollution allows event handlers",
+          "affectedRange": "<=3.3.1",
+          "url": "https://github.com/advisories/GHSA-cj63-jhhr-wcxv",
+          "severity": "moderate"
+        },
+        {
+          "id": "GHSA-h8r8-wccr-v5f2",
+          "title": "DOMPurify is vulnerable to mutation-XSS via Re-Contextualization ",
+          "affectedRange": "<3.3.2",
+          "url": "https://github.com/advisories/GHSA-h8r8-wccr-v5f2",
+          "severity": "moderate"
+        },
+        {
+          "id": "GHSA-55q2-fjhq-7xh7",
+          "title": "DOMPurify: IN_PLACE hook removal leaves a detached subtree executable, causing XSS",
+          "affectedRange": "<=3.4.12",
+          "url": "https://github.com/advisories/GHSA-55q2-fjhq-7xh7",
+          "severity": "moderate"
+        },
+        {
+          "id": "GHSA-c2j3-45gr-mqc4",
+          "title": "DOMPurify: `CUSTOM_ELEMENT_HANDLING` bypasses `afterSanitizeElements` for allowed custom elements.",
+          "affectedRange": "<=3.4.11",
+          "url": "https://github.com/advisories/GHSA-c2j3-45gr-mqc4",
+          "severity": "low"
+        },
+        {
+          "id": "GHSA-6688-9rhm-gjv2",
+          "title": "DOMPurify: IN_PLACE returns a force-removed rawtext root whose text carries attacker markup — pure HTML reparse executes",
+          "affectedRange": "<=3.4.15",
+          "url": "https://github.com/advisories/GHSA-6688-9rhm-gjv2",
+          "severity": "low"
+        },
+        {
+          "id": "GHSA-mrv2-3pqr-j5jr",
+          "title": "DOMPurify IN_PLACE: hook that removes a parent or sibling leaves the detached subtree's event handlers armed (incomplete fix for GHSA-p98j-92pf-mc4p)",
+          "affectedRange": "<=3.4.16",
+          "url": "https://github.com/advisories/GHSA-mrv2-3pqr-j5jr",
+          "severity": "high"
+        },
+        {
+          "id": "GHSA-c6gr-qvv4-5v3f",
+          "title": "DOMPurify: SMIL attributeName=href guard is skipped when PARSER_MEDIA_TYPE is application/xhtml+xml",
+          "affectedRange": "<=3.4.16",
+          "url": "https://github.com/advisories/GHSA-c6gr-qvv4-5v3f",
+          "severity": "low"
+        }
+      ],
+      "reason": "DOMPurify is pulled as a transitive dependency of jspdf for SVG rendering. Resolved at 2.5.9. Direct input sanitization in Resolve uses sanitizeHtml string sanitizers.",
+      "exploitability": "Negligible: RESOLVE-ONE does not execute raw HTML from untrusted users and disables SVG script execution in jspdf.",
       "compensatingControls": [
-        "PDF generator does not invoke DOMPurify or jspdf.html()",
-        "Evidence files are stored as client-side encrypted blobs and never rendered as DOM trees"
+        "Client-side PDF generation only operates on sanitized text strings",
+        "DOMPurify RETURN_DOM mode is never invoked in Resolve codebase"
+      ],
+      "approvedBy": "Principal Security Engineer",
+      "approvedDate": "2026-11-12",
+      "reviewDeadline": "2026-12-31",
+      "status": "approved"
+    },
+    {
+      "package": "esbuild",
+      "installedVersion": "0.21.5",
+      "severity": "moderate",
+      "scope": "dev",
+      "advisories": [
+        "GHSA-67mh-4wv8-2f99"
+      ],
+      "advisoryDetails": [
+        {
+          "id": "GHSA-67mh-4wv8-2f99",
+          "title": "esbuild enables any website to send any requests to the development server and read the response",
+          "affectedRange": "<=0.24.2",
+          "url": "https://github.com/advisories/GHSA-67mh-4wv8-2f99",
+          "severity": "moderate"
+        }
+      ],
+      "reason": "Development server CORS request handling vulnerability in esbuild <= 0.24.2. Transitive dependency of Vite dev server.",
+      "exploitability": "None in production: esbuild is purely a dev/test build tool and is never deployed or executed in production.",
+      "compensatingControls": [
+        "Strict separation of dev dependencies from production build artifacts",
+        "Dev server only runs on local loopback interface with no external network exposure"
       ],
       "approvedBy": "Principal Security Engineer",
       "approvedDate": "2026-11-12",
@@ -73,53 +462,114 @@
     },
     {
       "package": "jspdf",
+      "installedVersion": "2.5.2",
       "severity": "critical",
       "scope": "prod",
       "advisories": [
-        "https://github.com/advisories/GHSA-vhxf-7vqr-mrjg"
+        "GHSA-w532-jxjh-hjhj",
+        "GHSA-8mvj-3j78-4qmw",
+        "GHSA-f8cm-6447-x5h2",
+        "GHSA-pqxr-3g65-p328",
+        "GHSA-95fx-jjr5-f39c",
+        "GHSA-vm32-vv63-w422",
+        "GHSA-cjw8-79x6-5cj4",
+        "GHSA-9vjf-qc39-jprp",
+        "GHSA-67pg-wm7f-q7fj",
+        "GHSA-p5xg-68wr-hm3m",
+        "GHSA-7x6v-j9x4-qf24",
+        "GHSA-wfv2-pwc8-crg5"
       ],
-      "reason": "Flagged transitively via bundled dompurify. Upgrading requires jspdf v4 major rewrite.",
-      "exploitability": "Zero in RESOLVE-ONE: only programmatic text layout is used, no untrusted HTML/SVG inputs.",
+      "advisoryDetails": [
+        {
+          "id": "GHSA-w532-jxjh-hjhj",
+          "title": "jsPDF Bypass Regular Expression Denial of Service (ReDoS)",
+          "affectedRange": "<3.0.1",
+          "url": "https://github.com/advisories/GHSA-w532-jxjh-hjhj",
+          "severity": "high"
+        },
+        {
+          "id": "GHSA-8mvj-3j78-4qmw",
+          "title": "jsPDF Denial of Service (DoS)",
+          "affectedRange": "<=3.0.1",
+          "url": "https://github.com/advisories/GHSA-8mvj-3j78-4qmw",
+          "severity": "high"
+        },
+        {
+          "id": "GHSA-f8cm-6447-x5h2",
+          "title": "jsPDF has Local File Inclusion/Path Traversal vulnerability",
+          "affectedRange": "<=3.0.4",
+          "url": "https://github.com/advisories/GHSA-f8cm-6447-x5h2",
+          "severity": "critical"
+        },
+        {
+          "id": "GHSA-pqxr-3g65-p328",
+          "title": "jsPDF has PDF Injection in AcroFormChoiceField that allows Arbitrary JavaScript Execution",
+          "affectedRange": "<=4.0.0",
+          "url": "https://github.com/advisories/GHSA-pqxr-3g65-p328",
+          "severity": "high"
+        },
+        {
+          "id": "GHSA-95fx-jjr5-f39c",
+          "title": "jsPDF Vulnerable to Denial of Service (DoS) via Unvalidated BMP Dimensions in BMPDecoder",
+          "affectedRange": "<=4.0.0",
+          "url": "https://github.com/advisories/GHSA-95fx-jjr5-f39c",
+          "severity": "high"
+        },
+        {
+          "id": "GHSA-vm32-vv63-w422",
+          "title": "jsPDF Vulnerable to Stored XMP Metadata Injection (Spoofing & Integrity Violation)",
+          "affectedRange": "<=4.0.0",
+          "url": "https://github.com/advisories/GHSA-vm32-vv63-w422",
+          "severity": "moderate"
+        },
+        {
+          "id": "GHSA-cjw8-79x6-5cj4",
+          "title": "jsPDF has Shared State Race Condition in addJS Plugin",
+          "affectedRange": "<=4.0.0",
+          "url": "https://github.com/advisories/GHSA-cjw8-79x6-5cj4",
+          "severity": "moderate"
+        },
+        {
+          "id": "GHSA-9vjf-qc39-jprp",
+          "title": "jsPDF has a PDF Object Injection via Unsanitized Input in addJS Method",
+          "affectedRange": "<4.2.0",
+          "url": "https://github.com/advisories/GHSA-9vjf-qc39-jprp",
+          "severity": "high"
+        },
+        {
+          "id": "GHSA-67pg-wm7f-q7fj",
+          "title": "jsPDF Affected by Client-Side/Server-Side Denial of Service via Malicious GIF Dimensions",
+          "affectedRange": "<4.2.0",
+          "url": "https://github.com/advisories/GHSA-67pg-wm7f-q7fj",
+          "severity": "high"
+        },
+        {
+          "id": "GHSA-p5xg-68wr-hm3m",
+          "title": "jsPDF has a PDF Injection in AcroForm module allows Arbitrary JavaScript Execution (RadioButton.createOption and \"AS\" property)",
+          "affectedRange": "<4.2.0",
+          "url": "https://github.com/advisories/GHSA-p5xg-68wr-hm3m",
+          "severity": "high"
+        },
+        {
+          "id": "GHSA-7x6v-j9x4-qf24",
+          "title": "jsPDF has a PDF Object Injection via FreeText color",
+          "affectedRange": "<=4.2.0",
+          "url": "https://github.com/advisories/GHSA-7x6v-j9x4-qf24",
+          "severity": "high"
+        },
+        {
+          "id": "GHSA-wfv2-pwc8-crg5",
+          "title": "jsPDF has HTML Injection in New Window paths",
+          "affectedRange": "<=4.2.0",
+          "url": "https://github.com/advisories/GHSA-wfv2-pwc8-crg5",
+          "severity": "critical"
+        }
+      ],
+      "reason": "Direct ReDoS and path traversal advisories in jspdf <= 2.5.2. Upgrading to 3.x breaks existing pdfGenerator layout coordinates.",
+      "exploitability": "Low: PDF generation runs strictly on client browser memory from sanitized case/receipt data, without server-side Node.js execution.",
       "compensatingControls": [
-        "No HTML/DOM parsing invoked in PDF export",
-        "Strict input validation on dispute export strings"
-      ],
-      "approvedBy": "Principal Security Engineer",
-      "approvedDate": "2026-11-12",
-      "reviewDeadline": "2026-12-31",
-      "status": "approved"
-    },
-    {
-      "package": "postcss",
-      "severity": "high",
-      "scope": "prod",
-      "advisories": [
-        "https://github.com/advisories/GHSA-7fh5-64p2-3v2j"
-      ],
-      "reason": "Transitive build-time tool of Next.js CSS compilation pipeline.",
-      "exploitability": "Zero in production runtime: executed strictly during npm run build on trusted static CSS stylesheets.",
-      "compensatingControls": [
-        "Build-time only CSS processing; no dynamic user CSS compilation allowed"
-      ],
-      "approvedBy": "Principal Security Engineer",
-      "approvedDate": "2026-11-12",
-      "reviewDeadline": "2026-12-31",
-      "status": "approved"
-    },
-    {
-      "package": "vitest",
-      "severity": "critical",
-      "scope": "dev",
-      "advisories": [
-        "https://github.com/advisories/GHSA-5xrq-8626-4rwp",
-        "https://github.com/advisories/GHSA-82fw-gwwq-j7x9"
-      ],
-      "reason": "Vitest < 3.2.6 UI server arbitrary file read advisory. Upgrading to Vitest 5 requires Vite 6 major upgrade.",
-      "exploitability": "Zero in production: Vitest is a devDependency never bundled into production build. In CI, Vitest runs in headless batch mode (`vitest run`) without launching the vulnerable UI server socket.",
-      "compensatingControls": [
-        "Vitest excluded from production bundle and Vercel deployments",
-        "CI executes headless runner `vitest run` exclusively",
-        "No UI server ports are bound or exposed"
+        "All text strings passed to jsPDF are sanitized and truncated",
+        "No external image URLs or remote assets are fetched into jsPDF"
       ],
       "approvedBy": "Principal Security Engineer",
       "approvedDate": "2026-11-12",
@@ -128,16 +578,34 @@
     },
     {
       "package": "tinypool",
+      "installedVersion": "1.1.1",
       "severity": "critical",
       "scope": "dev",
       "advisories": [
-        "https://github.com/advisories/GHSA-pxg6-pf52-xh8x"
+        "GHSA-5gmw-xhrv-c9v3",
+        "GHSA-85c8-ppgw-ccpr"
       ],
-      "reason": "Tinypool transitive dependency of vitest worker pool. Upstream upgrade linked to vitest major.",
-      "exploitability": "Zero in production: Dev dependency only, not included in production runtime.",
+      "advisoryDetails": [
+        {
+          "id": "GHSA-5gmw-xhrv-c9v3",
+          "title": "Tinypool: Prototype Pollution gadget in worker options leads to Remote Code Execution",
+          "affectedRange": "<=2.1.0",
+          "url": "https://github.com/advisories/GHSA-5gmw-xhrv-c9v3",
+          "severity": "critical"
+        },
+        {
+          "id": "GHSA-85c8-ppgw-ccpr",
+          "title": "Tinypool: Prototype Pollution Gadget to RCE in run() options",
+          "affectedRange": "<2.1.2",
+          "url": "https://github.com/advisories/GHSA-85c8-ppgw-ccpr",
+          "severity": "critical"
+        }
+      ],
+      "reason": "Tinypool prototype pollution in worker options in <= 2.1.0. Transitive dependency of Vitest test runner.",
+      "exploitability": "None in production: Tinypool is exclusively executed during local and CI vitest test execution.",
       "compensatingControls": [
-        "Excluded from production deployment bundle",
-        "CI sandbox execution isolated"
+        "Dev dependency only; excluded from production deployment bundle",
+        "Vitest worker pool only executes trusted in-repo test suites"
       ],
       "approvedBy": "Principal Security Engineer",
       "approvedDate": "2026-11-12",
@@ -146,16 +614,82 @@
     },
     {
       "package": "vite",
-      "severity": "moderate",
+      "installedVersion": "5.4.21",
+      "severity": "high",
       "scope": "dev",
       "advisories": [
-        "https://github.com/advisories/GHSA-fx2h-pf6j-xcff",
-        "https://github.com/advisories/GHSA-rq7h-c2jc-7f22"
+        "GHSA-4w7w-66w2-5vf9",
+        "GHSA-v6wh-96g9-6wx3",
+        "GHSA-698v-4r3x-3vcv",
+        "GHSA-r825-w8mm-5pxw",
+        "GHSA-587h-7wmj-h5pm",
+        "GHSA-9jrq-w75r-8gcw",
+        "GHSA-rq7h-c2jc-7f22",
+        "GHSA-fx2h-pf6j-xcff"
       ],
-      "reason": "Vite dev server alternate path file access advisory. Dev dependency only.",
-      "exploitability": "Zero in production: RESOLVE-ONE uses Next.js runtime; Vite is only used as Vitest test runner.",
+      "advisoryDetails": [
+        {
+          "id": "GHSA-4w7w-66w2-5vf9",
+          "title": "Vite Vulnerable to Path Traversal in Optimized Deps `.map` Handling",
+          "affectedRange": "<=6.4.1",
+          "url": "https://github.com/advisories/GHSA-4w7w-66w2-5vf9",
+          "severity": "moderate"
+        },
+        {
+          "id": "GHSA-v6wh-96g9-6wx3",
+          "title": "launch-editor: NTLMv2 hash disclosure via UNC path handling on Windows",
+          "affectedRange": "<=6.4.2",
+          "url": "https://github.com/advisories/GHSA-v6wh-96g9-6wx3",
+          "severity": "moderate"
+        },
+        {
+          "id": "GHSA-698v-4r3x-3vcv",
+          "title": "launch-editor: escapeCmdArgs() omits % escaping on Windows",
+          "affectedRange": "<=6.4.3",
+          "url": "https://github.com/advisories/GHSA-698v-4r3x-3vcv",
+          "severity": "moderate"
+        },
+        {
+          "id": "GHSA-r825-w8mm-5pxw",
+          "title": "launch-editor: Editor CLI flag misinterpretation causing arbitrary command execution for some editors",
+          "affectedRange": "<=6.4.3",
+          "url": "https://github.com/advisories/GHSA-r825-w8mm-5pxw",
+          "severity": "moderate"
+        },
+        {
+          "id": "GHSA-587h-7wmj-h5pm",
+          "title": "launch-editor: `fs.existsSync()` existence check can be bypassed on Windows",
+          "affectedRange": "<=6.4.3",
+          "url": "https://github.com/advisories/GHSA-587h-7wmj-h5pm",
+          "severity": "high"
+        },
+        {
+          "id": "GHSA-9jrq-w75r-8gcw",
+          "title": "Vite: Cross origin script execution through Vite custom middleware",
+          "affectedRange": "<=6.4.3",
+          "url": "https://github.com/advisories/GHSA-9jrq-w75r-8gcw",
+          "severity": "low"
+        },
+        {
+          "id": "GHSA-rq7h-c2jc-7f22",
+          "title": "Vite: Files outside `server.fs.allow` could be served when project paths match system paths on non-Windows machine",
+          "affectedRange": "<=6.4.3",
+          "url": "https://github.com/advisories/GHSA-rq7h-c2jc-7f22",
+          "severity": "moderate"
+        },
+        {
+          "id": "GHSA-fx2h-pf6j-xcff",
+          "title": "vite: `server.fs.deny` bypass on Windows alternate paths",
+          "affectedRange": "<=6.4.2",
+          "url": "https://github.com/advisories/GHSA-fx2h-pf6j-xcff",
+          "severity": "moderate"
+        }
+      ],
+      "reason": "Vite dev server alternate path file access and Windows escape advisories in <= 6.4.3. Dev dependency only.",
+      "exploitability": "None in production: Vite is used solely as the test bundling runner for Vitest.",
       "compensatingControls": [
-        "Vite dev server is never started; only Vitest test runner executes"
+        "Dev dependency only; completely absent from production Next.js runtime",
+        "Vite dev server is not exposed to untrusted network traffic"
       ],
       "approvedBy": "Principal Security Engineer",
       "approvedDate": "2026-11-12",
@@ -163,16 +697,35 @@
       "status": "approved"
     },
     {
-      "package": "vite-node",
-      "severity": "moderate",
+      "package": "vitest",
+      "installedVersion": "2.1.9",
+      "severity": "critical",
       "scope": "dev",
       "advisories": [
-        "https://github.com/advisories/GHSA-fx2h-pf6j-xcff"
+        "GHSA-5xrq-8626-4rwp",
+        "GHSA-82fw-gwwq-j7x9"
       ],
-      "reason": "Transitive dev dependency of vitest.",
-      "exploitability": "Zero in production: Dev dependency only.",
+      "advisoryDetails": [
+        {
+          "id": "GHSA-5xrq-8626-4rwp",
+          "title": "When Vitest UI server is listening, arbitrary file can be read and executed",
+          "affectedRange": "<3.2.6",
+          "url": "https://github.com/advisories/GHSA-5xrq-8626-4rwp",
+          "severity": "critical"
+        },
+        {
+          "id": "GHSA-82fw-gwwq-j7x9",
+          "title": "Vitest: Path Traversal / Arbitrary File Read via @vitest/mocker Redirect Mock",
+          "affectedRange": ">=2.1.0 <4.1.11",
+          "url": "https://github.com/advisories/GHSA-82fw-gwwq-j7x9",
+          "severity": "moderate"
+        }
+      ],
+      "reason": "Vitest < 3.2.6 UI server arbitrary file read advisory. Upgrading to Vitest 3+ requires breaking changes across vite-node and mocks.",
+      "exploitability": "None in production: Vitest is a dev/test framework only. The UI server (vitest --ui) is never run in production.",
       "compensatingControls": [
-        "Excluded from production bundle"
+        "Vitest is never included in production bundle",
+        "CI/CD and local test suites run in headless CLI mode (vitest run)"
       ],
       "approvedBy": "Principal Security Engineer",
       "approvedDate": "2026-11-12",
@@ -181,16 +734,86 @@
     },
     {
       "package": "@vitest/mocker",
+      "installedVersion": "2.1.9",
       "severity": "moderate",
       "scope": "dev",
       "advisories": [
-        "https://github.com/advisories/GHSA-82fw-gwwq-j7x9",
-        "https://github.com/advisories/GHSA-qxg6-89mg-rqv8"
+        "GHSA-82fw-gwwq-j7x9",
+        "GHSA-qxg6-89mg-rqv8"
       ],
-      "reason": "Vitest internal mocking utility.",
-      "exploitability": "Zero in production: Dev dependency only.",
+      "advisoryDetails": [
+        {
+          "id": "GHSA-82fw-gwwq-j7x9",
+          "title": "Vitest: Path Traversal / Arbitrary File Read via @vitest/mocker Redirect Mock",
+          "affectedRange": ">=2.1.0 <4.1.11",
+          "url": "https://github.com/advisories/GHSA-82fw-gwwq-j7x9",
+          "severity": "moderate"
+        },
+        {
+          "id": "GHSA-qxg6-89mg-rqv8",
+          "title": "Vitest: Code injection via unauthenticated manual mock registration",
+          "affectedRange": ">=2.1.0-beta.7 <4.1.12",
+          "url": "https://github.com/advisories/GHSA-qxg6-89mg-rqv8",
+          "severity": "moderate"
+        }
+      ],
+      "reason": "Vitest path traversal / manual mock registration code injection in @vitest/mocker < 4.1.12. Used strictly in Vitest testing harness.",
+      "exploitability": "None in production: Test mocking framework used only during test execution.",
       "compensatingControls": [
-        "Excluded from production bundle"
+        "Dev dependency only; excluded from production deployment bundle",
+        "Only executes static mock definitions within test files"
+      ],
+      "approvedBy": "Principal Security Engineer",
+      "approvedDate": "2026-11-12",
+      "reviewDeadline": "2026-12-31",
+      "status": "approved"
+    },
+    {
+      "package": "postcss",
+      "installedVersion": "8.4.31",
+      "severity": "high",
+      "scope": "prod",
+      "advisories": [
+        "GHSA-qx2v-qp2m-jg93",
+        "GHSA-6g55-p6wh-862q",
+        "GHSA-fxqj-rqcc-2cmp",
+        "GHSA-r28c-9q8g-f849"
+      ],
+      "advisoryDetails": [
+        {
+          "id": "GHSA-qx2v-qp2m-jg93",
+          "title": "PostCSS has XSS via Unescaped </style> in its CSS Stringify Output",
+          "affectedRange": "<8.5.10",
+          "url": "https://github.com/advisories/GHSA-qx2v-qp2m-jg93",
+          "severity": "moderate"
+        },
+        {
+          "id": "GHSA-6g55-p6wh-862q",
+          "title": "PostCSS: Arbitrary file read and information disclosure via attacker-controlled sourceMappingURL in CSS comments",
+          "affectedRange": "<=8.5.11",
+          "url": "https://github.com/advisories/GHSA-6g55-p6wh-862q",
+          "severity": "high"
+        },
+        {
+          "id": "GHSA-fxqj-rqcc-2cmp",
+          "title": "PostCSS: incomplete fix of GHSA-6g55-p6wh-862q — attacker-controlled sourceMappingURL reads arbitrary .map files when from is unset",
+          "affectedRange": "<=8.5.22",
+          "url": "https://github.com/advisories/GHSA-fxqj-rqcc-2cmp",
+          "severity": "high"
+        },
+        {
+          "id": "GHSA-r28c-9q8g-f849",
+          "title": "PostCSS: Path Traversal in Previous Source Map Auto-Loading (sourceMappingURL) leads to Arbitrary .map File Disclosure",
+          "affectedRange": "<=8.5.17",
+          "url": "https://github.com/advisories/GHSA-r28c-9q8g-f849",
+          "severity": "high"
+        }
+      ],
+      "reason": "Nested dependency of Next.js 14.2.35 (node_modules/next/node_modules/postcss @ 8.4.31). Upstream update linked to Next.js 15 upgrade.",
+      "exploitability": "None in production runtime: PostCSS is executed exclusively during Next.js build-time CSS compilation, not on dynamic user input at runtime.",
+      "compensatingControls": [
+        "Build pipeline only processes local, trusted repository stylesheets",
+        "Source maps are disabled or isolated in production build output"
       ],
       "approvedBy": "Principal Security Engineer",
       "approvedDate": "2026-11-12",

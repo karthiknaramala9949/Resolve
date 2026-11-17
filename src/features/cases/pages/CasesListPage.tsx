@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { Button, CaseCard, EmptyState, Input, Select } from '@/design-system';
+import { Button, CaseCard, EmptyState, Input, SegmentedControl } from '@/design-system';
 import { Plus, Search } from 'lucide-react';
 import { caseService } from '@/services';
 import { Case } from '@/lib/db/types';
@@ -74,8 +74,22 @@ export const CasesListPage: React.FC = () => {
       </div>
 
       {/* Filter and Search Bar */}
-      <div className="flex flex-col sm:flex-row items-center gap-3">
-        <div className="relative flex-1 w-full">
+      <div className="space-y-3">
+        <SegmentedControl
+          options={[
+            { value: 'all', label: 'All' },
+            { value: 'action_required', label: 'Action needed' },
+            { value: 'waiting_company', label: 'Waiting for company' },
+            { value: 'response_received', label: 'Reply received' },
+            { value: 'resolved', label: 'Resolved' },
+          ]}
+          value={filter}
+          onChange={setFilter}
+          ariaLabel="Filter cases by status"
+          className="w-full overflow-x-auto"
+        />
+
+        <div className="relative w-full">
           <Input
             placeholder="Search cases, stores, or products"
             value={search}
@@ -83,21 +97,6 @@ export const CasesListPage: React.FC = () => {
             className="pl-9"
           />
           <Search className="w-4 h-4 text-steel-grey-400 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
-        </div>
-
-        <div className="w-full sm:w-56">
-          <Select
-            aria-label="Filter cases by status"
-            value={filter}
-            onChange={(e) => setFilter(e.target.value)}
-            options={[
-              { value: 'all', label: 'All cases' },
-              { value: 'action_required', label: 'Action needed' },
-              { value: 'waiting_company', label: 'Waiting for company' },
-              { value: 'response_received', label: 'Reply received' },
-              { value: 'resolved', label: 'Resolved' },
-            ]}
-          />
         </div>
       </div>
 

@@ -87,3 +87,16 @@ export function timingSafeEqual(a: string, b: string): boolean {
   return mismatch === 0;
 }
 
+export function timingSafeEqualStrings(a?: string | null, b?: string | null): boolean {
+  if (typeof a !== 'string' || typeof b !== 'string') return false;
+  const enc = new TextEncoder();
+  const aBytes = enc.encode(a);
+  const bBytes = enc.encode(b);
+  if (aBytes.byteLength !== bBytes.byteLength) return false;
+  let mismatch = 0;
+  for (let i = 0; i < aBytes.byteLength; i++) {
+    mismatch |= aBytes[i] ^ bBytes[i];
+  }
+  return mismatch === 0;
+}
+

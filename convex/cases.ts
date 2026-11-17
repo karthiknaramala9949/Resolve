@@ -140,6 +140,122 @@ export const getById = query({
   },
 });
 
+export const VALID_CASE_STATUSES = [
+  'action_required',
+  'waiting_company',
+  'response_received',
+  'resolved',
+  'closed',
+] as const;
+
+export const VALID_ISSUE_TYPES = [
+  'Refund not received',
+  'Wrong or missing item',
+  'Damaged or defective',
+  'Return or replacement issue',
+  'Delivery problem',
+  'Service quality or billing',
+  'Cancellation or subscription',
+  'Something else',
+  'Defective item',
+  'Defective goods',
+  // Short code aliases
+  'damaged_item',
+  'delivery_delay',
+  'refund_delayed',
+  'defective_product',
+  'warranty_denial',
+  'subscription_dispute',
+  'wrong_item',
+  'service_quality',
+  'billing_dispute',
+  'cancellation_dispute',
+  'return_replacement',
+  'other',
+] as const;
+
+function cleanString(str: string, maxLength: number): string {
+  return str
+    .replace(/[\0\r\x00-\x08\x0b\x0c\x0e-\x1f\x7f]/g, '')
+    .trim()
+    .slice(0, maxLength);
+}
+
+function validateAndCleanCaseFields(args: {
+  title?: string;
+  description?: string;
+  company?: string;
+  orderRef?: string;
+  product?: string;
+  desiredOutcome?: string;
+  amount?: number | null;
+  status?: string;
+  issueType?: string;
+}) {
+  const cleaned: Record<string, any> = {};
+
+  if (args.title !== undefined) {
+    const cleanTitle = cleanString(args.title, 200);
+    if (cleanTitle.length < 3) {
+      throw new Error('Title must be at least 3 characters long (max 200).');
+    }
+    cleaned.title = cleanTitle;
+  }
+
+  if (args.description !== undefined) {
+    const cleanDesc = cleanString(args.description, 10000);
+    if (cleanDesc.length < 5) {
+      throw new Error('Description must be at least 5 characters long (max 10000).');
+    }
+    cleaned.description = cleanDesc;
+  }
+
+  if (args.company !== undefined) {
+    const cleanComp = cleanString(args.company, 100);
+    if (cleanComp.length < 1) {
+      throw new Error('Company must be at least 1 character long (max 100).');
+    }
+    cleaned.company = cleanComp;
+  }
+
+  if (args.orderRef !== undefined) {
+    cleaned.orderRef = args.orderRef ? cleanString(args.orderRef, 100) : undefined;
+  }
+
+  if (args.product !== undefined) {
+    cleaned.product = args.product ? cleanString(args.product, 150) : undefined;
+  }
+
+  if (args.desiredOutcome !== undefined) {
+    cleaned.desiredOutcome = args.desiredOutcome ? cleanString(args.desiredOutcome, 100) : 'Refund';
+  }
+
+  if (args.amount !== undefined && args.amount !== null) {
+    if (typeof args.amount !== 'number' || isNaN(args.amount) || args.amount < 0 || args.amount > 100000000) {
+      throw new Error('Claim amount must be a non-negative number up to ₹100,000,000.');
+    }
+    cleaned.amount = args.amount;
+  } else if (args.amount === null) {
+    cleaned.amount = null;
+  }
+
+  if (args.status !== undefined) {
+    if (!(VALID_CASE_STATUSES as readonly string[]).includes(args.status)) {
+      throw new Error(`Invalid status: ${args.status}. Allowed values: ${VALID_CASE_STATUSES.join(', ')}`);
+    }
+    cleaned.status = args.status;
+  }
+
+  if (args.issueType !== undefined) {
+    if (!(VALID_ISSUE_TYPES as readonly string[]).includes(args.issueType)) {
+      throw new Error(`Invalid issueType: ${args.issueType}. Allowed values: ${VALID_ISSUE_TYPES.join(', ')}`);
+    }
+    cleaned.issueType = args.issueType;
+  }
+
+  return cleaned;
+}
+
 /**
  * Create a new dispute case.
  */
@@ -171,6 +287,18 @@ export const create = mutation({
     const { user } = await getAuthenticatedUser(ctx, args.sessionToken);
     const now = new Date().toISOString();
 
+    const cleaned = validateAndCleanCaseFields({
+      title: args.title,
+      description: args.description,
+      company: args.company,
+      orderRef: args.orderRef,
+      product: args.product,
+      desiredOutcome: args.desiredOutcome,
+      amount: args.amount,
+      status: args.status,
+      issueType: args.issueType,
+    });
+
     const initialTimeline = [
       ...(args.timeline || []),
       {
@@ -184,27 +312,27 @@ export const create = mutation({
 
     const caseId = await ctx.db.insert('cases', {
       userId: user._id,
-      clientGeneratedId: args.clientGeneratedId || `RS-${Date.now().toString().slice(-5)}`,
-      title: args.title.trim(),
-      issueType: args.issueType,
-      company: args.company.trim(),
-      orderRef: args.orderRef?.trim() || undefined,
-      product: args.product?.trim() || undefined,
-      amount: args.amount ?? null,
-      purchasedAt: args.purchasedAt || undefined,
-      desiredOutcome: args.desiredOutcome || 'Refund',
-      description: args.description.trim(),
-      status: args.status || 'action_required',
+      clientGeneratedId: args.clientGeneratedId ? cleanString(args.clientGeneratedId, 50) : `RS-${Date.now().toString().slice(-5)}`,
+      title: cleaned.title,
+      issueType: cleaned.issueType,
+      company: cleaned.company,
+      orderRef: cleaned.orderRef,
+      product: cleaned.product,
+      amount: cleaned.amount ?? null,
+      purchasedAt: args.purchasedAt ? cleanString(args.purchasedAt, 50) : undefined,
+      desiredOutcome: cleaned.desiredOutcome,
+      description: cleaned.description,
+      status: cleaned.status || 'action_required',
       isArchived: false,
-      nextAction: args.nextAction || undefined,
-      nextStepReason: args.nextStepReason || undefined,
-      claimedOutcome: args.claimedOutcome || undefined,
-      customerConfirmedOutcome: args.customerConfirmedOutcome || undefined,
+      nextAction: args.nextAction ? cleanString(args.nextAction, 200) : undefined,
+      nextStepReason: args.nextStepReason ? cleanString(args.nextStepReason, 500) : undefined,
+      claimedOutcome: args.claimedOutcome ? cleanString(args.claimedOutcome, 200) : undefined,
+      customerConfirmedOutcome: args.customerConfirmedOutcome ? cleanString(args.customerConfirmedOutcome, 200) : undefined,
       threeStateOutcome: args.threeStateOutcome,
       evidence: args.evidence || [],
       timeline: initialTimeline,
-      tags: args.tags || [],
-      customerNotes: args.customerNotes || undefined,
+      tags: (args.tags || []).map((t) => cleanString(t, 50)).filter(Boolean),
+      customerNotes: args.customerNotes ? cleanString(args.customerNotes, 2000) : undefined,
       createdAt: now,
       updatedAt: now,
       version: 1,
@@ -273,32 +401,44 @@ export const update = mutation({
       throw new Error('Case not found or permission denied.');
     }
 
+    const cleaned = validateAndCleanCaseFields({
+      title: args.title,
+      description: args.description,
+      company: args.company,
+      orderRef: args.orderRef,
+      product: args.product,
+      desiredOutcome: args.desiredOutcome,
+      amount: args.amount,
+      status: args.status,
+      issueType: args.issueType,
+    });
+
     const now = new Date().toISOString();
     const patch: any = {
       updatedAt: now,
       version: existing.version + 1,
     };
 
-    if (args.title !== undefined) patch.title = args.title.trim();
-    if (args.issueType !== undefined) patch.issueType = args.issueType;
-    if (args.company !== undefined) patch.company = args.company.trim();
-    if (args.orderRef !== undefined) patch.orderRef = args.orderRef;
-    if (args.product !== undefined) patch.product = args.product;
-    if (args.amount !== undefined) patch.amount = args.amount;
-    if (args.purchasedAt !== undefined) patch.purchasedAt = args.purchasedAt;
-    if (args.desiredOutcome !== undefined) patch.desiredOutcome = args.desiredOutcome;
-    if (args.description !== undefined) patch.description = args.description;
-    if (args.status !== undefined) patch.status = args.status;
+    if (cleaned.title !== undefined) patch.title = cleaned.title;
+    if (cleaned.issueType !== undefined) patch.issueType = cleaned.issueType;
+    if (cleaned.company !== undefined) patch.company = cleaned.company;
+    if (cleaned.orderRef !== undefined) patch.orderRef = cleaned.orderRef;
+    if (cleaned.product !== undefined) patch.product = cleaned.product;
+    if (cleaned.amount !== undefined) patch.amount = cleaned.amount;
+    if (args.purchasedAt !== undefined) patch.purchasedAt = args.purchasedAt ? cleanString(args.purchasedAt, 50) : undefined;
+    if (cleaned.desiredOutcome !== undefined) patch.desiredOutcome = cleaned.desiredOutcome;
+    if (cleaned.description !== undefined) patch.description = cleaned.description;
+    if (cleaned.status !== undefined) patch.status = cleaned.status;
     if (args.isArchived !== undefined) patch.isArchived = args.isArchived;
-    if (args.nextAction !== undefined) patch.nextAction = args.nextAction;
-    if (args.nextStepReason !== undefined) patch.nextStepReason = args.nextStepReason;
-    if (args.claimedOutcome !== undefined) patch.claimedOutcome = args.claimedOutcome;
+    if (args.nextAction !== undefined) patch.nextAction = args.nextAction ? cleanString(args.nextAction, 200) : undefined;
+    if (args.nextStepReason !== undefined) patch.nextStepReason = args.nextStepReason ? cleanString(args.nextStepReason, 500) : undefined;
+    if (args.claimedOutcome !== undefined) patch.claimedOutcome = args.claimedOutcome ? cleanString(args.claimedOutcome, 200) : undefined;
     if (args.customerConfirmedOutcome !== undefined)
-      patch.customerConfirmedOutcome = args.customerConfirmedOutcome;
+      patch.customerConfirmedOutcome = args.customerConfirmedOutcome ? cleanString(args.customerConfirmedOutcome, 200) : undefined;
     if (args.threeStateOutcome !== undefined) patch.threeStateOutcome = args.threeStateOutcome;
     if (args.evidence !== undefined) patch.evidence = args.evidence;
-    if (args.tags !== undefined) patch.tags = args.tags;
-    if (args.customerNotes !== undefined) patch.customerNotes = args.customerNotes;
+    if (args.tags !== undefined) patch.tags = args.tags.map((t) => cleanString(t, 50)).filter(Boolean);
+    if (args.customerNotes !== undefined) patch.customerNotes = args.customerNotes ? cleanString(args.customerNotes, 2000) : undefined;
 
     await ctx.db.patch(existing._id, patch);
 
@@ -350,9 +490,9 @@ export const addTimelineEvent = mutation({
     const newEvent = {
       id: `EV-${Date.now()}-${Math.random().toString(36).substring(2, 6).toUpperCase()}`,
       at: now,
-      title: args.title.trim(),
-      detail: args.detail.trim(),
-      source: args.source || 'customer',
+      title: cleanString(args.title, 200),
+      detail: cleanString(args.detail, 2000),
+      source: args.source ? cleanString(args.source, 50) : 'customer',
     };
 
     const updatedTimeline = [...existing.timeline, newEvent];

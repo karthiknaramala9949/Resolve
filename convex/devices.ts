@@ -20,12 +20,43 @@ export const registerDevice = mutation({
       .withIndex('by_device', (q) => q.eq('deviceId', args.deviceId))
       .first();
 
-    if (existing && existing.userId === user._id) {
+    if (existing) {
+      if (existing.userId !== user._id) {
+        await ctx.db.insert('audit_logs', {
+          userId: user._id,
+          entityType: 'crypto',
+          entityId: args.deviceId,
+          action: 'security_violation',
+          details: `Rejected attempt to register deviceId owned by another account: ${args.deviceId}`,
+          timestamp: now,
+        });
+        return {
+          ok: false,
+          code: 'FORBIDDEN',
+          error: 'Device is already registered to another account.',
+        };
+      }
+
       await ctx.db.patch(existing._id, {
         deviceName: args.deviceName,
+        deviceType: args.deviceType,
+        publicKey: args.publicKey,
         lastSyncAt: now,
       });
-      return await ctx.db.get(existing._id);
+
+      await ctx.db.insert('audit_logs', {
+        userId: user._id,
+        entityType: 'crypto',
+        entityId: args.deviceId,
+        action: 'update',
+        details: `Updated device registration: ${args.deviceName} (${args.deviceType})`,
+        timestamp: now,
+      });
+
+      return {
+        ok: true,
+        device: await ctx.db.get(existing._id),
+      };
     }
 
     const deviceDocId = await ctx.db.insert('devices', {
@@ -38,7 +69,19 @@ export const registerDevice = mutation({
       createdAt: now,
     });
 
-    return await ctx.db.get(deviceDocId);
+    await ctx.db.insert('audit_logs', {
+      userId: user._id,
+      entityType: 'crypto',
+      entityId: args.deviceId,
+      action: 'create',
+      details: `Registered new device: ${args.deviceName} (${args.deviceType})`,
+      timestamp: now,
+    });
+
+    return {
+      ok: true,
+      device: await ctx.db.get(deviceDocId),
+    };
   },
 });
 
@@ -68,11 +111,28 @@ export const removeDevice = mutation({
       .withIndex('by_device', (q) => q.eq('deviceId', args.deviceId))
       .first();
 
-    if (dev && dev.userId === user._id) {
-      await ctx.db.delete(dev._id);
+    if (!dev) {
+      return { ok: true, success: true };
     }
 
-    return { success: true };
+    if (dev.userId !== user._id) {
+      await ctx.db.insert('audit_logs', {
+        userId: user._id,
+        entityType: 'crypto',
+        entityId: args.deviceId,
+        action: 'security_violation',
+        details: `Unauthorized attempt to delete device owned by another account: ${args.deviceId}`,
+        timestamp: new Date().toISOString(),
+      });
+      return {
+        ok: false,
+        code: 'FORBIDDEN',
+        error: 'You do not have permission to remove this device.',
+      };
+    }
+
+    await ctx.db.delete(dev._id);
+    return { ok: true, success: true };
   },
 });
 

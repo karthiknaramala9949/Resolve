@@ -313,6 +313,16 @@ export const PrivacyPage: React.FC = () => {
             }}
             className="flex flex-col sm:flex-row gap-3 pt-1"
           >
+            <input
+              type="text"
+              name="username"
+              autoComplete="username"
+              className="sr-only"
+              aria-hidden="true"
+              tabIndex={-1}
+              readOnly
+              defaultValue="account-user"
+            />
             <Input
               type="password"
               placeholder="Enter a security password (min 6 characters)"
@@ -334,6 +344,16 @@ export const PrivacyPage: React.FC = () => {
             }}
             className="flex flex-col sm:flex-row gap-3 pt-1"
           >
+            <input
+              type="text"
+              name="username"
+              autoComplete="username"
+              className="sr-only"
+              aria-hidden="true"
+              tabIndex={-1}
+              readOnly
+              defaultValue="account-user"
+            />
             <Input
               type="password"
               placeholder="Enter password to turn off"

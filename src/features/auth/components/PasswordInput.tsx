@@ -28,11 +28,13 @@ export const PasswordInput = React.forwardRef<HTMLInputElement, PasswordInputPro
             id={inputId}
             ref={ref}
             type={showPassword ? 'text' : 'password'}
+            aria-invalid={Boolean(error)}
+            aria-describedby={error ? `${inputId}-error` : undefined}
             className={cn(
               'w-full px-3.5 py-2.5 pr-11 rounded-xl border bg-white text-base text-charcoal placeholder-steel-grey-400 transition-colors',
               'border-steel-grey-200 focus:border-coral focus:outline-none focus:ring-2 focus:ring-coral/20',
               'disabled:opacity-50 disabled:bg-steel-grey-50',
-              error && 'border-red-500 focus:border-red-500 focus:ring-red-500/20',
+              error && 'border-red-500 focus:border-red-500 focus:ring-red-500/20 animate-shake motion-reduce:animate-none',
               className
             )}
             {...props}
@@ -44,21 +46,25 @@ export const PasswordInput = React.forwardRef<HTMLInputElement, PasswordInputPro
               e.stopPropagation();
               setShowPassword((prev) => !prev);
             }}
-            className="absolute inset-y-0 right-0 flex items-center justify-center w-11 h-full cursor-pointer text-steel-grey-400 hover:text-charcoal focus:outline-none focus:text-coral transition-colors"
+            className="absolute inset-y-0 right-0 flex items-center justify-center w-11 h-full cursor-pointer text-steel-grey-400 hover:text-charcoal focus:outline-none focus:text-coral transition-all active:scale-90 motion-reduce:transform-none"
             tabIndex={0}
             aria-label={showPassword ? 'Hide password' : 'Show password'}
             aria-pressed={showPassword}
             title={showPassword ? 'Hide password' : 'Show password'}
           >
             {showPassword ? (
-              <EyeOff className="w-4 h-4 shrink-0" />
+              <EyeOff className="w-4 h-4 shrink-0 transition-transform duration-150 animate-in fade-in" />
             ) : (
-              <Eye className="w-4 h-4 shrink-0" />
+              <Eye className="w-4 h-4 shrink-0 transition-transform duration-150 animate-in fade-in" />
             )}
           </button>
         </div>
         {hint && !error && <p className="text-xs text-steel-grey-600 font-medium">{hint}</p>}
-        {error && <p className="text-xs text-red-600 font-medium">{error}</p>}
+        {error && (
+          <p id={`${inputId}-error`} role="alert" className="text-xs text-red-600 font-medium">
+            {error}
+          </p>
+        )}
       </div>
     );
   }

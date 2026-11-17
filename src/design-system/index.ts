@@ -13,4 +13,12 @@ export * from './components/BottomSheet';
 export * from './components/Input';
 export * from './components/Textarea';
 export * from './components/Select';
+export * from './components/ToggleSwitch';
+export * from './components/CheckboxStrike';
+export * from './components/CopyButton';
+export * from './components/NumberStepper';
+export * from './components/ProgressRing';
+export * from './components/Accordion';
+export * from './components/SegmentedControl';
+export * from './components/SwipeRow';
 

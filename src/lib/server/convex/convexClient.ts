@@ -54,13 +54,15 @@ export async function syncSessionToConvex(
   user: UserRecord,
   sessionToken: string,
   userAgent?: string,
-  ipAddress?: string
+  ipAddress?: string,
+  rememberMe: boolean = true
 ): Promise<void> {
   const client = getServerConvexClient();
   if (!client) return;
 
   try {
-    const expiresAt = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString();
+    const ttlMs = (rememberMe ? 30 : 1) * 24 * 60 * 60 * 1000;
+    const expiresAt = new Date(Date.now() + ttlMs).toISOString();
     const internalSecret =
       process.env.BETTER_AUTH_SECRET ||
       'dev_better_auth_secret_must_be_at_least_32_characters_long_for_security';

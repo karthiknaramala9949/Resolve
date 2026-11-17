@@ -1,7 +1,7 @@
 {
   "bomFormat": "CycloneDX-Lite",
   "specVersion": "1.4",
-  "timestamp": "2026-11-12T09:15:44.361Z",
+  "timestamp": "2026-11-17T10:31:17.479Z",
   "metadata": {
     "component": {
       "name": "resolve-one",
@@ -12,7 +12,7 @@
       {
         "vendor": "RESOLVE-ONE AppSec",
         "name": "dependency-audit-policy-gate",
-        "version": "1.0.0"
+        "version": "2.0.0"
       }
     ]
   },
@@ -1299,6 +1299,13 @@
       "resolved": "https://registry.npmjs.org/convex-helpers/-/convex-helpers-0.1.135.tgz"
     },
     {
+      "name": "convex-test",
+      "version": "0.0.71",
+      "scope": "development",
+      "integrity": "sha512-sHptDSWL0b2Og6to5R9/GoCHF7XGNXIAxQDJnA8UYYZa8yym9mfC03h3C47LS3Bj2BIO9lD0pKIv2H7dP+VKPA==",
+      "resolved": "https://registry.npmjs.org/convex-test/-/convex-test-0.0.71.tgz"
+    },
+    {
       "name": "convex/node_modules/@esbuild/aix-ppc64",
       "version": "0.27.0",
       "scope": "required",
@@ -1572,13 +1579,6 @@
       "resolved": "https://registry.npmjs.org/dequal/-/dequal-2.0.3.tgz"
     },
     {
-      "name": "dexie",
-      "version": "4.4.7",
-      "scope": "required",
-      "integrity": "sha512-wemFiCl3DTCnfzyqepUTX1ugbYbkTrw3aEZOG7YjAOUoEQB5g5PrEywPzk5JpbX/SxqQ9IvjUpxCDIEjoOWEfA==",
-      "resolved": "https://registry.npmjs.org/dexie/-/dexie-4.4.7.tgz"
-    },
-    {
       "name": "didyoumean",
       "version": "1.2.2",
       "scope": "development",
@@ -1689,13 +1689,6 @@
       "scope": "required",
       "integrity": "sha512-KfYbmpRm0VbLjEvVa9yGwCi9GI34xvi7A/HXYWQO65CSD2u3MczUJSuwXKFIxlGsgBQizV9q5J9NHj4VG0n+pA==",
       "resolved": "https://registry.npmjs.org/expect-type/-/expect-type-1.4.0.tgz"
-    },
-    {
-      "name": "fake-indexeddb",
-      "version": "6.2.7",
-      "scope": "development",
-      "integrity": "sha512-g0ghQ+BmU3CSZaHup5FigEAAtCmtNyxkrmID7OAeK2qONHghw1aQ2l2T1RxmfhP1H1tEXVRWArUTGVCk5832ww==",
-      "resolved": "https://registry.npmjs.org/fake-indexeddb/-/fake-indexeddb-6.2.7.tgz"
     },
     {
       "name": "fast-glob",

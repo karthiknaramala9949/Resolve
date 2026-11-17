@@ -4,6 +4,7 @@ import * as cases from '../../convex/cases';
 import * as documents from '../../convex/documents';
 import * as purchases from '../../convex/purchases';
 import * as reminders from '../../convex/reminders';
+import * as devices from '../../convex/devices';
 import * as auth from '../../convex/auth';
 import * as rateLimits from '../../convex/rateLimits';
 
@@ -17,6 +18,7 @@ describe('RESOLVE-ONE: Production Multi-Tenant Isolation & Backend Ownership Sec
   const expiredToken = 'session_token_expired_999999';
 
   beforeEach(async () => {
+    process.env.ENFORCE_SERVER_ONLY_AUTH = 'false';
     const mock = createMockConvexContext();
     ctx = mock.ctx;
     storageHelper = mock.storageHelper;
@@ -381,6 +383,320 @@ describe('RESOLVE-ONE: Production Multi-Tenant Isolation & Backend Ownership Sec
       const res5 = await (rateLimits.checkRateLimit as any)._handler(ctx, { key, maxAttempts, windowMs });
       expect(res5.allowed).toBe(true);
       expect(res5.remaining).toBe(2);
+    });
+  });
+
+  describe('Device Registration & Multi-Device Isolation', () => {
+    it('prevents User B from claiming or modifying User A device, and prevents cross-user device hijacking', async () => {
+      const deviceId = 'macbook-pro-m3-hardware-uuid-999';
+
+      // 1. User A registers device
+      const regResA = await (devices.registerDevice as any)._handler(ctx, {
+        sessionToken: tokenA,
+        deviceId,
+        deviceName: "Priya's MacBook",
+        deviceType: 'desktop',
+      });
+      expect(regResA.ok).toBe(true);
+      const devA = regResA.device;
+      expect(devA).toBeDefined();
+      expect(devA.userId).toBe(userAId);
+      expect(devA.deviceId).toBe(deviceId);
+
+      // 2. User B tries to register the same deviceId -> REJECTED (returns { ok: false, code: 'FORBIDDEN' })
+      const hijackRes = await (devices.registerDevice as any)._handler(ctx, {
+        sessionToken: tokenB,
+        deviceId,
+        deviceName: "Rohan's Attempted Hijack",
+        deviceType: 'desktop',
+      });
+      expect(hijackRes.ok).toBe(false);
+      expect(hijackRes.code).toBe('FORBIDDEN');
+
+      // 3. User B tries to remove User A's device -> REJECTED (returns { ok: false, code: 'FORBIDDEN' })
+      const removeFailRes = await (devices.removeDevice as any)._handler(ctx, {
+        sessionToken: tokenB,
+        deviceId,
+      });
+      expect(removeFailRes.ok).toBe(false);
+      expect(removeFailRes.code).toBe('FORBIDDEN');
+
+      // 4. User A updates their own device -> ALLOWED
+      const updatedResA = await (devices.registerDevice as any)._handler(ctx, {
+        sessionToken: tokenA,
+        deviceId,
+        deviceName: "Priya's MacBook Pro (Renamed)",
+        deviceType: 'desktop',
+      });
+      expect(updatedResA.ok).toBe(true);
+      expect(updatedResA.device.deviceName).toBe("Priya's MacBook Pro (Renamed)");
+
+      // 5. User A removes their own device -> ALLOWED
+      const removeRes = await (devices.removeDevice as any)._handler(ctx, {
+        sessionToken: tokenA,
+        deviceId,
+      });
+      expect(removeRes.ok).toBe(true);
+      expect(removeRes.success).toBe(true);
+    });
+  });
+
+  describe('Convex-Layer Rate Limiting on Direct Mutations', () => {
+    it('enforces rate limit on login attempts and triggers RATE_LIMIT_EXCEEDED on abuse', async () => {
+      const targetIdentifier = 'priya.sharma@example.com';
+
+      // 5 failed login attempts
+      for (let i = 0; i < 5; i++) {
+        const res = await (auth.login as any)._handler(ctx, {
+          identifier: targetIdentifier,
+          password: 'WrongPassword#123',
+        });
+        expect(res.ok).toBe(false);
+        expect(res.code).toBe('INVALID_CREDENTIALS');
+      }
+
+      // 6th attempt -> rejected by rate limiter
+      const blockedRes = await (auth.login as any)._handler(ctx, {
+        identifier: targetIdentifier,
+        password: 'WrongPassword#123',
+      });
+      expect(blockedRes.ok).toBe(false);
+      expect(blockedRes.code).toBe('RATE_LIMIT_EXCEEDED');
+    });
+
+    it('enforces rate limit on upload URL generation to protect storage quotas', async () => {
+      // User A requests upload URLs up to the limit (30)
+      for (let i = 0; i < 30; i++) {
+        const url = await (documents.generateUploadUrl as any)._handler(ctx, {
+          sessionToken: tokenA,
+        });
+        expect(url).toBeDefined();
+      }
+
+      // 31st attempt -> rejected by rate limiter
+      await expect(
+        (documents.generateUploadUrl as any)._handler(ctx, {
+          sessionToken: tokenA,
+        })
+      ).rejects.toThrow(/RATE_LIMIT_EXCEEDED/);
+    });
+  });
+
+  describe('Security Audit Logging for Sensitive Events', () => {
+    it('records failed logins, device registrations, and security violations in audit_logs', async () => {
+      // 1. Trigger failed login
+      const failLogin = await (auth.login as any)._handler(ctx, {
+        identifier: 'priya.sharma@example.com',
+        password: 'IncorrectPassword!999',
+        ipAddress: '203.0.113.42',
+      });
+      expect(failLogin.ok).toBe(false);
+
+      // 2. Trigger device registration
+      await (devices.registerDevice as any)._handler(ctx, {
+        sessionToken: tokenA,
+        deviceId: 'macbook-pro-audit-test',
+        deviceName: "Priya's Work Laptop",
+        deviceType: 'desktop',
+      });
+
+      // 3. Trigger device hijack attempt (security violation)
+      const hijackAttempt = await (devices.registerDevice as any)._handler(ctx, {
+        sessionToken: tokenB,
+        deviceId: 'macbook-pro-audit-test',
+        deviceName: "Rohan's Hijack",
+        deviceType: 'desktop',
+      });
+      expect(hijackAttempt.ok).toBe(false);
+      expect(hijackAttempt.code).toBe('FORBIDDEN');
+
+      // Verify audit_logs table has entries
+      const logs = await ctx.db.query('audit_logs').collect();
+      expect(logs.length).toBeGreaterThanOrEqual(3);
+
+      // Should have login_failed entry
+      const failedLoginLog = logs.find((l: any) => l.action === 'login_failed');
+      expect(failedLoginLog).toBeDefined();
+      expect(failedLoginLog.ipAddress).toBe('unverified:203.0.113.42');
+
+      // Should have create entry for device registration
+      const deviceRegLog = logs.find((l: any) => l.action === 'create' && l.entityId === 'macbook-pro-audit-test');
+      expect(deviceRegLog).toBeDefined();
+
+      // Should have security_violation entry from device hijack attempt
+      const violationLog = logs.find((l: any) => l.action === 'security_violation');
+      expect(violationLog).toBeDefined();
+      expect(violationLog.details).toContain('macbook-pro-audit-test');
+    });
+  });
+
+  describe('Server-Side Validation & File Upload Guards (Group 2 Hardening)', () => {
+    it('enforces bounds and enums on case creation and updates', async () => {
+      // 1. Rejects invalid status
+      await expect(
+        (cases.create as any)._handler(ctx, {
+          sessionToken: tokenA,
+          title: 'Defective Television',
+          issueType: 'Damaged or defective',
+          company: 'Sony India',
+          description: 'Display panel has lines across the screen.',
+          status: 'invalid_status_value',
+        })
+      ).rejects.toThrow(/Invalid status/);
+
+      // 2. Rejects invalid issueType
+      await expect(
+        (cases.create as any)._handler(ctx, {
+          sessionToken: tokenA,
+          title: 'Defective Television',
+          issueType: 'completely_unknown_issue_type',
+          company: 'Sony India',
+          description: 'Display panel has lines across the screen.',
+        })
+      ).rejects.toThrow(/Invalid issueType/);
+
+      // 3. Rejects negative amount
+      await expect(
+        (cases.create as any)._handler(ctx, {
+          sessionToken: tokenA,
+          title: 'Defective Television',
+          issueType: 'Damaged or defective',
+          company: 'Sony India',
+          description: 'Display panel has lines across the screen.',
+          amount: -500,
+        })
+      ).rejects.toThrow(/non-negative number up to ₹100,000,000/);
+
+      // 4. Rejects amount exceeding 100M
+      await expect(
+        (cases.create as any)._handler(ctx, {
+          sessionToken: tokenA,
+          title: 'Defective Television',
+          issueType: 'Damaged or defective',
+          company: 'Sony India',
+          description: 'Display panel has lines across the screen.',
+          amount: 200000000,
+        })
+      ).rejects.toThrow(/non-negative number up to ₹100,000,000/);
+
+      // 5. Rejects too short title
+      await expect(
+        (cases.create as any)._handler(ctx, {
+          sessionToken: tokenA,
+          title: 'Hi',
+          issueType: 'Damaged or defective',
+          company: 'Sony India',
+          description: 'Valid description text here.',
+        })
+      ).rejects.toThrow(/Title must be at least 3 characters/);
+    });
+
+    it('enforces numeric bounds and constraints on purchases', async () => {
+      // 1. Rejects negative amount
+      await expect(
+        (purchases.create as any)._handler(ctx, {
+          sessionToken: tokenA,
+          store: 'Amazon India',
+          product: 'Wireless Earbuds',
+          amount: -100,
+          returnWindowDays: 10,
+          warrantyMonths: 12,
+        })
+      ).rejects.toThrow(/non-negative number up to ₹100,000,000/);
+
+      // 2. Rejects returnWindowDays > 365
+      await expect(
+        (purchases.create as any)._handler(ctx, {
+          sessionToken: tokenA,
+          store: 'Amazon India',
+          product: 'Wireless Earbuds',
+          amount: 1999,
+          returnWindowDays: 400,
+          warrantyMonths: 12,
+        })
+      ).rejects.toThrow(/Return window must be between 0 and 365 days/);
+
+      // 3. Rejects warrantyMonths > 120
+      await expect(
+        (purchases.create as any)._handler(ctx, {
+          sessionToken: tokenA,
+          store: 'Amazon India',
+          product: 'Wireless Earbuds',
+          amount: 1999,
+          returnWindowDays: 15,
+          warrantyMonths: 150,
+        })
+      ).rejects.toThrow(/Warranty period must be between 0 and 120 months/);
+    });
+
+    it('enforces MIME allowlist, extension allowlist, 15MB limit, and SHA-256 format on documents', async () => {
+      const validStorageId = 'valid_storage_blob_doc_1';
+      storageHelper.registerStorage(validStorageId);
+
+      // 1. Rejects unlisted extension (.exe)
+      await expect(
+        (documents.registerDocument as any)._handler(ctx, {
+          sessionToken: tokenA,
+          storageId: validStorageId,
+          name: 'malware.exe',
+          mime: 'application/octet-stream',
+          size: 1024,
+          sha256: 'a1b2c3d4e5f60718293a4b5c6d7e8f90123456789abcdef0123456789abcdef0',
+          isEncrypted: true,
+        })
+      ).rejects.toThrow(/File extension '\.exe' is not permitted/);
+
+      // 2. Rejects unlisted MIME type
+      await expect(
+        (documents.registerDocument as any)._handler(ctx, {
+          sessionToken: tokenA,
+          storageId: validStorageId,
+          name: 'invoice.pdf',
+          mime: 'application/x-executable',
+          size: 1024,
+          sha256: 'a1b2c3d4e5f60718293a4b5c6d7e8f90123456789abcdef0123456789abcdef0',
+          isEncrypted: true,
+        })
+      ).rejects.toThrow(/MIME type 'application\/x-executable' is not permitted/);
+
+      // 3. Rejects size exceeding 15MB
+      await expect(
+        (documents.registerDocument as any)._handler(ctx, {
+          sessionToken: tokenA,
+          storageId: validStorageId,
+          name: 'large_video.mp4',
+          mime: 'application/octet-stream',
+          size: 16 * 1024 * 1024, // 16MB
+          sha256: 'a1b2c3d4e5f60718293a4b5c6d7e8f90123456789abcdef0123456789abcdef0',
+          isEncrypted: true,
+        })
+      ).rejects.toThrow(/at most 15MB/);
+
+      // 4. Rejects zero or negative size
+      await expect(
+        (documents.registerDocument as any)._handler(ctx, {
+          sessionToken: tokenA,
+          storageId: validStorageId,
+          name: 'zero.pdf',
+          mime: 'application/pdf',
+          size: 0,
+          sha256: 'a1b2c3d4e5f60718293a4b5c6d7e8f90123456789abcdef0123456789abcdef0',
+          isEncrypted: true,
+        })
+      ).rejects.toThrow(/greater than 0 and at most 15MB/);
+
+      // 5. Rejects invalid SHA-256 hash format
+      await expect(
+        (documents.registerDocument as any)._handler(ctx, {
+          sessionToken: tokenA,
+          storageId: validStorageId,
+          name: 'invoice.pdf',
+          mime: 'application/pdf',
+          size: 1024,
+          sha256: 'not-a-valid-sha256-hash',
+          isEncrypted: true,
+        })
+      ).rejects.toThrow(/Invalid SHA-256 hash fingerprint/);
     });
   });
 });

@@ -27,17 +27,10 @@ export const UserMenu: React.FC = () => {
   }, [isOpen]);
 
   if (!isAuthenticated || !user) {
-    return (
-      <Link
-        href="/login"
-        className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-coral hover:bg-coral-600 text-white font-medium text-xs shadow-2xs transition-colors"
-      >
-        <User className="w-3.5 h-3.5" />
-        <span>Log in</span>
-      </Link>
-    );
+    return null;
   }
 
+  const [imageError, setImageError] = useState(false);
   const monogram = (user.name || user.email || 'U')[0].toUpperCase();
 
   return (
@@ -50,11 +43,12 @@ export const UserMenu: React.FC = () => {
         aria-label="User account menu"
         className="flex items-center gap-2 p-1 pl-1.5 rounded-full border border-steel-grey-200 bg-white hover:border-steel-grey-300 transition-colors focus:outline-none focus:ring-2 focus:ring-coral/20"
       >
-        {user.image ? (
+        {user.image && !imageError ? (
           <img
             src={user.image}
             alt={user.name || 'User avatar'}
             className="w-6 h-6 rounded-full object-cover"
+            onError={() => setImageError(true)}
           />
         ) : (
           <div className="w-6 h-6 rounded-full bg-coral text-white text-[11px] font-semibold flex items-center justify-center font-serif leading-none">

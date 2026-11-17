@@ -52,10 +52,16 @@ export function createMockConvexContext() {
           const current = tableMap.get(id);
           const updated = {
             ...current,
-            ...JSON.parse(JSON.stringify(patchDoc)),
             _id: id,
             _creationTime: current._creationTime,
           };
+          for (const [k, v] of Object.entries(patchDoc)) {
+            if (v === undefined) {
+              delete updated[k];
+            } else {
+              updated[k] = typeof v === 'object' && v !== null ? JSON.parse(JSON.stringify(v)) : v;
+            }
+          }
           tableMap.set(id, updated);
           return;
         }
@@ -173,6 +179,10 @@ export function createMockConvexContext() {
   };
 
   const storage = {
+    async generateUploadUrl() {
+      return 'https://files.convex.cloud/upload_mock_target';
+    },
+
     async getUrl(storageId: string) {
       if (!storageId) return null;
       if (dbState.storage.has(storageId)) {
@@ -199,6 +209,29 @@ export function createMockConvexContext() {
     },
     dbState,
     storageHelper: storage,
+    /**
+     * Executes a Convex mutation handler within a transactional boundary.
+     * Accurately reproduces Convex ACID semantics: if the handler throws, all DB writes
+     * made in that invocation are aborted and rolled back to their pre-mutation state.
+     */
+    executeMutationWithRollback: async <T>(handler: (ctx: any) => Promise<T>): Promise<T> => {
+      const snapshotTables = new Map<string, Map<string, any>>();
+      for (const [table, rows] of dbState.tables.entries()) {
+        const copyRows = new Map<string, any>();
+        for (const [id, row] of rows.entries()) {
+          copyRows.set(id, JSON.parse(JSON.stringify(row)));
+        }
+        snapshotTables.set(table, copyRows);
+      }
+
+      try {
+        const res = await handler({ db, storage });
+        return res;
+      } catch (err) {
+        dbState.tables = snapshotTables;
+        throw err;
+      }
+    },
   };
 }
 

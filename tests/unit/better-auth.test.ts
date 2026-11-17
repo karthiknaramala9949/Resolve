@@ -289,22 +289,22 @@ describe('Milestone 2.2: Better Auth & Convex Backend Authentication Integration
   });
 
   describe('4. Middleware Route Protection & Better Auth Cookie Handling', () => {
-    it('detects valid Better Auth session cookie in request in development mode', async () => {
+    it('rejects un-signed or forged Better Auth session cookie in request in development mode', async () => {
       const req = {
         headers: new Headers({
-          cookie: 'better-auth.session_token=test_session_token_12345',
+          cookie: 'better-auth.session_token=forged_unsigned_token_12345',
         }),
       };
-      expect(await hasBetterAuthSession(req as any)).toBe(true);
+      expect(await hasBetterAuthSession(req as any)).toBe(false);
     });
 
-    it('detects secure HTTPS Better Auth session cookie in development mode', async () => {
+    it('rejects un-signed HTTPS Better Auth session cookie even if high entropy', async () => {
       const req = {
         headers: new Headers({
-          cookie: '__Secure-better-auth.session_token=secure_session_token_abcde',
+          cookie: '__Secure-better-auth.session_token=secure_session_token_abcde12345678',
         }),
       };
-      expect(await hasBetterAuthSession(req as any)).toBe(true);
+      expect(await hasBetterAuthSession(req as any)).toBe(false);
     });
 
     it('rejects empty or whitespace-only Better Auth session cookie', async () => {

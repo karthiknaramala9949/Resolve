@@ -3,6 +3,7 @@ import { authStore } from '@/lib/server/db/authStore';
 import { setSessionCookie } from '@/lib/server/auth/session';
 import { syncSessionToConvex } from '@/lib/server/convex/convexClient';
 import { sanitizeRedirectUrl, resolveRequestOrigin } from '@/lib/server/auth/redirect';
+import { getClientIp } from '@/lib/server/auth/ip';
 
 export const dynamic = 'force-dynamic';
 
@@ -39,7 +40,7 @@ export async function GET(req: NextRequest) {
 
     // Verify state token from cookie
     const storedState = req.cookies.get('oauth_state')?.value;
-    let decodedState: { state: string; returnTo?: string };
+    let decodedState: { state: string; returnTo?: string; rememberMe?: boolean };
     try {
       decodedState = JSON.parse(
         Buffer.from(stateParam, 'base64url').toString('utf-8')
@@ -157,17 +158,20 @@ export async function GET(req: NextRequest) {
     }
 
     // Create session
+    const isRemembered = decodedState.rememberMe !== false;
+    const clientIp = getClientIp(req).ip;
     const session = await authStore.createSession(user.id, {
       userAgent: req.headers.get('user-agent') || undefined,
-      ipAddress: req.headers.get('x-forwarded-for') || '127.0.0.1',
-    });
+      ipAddress: clientIp,
+    }, isRemembered);
 
     // Synchronize session with Convex cloud database
     await syncSessionToConvex(
       user,
       session.token,
       req.headers.get('user-agent') || undefined,
-      req.headers.get('x-forwarded-for') || '127.0.0.1'
+      clientIp,
+      isRemembered
     );
 
     const rawTarget =
@@ -182,7 +186,7 @@ export async function GET(req: NextRequest) {
     response.headers.set('Cache-Control', 'no-store, no-cache, must-revalidate, private');
     response.headers.set('Pragma', 'no-cache');
 
-    setSessionCookie(response, session.token);
+    setSessionCookie(response, session.token, isRemembered);
 
     // Clear OAuth state, PKCE verifier, nonce, and redirect URI cookies
     response.cookies.delete('oauth_state');

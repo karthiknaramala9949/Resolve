@@ -11,6 +11,8 @@ import {
   Input,
   Textarea,
   useToast,
+  NumberStepper,
+  CopyButton,
 } from '@/design-system';
 import {
   Plus,
@@ -272,6 +274,7 @@ export const PurchasesPage: React.FC = () => {
                     </span>
                     <div className="flex items-center gap-2">
                       <span className="font-mono text-xs text-steel-grey-500">{p.orderRef || p.id}</span>
+                      <CopyButton value={p.orderRef || p.id} label="order reference" />
                       <button
                         type="button"
                         onClick={() => setEditingPurchase(p)}
@@ -478,19 +481,21 @@ export const PurchasesPage: React.FC = () => {
           </div>
 
           <div className="grid grid-cols-2 gap-3">
-            <Input
-              label="Return window (days)"
-              type="number"
-              value={returnDays}
-              onChange={(e) => setReturnDays(e.target.value)}
-              placeholder="7"
+            <NumberStepper
+              label="Return window"
+              unit="days"
+              value={parseInt(returnDays, 10) || 0}
+              onChange={(v) => setReturnDays(String(v))}
+              min={0}
+              max={365}
             />
-            <Input
-              label="Warranty (months)"
-              type="number"
-              value={warrantyMonths}
-              onChange={(e) => setWarrantyMonths(e.target.value)}
-              placeholder="12"
+            <NumberStepper
+              label="Warranty"
+              unit="months"
+              value={parseInt(warrantyMonths, 10) || 0}
+              onChange={(v) => setWarrantyMonths(String(v))}
+              min={0}
+              max={120}
             />
           </div>
 
@@ -552,17 +557,21 @@ export const PurchasesPage: React.FC = () => {
               />
             </div>
             <div className="grid grid-cols-2 gap-3">
-              <Input
-                label="Return window (days)"
-                type="number"
-                value={String(editingPurchase.returnWindowDays || 7)}
-                onChange={(e) => setEditingPurchase({ ...editingPurchase, returnWindowDays: parseInt(e.target.value, 10) || 7 })}
+              <NumberStepper
+                label="Return window"
+                unit="days"
+                value={editingPurchase.returnWindowDays ?? 7}
+                onChange={(v) => setEditingPurchase({ ...editingPurchase, returnWindowDays: v })}
+                min={0}
+                max={365}
               />
-              <Input
-                label="Warranty (months)"
-                type="number"
-                value={String(editingPurchase.warrantyMonths || 12)}
-                onChange={(e) => setEditingPurchase({ ...editingPurchase, warrantyMonths: parseInt(e.target.value, 10) || 12 })}
+              <NumberStepper
+                label="Warranty"
+                unit="months"
+                value={editingPurchase.warrantyMonths ?? 12}
+                onChange={(v) => setEditingPurchase({ ...editingPurchase, warrantyMonths: v })}
+                min={0}
+                max={120}
               />
             </div>
             <div className="flex justify-end gap-3 pt-2">

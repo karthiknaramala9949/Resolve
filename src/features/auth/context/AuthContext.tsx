@@ -26,6 +26,32 @@ export interface AuthContextValue {
   setUser: (user: UserProfile | null) => void;
 }
 
+const AUTH_CHANNEL_NAME = 'resolve_auth_channel';
+const AUTH_STORAGE_KEY = 'resolve_auth_sync';
+
+export function broadcastAuthEvent(type: 'login' | 'logout'): void {
+  if (typeof window === 'undefined') return;
+  const payload = { type, timestamp: Date.now() };
+  try {
+    if ('BroadcastChannel' in window) {
+      const channel = new BroadcastChannel(AUTH_CHANNEL_NAME);
+      channel.postMessage(payload);
+      setTimeout(() => {
+        try {
+          channel.close();
+        } catch {}
+      }, 1000);
+    }
+  } catch {
+    // Ignore
+  }
+  try {
+    localStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(payload));
+  } catch {
+    // Ignore
+  }
+}
+
 const AuthContext = createContext<AuthContextValue | undefined>(undefined);
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
@@ -68,10 +94,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       } else {
         setUser(null);
         setSessionToken(null);
+        // Clear dead cookies server-side to prevent redirect loops between /app/* and /login
+        authService.logout().catch(() => {});
       }
     } catch {
       setUser(null);
       setSessionToken(null);
+      authService.logout().catch(() => {});
     } finally {
       setIsLoading(false);
     }
@@ -79,6 +108,108 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   useEffect(() => {
     refreshUser();
+  }, [refreshUser]);
+
+  // Multi-tab sync, BroadcastChannel, storage events, throttled tab focus verification, and BFCache protection
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+
+    let lastFocusCheckTime = 0;
+    const FOCUS_THROTTLE_MS = 30000; // Throttle to at most once per 30s
+
+    const handleRemoteLogout = async () => {
+      clearSessionToken();
+      await clearLocalUserData();
+      try {
+        await authService.logout();
+      } catch {
+        // Ignore
+      }
+      setUser(null);
+      if (window.location.pathname.startsWith('/app')) {
+        window.location.replace('/');
+      }
+    };
+
+    const handleRemoteLogin = () => {
+      refreshUser();
+    };
+
+    // 1. BroadcastChannel listener across tabs
+    let channel: BroadcastChannel | null = null;
+    if ('BroadcastChannel' in window) {
+      try {
+        channel = new BroadcastChannel(AUTH_CHANNEL_NAME);
+        channel.onmessage = async (event) => {
+          if (event.data?.type === 'logout') {
+            await handleRemoteLogout();
+          } else if (event.data?.type === 'login') {
+            handleRemoteLogin();
+          }
+        };
+      } catch {
+        // Ignore
+      }
+    }
+
+    // 2. Storage event listener (cross-window and fallback sync)
+    const handleStorage = async (e: StorageEvent) => {
+      if (e.key === AUTH_STORAGE_KEY && e.newValue) {
+        try {
+          const data = JSON.parse(e.newValue);
+          if (data.type === 'logout') {
+            await handleRemoteLogout();
+          } else if (data.type === 'login') {
+            handleRemoteLogin();
+          }
+        } catch {
+          // Ignore
+        }
+      }
+    };
+    window.addEventListener('storage', handleStorage);
+
+    // 3. Tab focus & visibility change listener (session check on tab focus throttled to 30s)
+    const handleFocusOrVisible = async () => {
+      if (document.visibilityState === 'visible' || document.hasFocus()) {
+        if (window.location.pathname.startsWith('/app')) {
+          const now = Date.now();
+          if (lastFocusCheckTime !== 0 && now - lastFocusCheckTime < FOCUS_THROTTLE_MS) {
+            return;
+          }
+          lastFocusCheckTime = now;
+
+          try {
+            const data = await authService.getMe();
+            if (!data || !data.user) {
+              await handleRemoteLogout();
+            }
+          } catch {
+            await handleRemoteLogout();
+          }
+        }
+      }
+    };
+    window.addEventListener('focus', handleFocusOrVisible);
+    document.addEventListener('visibilitychange', handleFocusOrVisible);
+
+    // 4. Back-forward cache listener (pageshow event when user presses Back after sign-out)
+    const handlePageShow = (event: PageTransitionEvent) => {
+      if (event.persisted && window.location.pathname.startsWith('/app')) {
+        handleFocusOrVisible();
+      }
+    };
+    window.addEventListener('pageshow', handlePageShow);
+
+    return () => {
+      if (channel) {
+        channel.close();
+      }
+      window.removeEventListener('storage', handleStorage);
+      window.removeEventListener('focus', handleFocusOrVisible);
+      document.removeEventListener('visibilitychange', handleFocusOrVisible);
+      window.removeEventListener('pageshow', handlePageShow);
+    };
   }, [refreshUser]);
 
   const login = async (data: LoginFormData) => {
@@ -97,6 +228,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         setSessionToken(result.sessionToken);
       }
       await refreshUser();
+      broadcastAuthEvent('login');
       return { success: true };
     } catch (err: any) {
       const isOfflineError =
@@ -130,6 +262,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         setSessionToken(result.sessionToken);
       }
       await refreshUser();
+      broadcastAuthEvent('login');
       return {
         success: true,
         user: result.user,
@@ -155,13 +288,19 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     try {
       clearSessionToken();
       await clearLocalUserData();
+      // Await server invalidation and cookie clearing first, then broadcast to other tabs
       await authService.logout();
+      broadcastAuthEvent('logout');
     } catch {
       // Ignore
     } finally {
       setUser(null);
-      router.push('/');
-      router.refresh();
+      if (typeof window !== 'undefined') {
+        window.location.replace('/');
+      } else {
+        router.push('/');
+        router.refresh();
+      }
     }
   };
 

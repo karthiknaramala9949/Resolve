@@ -148,7 +148,14 @@ export const Sidebar: React.FC<SidebarProps> = ({ className }) => {
           <div className="flex items-center justify-between p-2 rounded-xl bg-steel-grey-50 border border-steel-grey-200">
             <Link href="/app/profile" title="View Profile" className="flex items-center gap-2.5 min-w-0 hover:opacity-80 transition-opacity">
               {user.image ? (
-                <img src={user.image} alt={user.name} className="w-7 h-7 rounded-full object-cover shrink-0" />
+                <img
+                  src={user.image}
+                  alt={user.name}
+                  className="w-7 h-7 rounded-full object-cover shrink-0"
+                  onError={(e) => {
+                    (e.currentTarget as HTMLElement).style.display = 'none';
+                  }}
+                />
               ) : (
                 <div className="w-7 h-7 rounded-full bg-coral text-white text-xs font-semibold flex items-center justify-center font-serif shrink-0">
                   {(user.name || user.email || 'U')[0].toUpperCase()}
@@ -172,15 +179,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ className }) => {
               <LogOut className="w-3.5 h-3.5" />
             </button>
           </div>
-        ) : (
-          <Link
-            href="/login"
-            className="flex items-center justify-center gap-2 w-full py-2 px-3 rounded-xl border border-steel-grey-200 bg-white hover:bg-steel-grey-50 text-xs font-semibold text-charcoal transition-colors shadow-2xs"
-          >
-            <User className="w-3.5 h-3.5 text-steel-grey-500" />
-            <span>Log in to sync</span>
-          </Link>
-        )}
+        ) : null}
       </div>
     </aside>
   );

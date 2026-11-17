@@ -2,6 +2,41 @@ import { mutation, query } from './_generated/server';
 import { v } from 'convex/values';
 import { getAuthenticatedUser } from './authHelper';
 import { Doc, Id } from './_generated/dataModel';
+import { assertRateLimit } from './rateLimits';
+
+export const MAX_FILE_SIZE_BYTES = 15 * 1024 * 1024; // 15MB
+
+export const ALLOWED_MIME_TYPES = [
+  'application/pdf',
+  'image/jpeg',
+  'image/png',
+  'image/webp',
+  'image/heic',
+  'image/heif',
+  'text/plain',
+  'text/csv',
+  'application/msword',
+  'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+  'message/rfc822',
+  'application/octet-stream',
+] as const;
+
+export const ALLOWED_EXTENSIONS = [
+  'pdf',
+  'jpg',
+  'jpeg',
+  'png',
+  'webp',
+  'heic',
+  'heif',
+  'txt',
+  'csv',
+  'doc',
+  'docx',
+  'eml',
+  'msg',
+  'bin',
+] as const;
 
 /**
  * Generate a secure upload URL for storing encrypted file blobs.
@@ -12,7 +47,8 @@ export const generateUploadUrl = mutation({
   },
   handler: async (ctx, args) => {
     // Authenticate user before issuing upload URL
-    await getAuthenticatedUser(ctx, args.sessionToken);
+    const { user } = await getAuthenticatedUser(ctx, args.sessionToken);
+    await assertRateLimit(ctx, `upload_url:${user._id}`, 30, 10 * 60 * 1000);
     return await ctx.storage.generateUploadUrl();
   },
 });
@@ -39,6 +75,50 @@ export const registerDocument = mutation({
   handler: async (ctx, args) => {
     const { user } = await getAuthenticatedUser(ctx, args.sessionToken);
     const now = new Date().toISOString();
+
+    // 1. Validate file size (max 15MB)
+    if (
+      typeof args.size !== 'number' ||
+      isNaN(args.size) ||
+      args.size <= 0 ||
+      args.size > MAX_FILE_SIZE_BYTES
+    ) {
+      throw new Error(
+        `File size must be greater than 0 and at most 15MB (got ${args.size} bytes).`
+      );
+    }
+
+    // 2. Validate file extension against allowlist
+    const rawExt = args.name.split('.').pop()?.toLowerCase() || '';
+    if (!rawExt || !ALLOWED_EXTENSIONS.includes(rawExt as any)) {
+      throw new Error(
+        `File extension '.${rawExt}' is not permitted. Allowed extensions: ${ALLOWED_EXTENSIONS.join(', ')}`
+      );
+    }
+
+    // 3. Validate MIME type against allowlist
+    if (!ALLOWED_MIME_TYPES.includes(args.mime.toLowerCase() as any)) {
+      throw new Error(`MIME type '${args.mime}' is not permitted.`);
+    }
+
+    // 4. Validate SHA-256 fingerprint format (64-char hex)
+    if (!/^[a-fA-F0-9]{64}$/.test(args.sha256)) {
+      throw new Error('Invalid SHA-256 hash fingerprint format.');
+    }
+
+    // 5. Verify storage blob existence in Convex storage
+    const storageUrl = await ctx.storage.getUrl(args.storageId as Id<'_storage'>);
+    if (!storageUrl) {
+      throw new Error('Referenced storage blob does not exist or has expired.');
+    }
+
+    // Optional metadata check when available
+    if (typeof (ctx.storage as any).getMetadata === 'function') {
+      const meta = await (ctx.storage as any).getMetadata(args.storageId as Id<'_storage'>);
+      if (meta && typeof meta.size === 'number' && meta.size > MAX_FILE_SIZE_BYTES + 65536) {
+        throw new Error(`Uploaded blob size exceeds 15MB limit (${meta.size} bytes).`);
+      }
+    }
 
     // Verify case ownership if attaching to a case
     let resolvedCaseId: Id<'cases'> | null = null;
@@ -81,7 +161,8 @@ export const registerDocument = mutation({
       .replace(/[\0\r\n\x00-\x1f\x7f]/g, '')
       .replace(/^(\.\.(\/|\\|$))+/, '')
       .replace(/[\/\\]/g, '_')
-      .trim() || 'unnamed_document.bin';
+      .trim()
+      .slice(0, 255) || 'unnamed_document.bin';
 
     const docId = await ctx.db.insert('documents', {
       userId: user._id,

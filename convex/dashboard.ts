@@ -35,11 +35,15 @@ export const getStats = query({
     cases.sort((a, b) => (b.updatedAt > a.updatedAt ? 1 : -1));
     const recentCases = cases.slice(0, 5);
 
-    // Pending reminders
-    let reminders = await ctx.db
+    // Pending reminders (excluding soft-deleted)
+    const allReminders = await ctx.db
       .query('reminders')
       .withIndex('by_user_done', (q) => q.eq('userId', user._id).eq('done', false))
-      .take(5);
+      .collect();
+
+    const reminders = allReminders
+      .filter((r) => !r.deletedAt)
+      .slice(0, 5);
 
     return {
       activeCount,

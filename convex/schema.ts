@@ -202,7 +202,8 @@ export default defineSchema({
     .index('by_user_done', ['userId', 'done'])
     .index('by_case', ['caseId'])
     .index('by_client_id', ['clientGeneratedId'])
-    .index('by_user_client_id', ['userId', 'clientGeneratedId']),
+    .index('by_user_client_id', ['userId', 'clientGeneratedId'])
+    .index('by_deletedAt', ['deletedAt']),
 
   // 7. Notifications
   notifications: defineTable({

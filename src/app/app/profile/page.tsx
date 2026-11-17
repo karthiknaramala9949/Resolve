@@ -2,12 +2,13 @@
 
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { Input, Button, Card, useToast } from '@/design-system';
+import { Input, Button, Card, useToast, ToggleSwitch } from '@/design-system';
 import { PhoneInput } from '@/features/auth/components/PhoneInput';
 import { PasswordInput } from '@/features/auth/components/PasswordInput';
 import { PasswordStrengthMeter } from '@/features/auth/components/PasswordStrengthMeter';
 import { useAuth } from '@/features/auth/context/AuthContext';
 import { authService } from '@/services/authService';
+import { useAppStore } from '@/store/useAppStore';
 import {
   User,
   Mail,
@@ -42,9 +43,11 @@ export default function ProfilePage() {
   // Preference States
   const [smsReminders, setSmsReminders] = useState(true);
   const [emailAlerts, setEmailAlerts] = useState(true);
+  const { simpleLanguageMode, setSimpleLanguageMode } = useAppStore();
 
   // UI & Loading States
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isSaveSuccess, setIsSaveSuccess] = useState(false);
   const [formError, setFormError] = useState<string | null>(null);
   const [formSuccess, setFormSuccess] = useState<string | null>(null);
 
@@ -119,6 +122,8 @@ export default function ProfilePage() {
         await refreshUser();
         const successMsg = 'Profile and account details updated successfully.';
         setFormSuccess(successMsg);
+        setIsSaveSuccess(true);
+        setTimeout(() => setIsSaveSuccess(false), 2500);
         toast(successMsg, 'success');
         setPassword('');
         setConfirmPassword('');
@@ -186,6 +191,9 @@ export default function ProfilePage() {
                 src={user.image}
                 alt={user.name || 'User profile'}
                 className="w-16 h-16 rounded-2xl object-cover border-2 border-white shadow-sm shrink-0"
+                onError={(e) => {
+                  (e.currentTarget as HTMLElement).style.display = 'none';
+                }}
               />
             ) : (
               <div className="w-16 h-16 rounded-2xl bg-coral flex items-center justify-center text-white font-serif font-medium text-2xl shadow-sm shrink-0">
@@ -409,40 +417,36 @@ export default function ProfilePage() {
             </p>
           </div>
 
-          <div className="space-y-3 pt-1">
-            <label className="flex items-start gap-3 p-3.5 rounded-xl bg-steel-grey-50 border border-steel-grey-200 cursor-pointer hover:border-steel-grey-300 transition-colors">
-              <input
-                type="checkbox"
+          <div className="space-y-4 pt-1">
+            <div className="p-4 rounded-xl bg-steel-grey-50 border border-steel-grey-200">
+              <ToggleSwitch
+                id="sms-reminders-toggle"
                 checked={smsReminders}
-                onChange={(e) => setSmsReminders(e.target.checked)}
-                className="mt-0.5 w-4 h-4 rounded border-steel-grey-300 text-coral focus:ring-coral/20"
+                onChange={setSmsReminders}
+                label="SMS deadline alerts & cutoff countdowns"
+                description="Receive SMS when the 15-day merchant response period or 30-day escalation deadline is near."
               />
-              <div className="min-w-0">
-                <span className="text-xs sm:text-sm font-semibold text-charcoal block">
-                  SMS deadline alerts & cutoff countdowns
-                </span>
-                <span className="text-xs text-steel-grey-500 block font-normal">
-                  Receive SMS when the 15-day merchant response period or 30-day escalation deadline is near.
-                </span>
-              </div>
-            </label>
+            </div>
 
-            <label className="flex items-start gap-3 p-3.5 rounded-xl bg-steel-grey-50 border border-steel-grey-200 cursor-pointer hover:border-steel-grey-300 transition-colors">
-              <input
-                type="checkbox"
+            <div className="p-4 rounded-xl bg-steel-grey-50 border border-steel-grey-200">
+              <ToggleSwitch
+                id="email-alerts-toggle"
                 checked={emailAlerts}
-                onChange={(e) => setEmailAlerts(e.target.checked)}
-                className="mt-0.5 w-4 h-4 rounded border-steel-grey-300 text-coral focus:ring-coral/20"
+                onChange={setEmailAlerts}
+                label="Email updates & proof pack download links"
+                description="Receive email copies of generated proof packs and case milestone confirmations."
               />
-              <div className="min-w-0">
-                <span className="text-xs sm:text-sm font-semibold text-charcoal block">
-                  Email updates & proof pack download links
-                </span>
-                <span className="text-xs text-steel-grey-500 block font-normal">
-                  Receive email copies of generated proof packs and case milestone confirmations.
-                </span>
-              </div>
-            </label>
+            </div>
+
+            <div className="p-4 rounded-xl bg-steel-grey-50 border border-steel-grey-200">
+              <ToggleSwitch
+                id="simple-language-toggle"
+                checked={simpleLanguageMode}
+                onChange={setSimpleLanguageMode}
+                label="Simple Language Mode"
+                description="Translates complex legal dispute phrases into plain conversational language across your dashboard."
+              />
+            </div>
           </div>
         </Card>
 
@@ -471,11 +475,13 @@ export default function ProfilePage() {
             type="submit"
             variant="primary"
             size="md"
+            isLoading={isSubmitting}
+            isSuccess={isSaveSuccess}
             disabled={isSubmitting}
             className="min-w-[140px]"
           >
             <Save className="w-4 h-4 shrink-0" />
-            <span>{isSubmitting ? 'Saving...' : 'Save changes'}</span>
+            <span>{isSaveSuccess ? 'Saved!' : isSubmitting ? 'Saving...' : 'Save changes'}</span>
           </Button>
         </div>
       </form>

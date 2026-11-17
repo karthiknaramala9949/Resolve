@@ -18,21 +18,16 @@ export async function hasBetterAuthSession(
     if (!token || token.trim().length === 0) return false;
 
     // Better Auth signs cookies when secret is provided: `<token>.<signature>`
-    if (token.includes('.')) {
-      const authSecret =
-        secret ||
-        process.env.BETTER_AUTH_SECRET;
-      if (!authSecret || authSecret.length < 32) return false;
-      return await verifySessionCookie(token, authSecret);
-    }
-
-    // In production, un-signed cookie tokens are strictly prohibited
-    if (process.env.NODE_ENV === 'production') {
+    // Forged or un-signed cookies must NEVER be accepted in any environment
+    if (!token.includes('.')) {
       return false;
     }
 
-    // In dev without cookie signing, require minimum token entropy
-    return token.length >= 16;
+    const authSecret =
+      secret ||
+      process.env.BETTER_AUTH_SECRET;
+    if (!authSecret || authSecret.length < 32) return false;
+    return await verifySessionCookie(token, authSecret);
   } catch {
     return false;
   }
@@ -86,18 +81,100 @@ export async function verifySessionCookie(
       sigBytes[i] = binary.charCodeAt(i);
     }
 
-    return await crypto.subtle.verify(
+    const isSigValid = await crypto.subtle.verify(
       'HMAC',
       key,
       sigBytes,
       enc.encode(payload)
     );
+    if (!isSigValid) return false;
+
+    // Unambiguous expiry parsing
+    // 1. Structured JSON payload: {"t":"<token>","exp":<timestamp>}
+    if (payload.startsWith('{') && payload.endsWith('}')) {
+      try {
+        const parsed = JSON.parse(payload);
+        if (typeof parsed.exp === 'number' && parsed.exp < Date.now()) {
+          return false; // Expired
+        }
+        return Boolean(parsed.t);
+      } catch {
+        return false;
+      }
+    }
+
+    // 2. Delimited format: `<token>:<expiresAt>`
+    if (payload.includes(':')) {
+      const lastColon = payload.lastIndexOf(':');
+      const expiryStr = payload.slice(lastColon + 1);
+      const expiryNum = Number(expiryStr);
+      if (!isNaN(expiryNum)) {
+        if (expiryNum < Date.now()) {
+          return false; // Expired
+        }
+      } else {
+        const expiryDate = new Date(expiryStr).getTime();
+        if (!isNaN(expiryDate) && expiryDate < Date.now()) {
+          return false; // Expired
+        }
+      }
+      return true;
+    }
+
+    // 3. Legacy cookies without embedded expiry:
+    // In production, un-timestamped legacy cookies are invalidated to enforce transition to secure timestamped sessions.
+    // In development/test, permitted if cryptographic signature is valid.
+    if (process.env.NODE_ENV === 'production') {
+      return false;
+    }
+
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+/**
+ * Validates request origin against the authorized application URL, Host, and local development origins.
+ */
+export function isOriginAllowed(origin: string, host: string | null): boolean {
+  try {
+    const originHost = new URL(origin).host;
+    if (host && originHost === host) return true;
+
+    const allowedUrl = process.env.NEXT_PUBLIC_APP_URL || process.env.SITE_URL;
+    if (allowedUrl) {
+      const allowedHost = new URL(allowedUrl).host;
+      if (originHost === allowedHost) return true;
+    }
+
+    if (process.env.NODE_ENV !== 'production') {
+      if (
+        originHost === 'localhost' ||
+        originHost.startsWith('localhost:') ||
+        originHost === '127.0.0.1' ||
+        originHost.startsWith('127.0.0.1:')
+      ) {
+        return true;
+      }
+    }
+    return false;
   } catch {
     return false;
   }
 }
 
 export async function middleware(req: NextRequest) {
+  // 0. Canonical HTTPS redirect in production
+  if (process.env.NODE_ENV === 'production') {
+    const proto = req.headers.get('x-forwarded-proto');
+    if (proto === 'http') {
+      const httpsUrl = new URL(req.url);
+      httpsUrl.protocol = 'https:';
+      return NextResponse.redirect(httpsUrl, 301);
+    }
+  }
+
   const { pathname, search } = req.nextUrl;
   
   // 1. Check for Better Auth session cookie (cryptographically verified)
@@ -109,6 +186,13 @@ export async function middleware(req: NextRequest) {
 
   // Guest Mode is completely removed: only authentic sessions are permitted
   const isAuthenticated = isBetterAuthAuthenticated || isLegacyAuthenticated;
+
+  const hasSessionCookie =
+    req.cookies.has(SESSION_COOKIE_NAME) ||
+    req.cookies.has('better-auth.session_token') ||
+    req.cookies.has('__Secure-better-auth.session_token');
+
+  const isInvalidOrExpiredCookie = hasSessionCookie && !isAuthenticated;
 
   const isProtectedRoute =
     pathname.startsWith('/app') ||
@@ -126,6 +210,17 @@ export async function middleware(req: NextRequest) {
   const requestHeaders = new Headers(req.headers);
   requestHeaders.set('x-nonce', nonce);
 
+  function clearAuthCookies(res: NextResponse) {
+    res.cookies.delete(SESSION_COOKIE_NAME);
+    res.cookies.set(SESSION_COOKIE_NAME, '', { path: '/', maxAge: 0, expires: new Date(0) });
+    res.cookies.delete('better-auth.session_token');
+    res.cookies.set('better-auth.session_token', '', { path: '/', maxAge: 0, expires: new Date(0) });
+    res.cookies.delete('__Secure-better-auth.session_token');
+    res.cookies.set('__Secure-better-auth.session_token', '', { path: '/', maxAge: 0, expires: new Date(0) });
+    res.cookies.delete('resolve_guest');
+    res.cookies.set('resolve_guest', '', { path: '/', maxAge: 0, expires: new Date(0) });
+  }
+
   function applySecurityHeaders(res: NextResponse): NextResponse {
     res.headers.set('X-Content-Type-Options', 'nosniff');
     res.headers.set('X-Frame-Options', 'DENY');
@@ -137,12 +232,12 @@ export async function middleware(req: NextRequest) {
 
     const isDev = process.env.NODE_ENV !== 'production';
     const scriptSrc = isDev
-      ? `'self' 'unsafe-inline' 'unsafe-eval' https://accounts.google.com https://*.convex.cloud`
-      : `'self' 'unsafe-inline' 'wasm-unsafe-eval' https://accounts.google.com https://*.convex.cloud`;
+      ? `'self' 'unsafe-inline' 'unsafe-eval' https://accounts.google.com https://*.convex.cloud https://challenges.cloudflare.com`
+      : `'self' 'unsafe-inline' 'wasm-unsafe-eval' https://accounts.google.com https://*.convex.cloud https://challenges.cloudflare.com`;
 
     const connectSrc = isDev
-      ? `'self' https://*.convex.cloud wss://*.convex.cloud https://*.convex.site https://accounts.google.com ws: wss:`
-      : `'self' https://*.convex.cloud wss://*.convex.cloud https://*.convex.site https://accounts.google.com`;
+      ? `'self' https://*.convex.cloud wss://*.convex.cloud https://*.convex.site https://accounts.google.com https://challenges.cloudflare.com ws: wss:`
+      : `'self' https://*.convex.cloud wss://*.convex.cloud https://*.convex.site https://accounts.google.com https://challenges.cloudflare.com`;
 
     const csp = `
       default-src 'self';
@@ -151,7 +246,7 @@ export async function middleware(req: NextRequest) {
       font-src 'self' data: https://fonts.gstatic.com;
       img-src 'self' data: blob: https:;
       connect-src ${connectSrc};
-      frame-src 'self' https://accounts.google.com;
+      frame-src 'self' https://accounts.google.com https://challenges.cloudflare.com;
       object-src 'none';
       base-uri 'self';
       form-action 'self';
@@ -162,24 +257,155 @@ export async function middleware(req: NextRequest) {
     return res;
   }
 
+  // Handle /api routes: CORS lockdown, safe OPTIONS preflight, and state-changing cross-origin rejection
+  if (pathname.startsWith('/api')) {
+    const origin = req.headers.get('origin');
+    const host = req.headers.get('host');
+
+    // 1. Handle OPTIONS preflight requests
+    if (req.method === 'OPTIONS') {
+      if (!origin || isOriginAllowed(origin, host)) {
+        const preflightHeaders = new Headers();
+        if (origin) {
+          preflightHeaders.set('Access-Control-Allow-Origin', origin);
+          preflightHeaders.set('Vary', 'Origin');
+          preflightHeaders.set('Access-Control-Allow-Credentials', 'true');
+        }
+        preflightHeaders.set(
+          'Access-Control-Allow-Methods',
+          'GET, POST, PUT, PATCH, DELETE, OPTIONS'
+        );
+        preflightHeaders.set(
+          'Access-Control-Allow-Headers',
+          'Content-Type, Authorization, X-Requested-With, X-CSRF-Token, x-nonce'
+        );
+        preflightHeaders.set('Access-Control-Max-Age', '86400');
+        return applySecurityHeaders(
+          new NextResponse(null, { status: 204, headers: preflightHeaders })
+        );
+      }
+      return applySecurityHeaders(
+        NextResponse.json(
+          { error: 'Forbidden: Untrusted cross-origin preflight request.' },
+          { status: 403 }
+        )
+      );
+    }
+
+    // 2. State-changing requests: reject cross-site mutations
+    // OAuth 2.0 / OpenID Connect callbacks legitimately need only POST (e.g. form_post) and GET.
+    // Restrict callback exemption strictly to POST; reject PUT, PATCH, DELETE across all endpoints.
+    // Note: No webhook endpoints exist in the application, so zero webhook exemptions are granted.
+    const method = req.method.toUpperCase();
+    const isAllowedOAuthMethod = method === 'POST';
+    const isAuthCallback = pathname.startsWith('/api/auth/callback') && isAllowedOAuthMethod;
+    if (['POST', 'PUT', 'DELETE', 'PATCH'].includes(method)) {
+      const secFetchSite = req.headers.get('sec-fetch-site');
+      if (secFetchSite === 'cross-site' && !isAuthCallback) {
+        return applySecurityHeaders(
+          NextResponse.json(
+            { error: 'Forbidden: Cross-site mutation rejected.' },
+            { status: 403 }
+          )
+        );
+      }
+
+      if (origin && !isOriginAllowed(origin, host) && !isAuthCallback) {
+        return applySecurityHeaders(
+          NextResponse.json(
+            { error: 'Forbidden: Untrusted request origin.' },
+            { status: 403 }
+          )
+        );
+      }
+    }
+
+    // Pass through API request with security headers and reflected origin
+    const res = NextResponse.next({
+      request: {
+        headers: requestHeaders,
+      },
+    });
+
+    if (origin && isOriginAllowed(origin, host)) {
+      res.headers.set('Access-Control-Allow-Origin', origin);
+      res.headers.set('Vary', 'Origin');
+      res.headers.set('Access-Control-Allow-Credentials', 'true');
+    }
+
+    return applySecurityHeaders(res);
+  }
+
   // 1. Unauthenticated user trying to access protected workspace routes or profile
+  // Redirect to sign-in page with safe, same-origin-only `next` param.
   if (isProtectedRoute && !isAuthenticated) {
-    const returnUrl = encodeURIComponent(`${pathname}${search}`);
-    const redirectUrl = new URL(`/login?next=${returnUrl}`, req.url);
-    const response = NextResponse.redirect(redirectUrl);
-    if (req.cookies.has('resolve_guest')) {
-      response.cookies.delete('resolve_guest');
+    const rawNext = `${pathname}${search}`;
+    const safeNext = sanitizeRedirectUrl(rawNext, req.nextUrl.origin, '/app/overview');
+    const redirectUrl = new URL(`/login?next=${encodeURIComponent(safeNext)}`, req.url);
+    const response = NextResponse.redirect(redirectUrl, 307);
+    response.headers.set('Cache-Control', 'no-store, no-cache, must-revalidate, private');
+    response.headers.set('Pragma', 'no-cache');
+    response.headers.set('Expires', '0');
+
+    // If an invalid, expired, or tampered cookie was provided, clear it on redirect
+    if (isInvalidOrExpiredCookie || req.cookies.has('resolve_guest')) {
+      clearAuthCookies(response);
     }
     return applySecurityHeaders(response);
   }
 
-  // 2. Public and authentication routes are always rendered without automatic redirects.
-  // Visiting /login or /signup directly renders the respective page even if a prior session exists.
-  return applySecurityHeaders(NextResponse.next({
+  // 2. Authenticated user opening the site root ("/") or any auth page (/auth/signin, /auth/signup, /login, /signup)
+  // Redirect straight to /app/overview (or safe `next` param if present). They never see landing or auth pages.
+  if (isAuthenticated && (pathname === '/' || isAuthPage)) {
+    let target = '/app/overview';
+    if (isAuthPage) {
+      const rawNext = req.nextUrl.searchParams.get('next');
+      target = sanitizeRedirectUrl(rawNext, req.nextUrl.origin, '/app/overview');
+    }
+    const redirectUrl = new URL(target, req.url);
+    const response = NextResponse.redirect(redirectUrl, 307);
+    response.headers.set('Cache-Control', 'no-store, no-cache, must-revalidate, private');
+    response.headers.set('Pragma', 'no-cache');
+    response.headers.set('Expires', '0');
+    return applySecurityHeaders(response);
+  }
+
+  // 3. Authenticated user opening /app base route -> redirect straight to /app/overview
+  if (isAuthenticated && (pathname === '/app' || pathname === '/app/')) {
+    const redirectUrl = new URL('/app/overview', req.url);
+    const response = NextResponse.redirect(redirectUrl, 307);
+    response.headers.set('Cache-Control', 'no-store, no-cache, must-revalidate, private');
+    response.headers.set('Pragma', 'no-cache');
+    response.headers.set('Expires', '0');
+    return applySecurityHeaders(response);
+  }
+
+  // 4. Authenticated user accessing /app/* -> allow access with no-store cache control headers
+  // Pressing Back after sign-out must not show cached app pages.
+  if (isAuthenticated && pathname.startsWith('/app')) {
+    const res = NextResponse.next({
+      request: {
+        headers: requestHeaders,
+      },
+    });
+    res.headers.set('Cache-Control', 'no-store, no-cache, must-revalidate, private');
+    res.headers.set('Pragma', 'no-cache');
+    res.headers.set('Expires', '0');
+    return applySecurityHeaders(res);
+  }
+
+  // 5. Unauthenticated user accessing public pages (/ or auth pages)
+  const res = NextResponse.next({
     request: {
       headers: requestHeaders,
     },
-  }));
+  });
+
+  if (isInvalidOrExpiredCookie || req.cookies.has('resolve_guest')) {
+    clearAuthCookies(res);
+  }
+
+  return applySecurityHeaders(res);
 }
 
 export const config = {
@@ -203,5 +429,6 @@ export const config = {
     '/verify-email',
     '/verify-phone',
     '/account-setup',
+    '/api/:path*',
   ],
 };

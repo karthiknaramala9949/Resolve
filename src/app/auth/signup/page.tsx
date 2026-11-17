@@ -11,6 +11,7 @@ import { PhoneInput } from '@/features/auth/components/PhoneInput';
 import { Input, Button } from '@/design-system';
 import { useAuth } from '@/features/auth/context/AuthContext';
 import { sanitizeRedirectUrl } from '@/lib/server/auth/redirect';
+import { Turnstile } from '@/components/security/Turnstile';
 import { Mail, Phone, AlertCircle, WifiOff } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -31,6 +32,7 @@ function SignUpContent() {
   const [email, setEmail] = useState('');
   const [phoneNumber, setPhoneNumber] = useState('+91');
   const [password, setPassword] = useState('');
+  const [turnstileToken, setTurnstileToken] = useState<string>('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [isOfflineError, setIsOfflineError] = useState(false);
@@ -75,6 +77,7 @@ function SignUpContent() {
         email: method === 'email' ? email.trim() : undefined,
         phoneNumber: method === 'phone' ? phoneNumber.trim() : undefined,
         password,
+        turnstileToken: turnstileToken || undefined,
       });
 
       if (!res.success) {
@@ -226,6 +229,9 @@ function SignUpContent() {
         <p className="text-[11px] text-steel-grey-500 leading-normal pt-1">
           By continuing, you understand that your evidence and documents are kept secure and private.
         </p>
+
+        {/* Security Challenge (Cloudflare Turnstile) */}
+        <Turnstile onSuccess={setTurnstileToken} />
 
         <Button
           type="submit"

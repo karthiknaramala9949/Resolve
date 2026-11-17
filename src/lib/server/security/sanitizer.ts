@@ -23,6 +23,7 @@ export function sanitizeHeaderValue(value: string): string {
 
 /**
  * HTML-encodes user content to prevent Stored and Reflected XSS (B-01, B-02, A-17).
+ * Used strictly at output boundaries (HTML templates, emails, PDF generation).
  */
 export function escapeHtml(unsafe: string): string {
   if (!unsafe) return '';
@@ -32,6 +33,18 @@ export function escapeHtml(unsafe: string): string {
     .replace(/>/g, '&gt;')
     .replace(/"/g, '&quot;')
     .replace(/'/g, '&#039;');
+}
+
+/**
+ * Strips non-printable ASCII control characters (0x00-0x1F, except tabs/newlines if permitted)
+ * and null bytes to prevent header/data injection while preserving valid international Unicode text.
+ */
+export function stripControlChars(input: string, allowNewlines = true): string {
+  if (!input || typeof input !== 'string') return '';
+  if (allowNewlines) {
+    return input.replace(/[\0\x01-\x08\x0b\x0c\x0e-\x1f\x7f]/g, '');
+  }
+  return input.replace(/[\0-\x1f\x7f]/g, '');
 }
 
 /**

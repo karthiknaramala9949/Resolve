@@ -59,6 +59,9 @@ export const authService = {
    */
   async login(data: LoginFormData): Promise<AuthSuccessResponse> {
     const res = await apiClient.post<AuthSuccessResponse>('/api/auth/login', data);
+    if ((res as any)?.ok === false) {
+      throw new ApiError((res as any).error || 'Sign-in failed', (res as any).code === 'RATE_LIMIT_EXCEEDED' ? 429 : 401);
+    }
     if (res.sessionToken) {
       setSessionToken(res.sessionToken);
     }
@@ -90,6 +93,9 @@ export const authService = {
    */
   async register(data: RegisterFormData): Promise<AuthSuccessResponse> {
     const res = await apiClient.post<AuthSuccessResponse>('/api/auth/register', data);
+    if ((res as any)?.ok === false) {
+      throw new ApiError((res as any).error || 'Registration failed', (res as any).code === 'ALREADY_EXISTS' ? 409 : 400);
+    }
     if (res.sessionToken) {
       setSessionToken(res.sessionToken);
     }
@@ -155,14 +161,25 @@ export const authService = {
    * Verifies a 6-digit phone OTP.
    */
   async verifyOtp(phoneNumber: string, otp: string, type: string = 'phone_otp'): Promise<{ success: boolean; user?: UserProfile }> {
-    return apiClient.post('/api/auth/otp/verify', { phoneNumber, otp, type });
+    const res = await apiClient.post<{ success: boolean; user?: UserProfile }>('/api/auth/otp/verify', { phoneNumber, otp, type });
+    if ((res as any)?.ok === false) {
+      throw new ApiError((res as any).error || 'Verification failed', 400);
+    }
+    return res;
   },
 
   /**
    * Requests a password recovery link/code.
    */
-  async requestPasswordReset(identifier: string): Promise<{ success: boolean; message: string }> {
-    return apiClient.post('/api/auth/forgot-password', { identifier });
+  async requestPasswordReset(
+    identifier: string,
+    turnstileToken?: string
+  ): Promise<{ success: boolean; message: string }> {
+    const res = await apiClient.post<{ success: boolean; message: string }>('/api/auth/forgot-password', { identifier, turnstileToken });
+    if ((res as any)?.ok === false) {
+      throw new ApiError((res as any).error || 'Request failed', 400);
+    }
+    return res;
   },
 
   /**
@@ -173,7 +190,11 @@ export const authService = {
     token: string;
     newPassword: string;
   }): Promise<{ success: boolean; message: string; user?: UserProfile }> {
-    return apiClient.put('/api/auth/reset-password', data);
+    const res = await apiClient.put<{ success: boolean; message: string; user?: UserProfile }>('/api/auth/reset-password', data);
+    if ((res as any)?.ok === false) {
+      throw new ApiError((res as any).error || 'Password reset failed', 400);
+    }
+    return res;
   },
 
   /**

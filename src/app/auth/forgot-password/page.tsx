@@ -5,12 +5,14 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { AuthLayout } from '@/features/auth/components/AuthLayout';
 import { Input, Button } from '@/design-system';
+import { Turnstile } from '@/components/security/Turnstile';
 import { AlertCircle, CheckCircle2, ArrowLeft, Mail, Phone } from 'lucide-react';
 import { authService } from '@/services/authService';
 
 export default function ForgotPasswordPage() {
   const router = useRouter();
   const [identifier, setIdentifier] = useState('');
+  const [turnstileToken, setTurnstileToken] = useState<string>('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [sentInfo, setSentInfo] = useState<{
@@ -28,7 +30,7 @@ export default function ForgotPasswordPage() {
 
     try {
       setIsSubmitting(true);
-      const res = await authService.requestPasswordReset(identifier.trim());
+      const res = await authService.requestPasswordReset(identifier.trim(), turnstileToken || undefined);
 
       setSentInfo({
         message: res.message || 'If an account exists, we have sent instructions.',
@@ -100,6 +102,9 @@ export default function ForgotPasswordPage() {
             autoComplete="username"
             disabled={isSubmitting}
           />
+
+          {/* Security Challenge (Cloudflare Turnstile) */}
+          <Turnstile onSuccess={setTurnstileToken} />
 
           <Button
             type="submit"

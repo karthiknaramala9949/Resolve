@@ -199,11 +199,13 @@ class AuthStore {
 
   public async createSession(
     userId: string,
-    metadata?: { userAgent?: string; ipAddress?: string }
+    metadata?: { userAgent?: string; ipAddress?: string },
+    rememberMe: boolean = true
   ): Promise<SessionRecord> {
     this.loadSync();
     const token = generateRandomToken(32);
-    const expiresAt = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(); // 30 days
+    const ttlMs = (rememberMe ? 30 : 1) * 24 * 60 * 60 * 1000;
+    const expiresAt = new Date(Date.now() + ttlMs).toISOString();
     const session: SessionRecord = {
       id: crypto.randomUUID(),
       userId,

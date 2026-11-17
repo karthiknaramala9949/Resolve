@@ -6,12 +6,16 @@ import { setSessionCookie, getSessionTokenFromCookies } from '@/lib/server/auth/
 import { rateLimiter, RATE_LIMITS, applyRateLimitHeaders } from '@/lib/server/auth/rateLimit';
 import { getServerConvexClient, deleteSessionFromConvex } from '@/lib/server/convex/convexClient';
 import { validateCsrf } from '@/lib/server/auth/csrf';
+import { verifyTurnstileToken } from '@/lib/server/security/turnstile';
+import { getClientIp } from '@/lib/server/auth/ip';
+import { getConvexServerSecret, checkGateError } from '@/lib/server/auth/serverSecret';
 import { api } from '../../../../../convex/_generated/api';
 
 const LoginSchema = z.object({
   identifier: z.string().min(3, 'Email or phone number is required'),
   password: z.string().min(1, 'Password is required'),
   rememberMe: z.boolean().optional(),
+  turnstileToken: z.string().optional(),
 });
 
 export async function POST(req: NextRequest) {
@@ -21,7 +25,8 @@ export async function POST(req: NextRequest) {
       return csrfCheck.errorResponse;
     }
 
-    const ip = req.headers.get('x-forwarded-for') || '127.0.0.1';
+    const clientIpInfo = getClientIp(req);
+    const ip = clientIpInfo.ip;
     const body = await req.json();
 
     const parseResult = LoginSchema.safeParse(body);
@@ -32,10 +37,34 @@ export async function POST(req: NextRequest) {
       );
     }
 
+    // Verify Cloudflare Turnstile CAPTCHA token
+    const turnstileCheck = await verifyTurnstileToken(parseResult.data.turnstileToken, ip);
+    if (!turnstileCheck.success) {
+      return NextResponse.json(
+        { error: turnstileCheck.error || 'Security challenge failed. Please complete the CAPTCHA.' },
+        { status: 400 }
+      );
+    }
+
     const { identifier, password, rememberMe } = parseResult.data;
     const cleanId = identifier.trim().toLowerCase();
 
-    // Check rate limit for this identifier and IP
+    // 1. Per-account ceiling independent of IP (10 attempts per 15 min; stricter 5 attempts if untrusted IP)
+    const accountLimitCeiling = clientIpInfo.isTrusted ? 10 : 5;
+    const accountRlKey = `login:account:${cleanId}`;
+    const accountRlCheck = await rateLimiter.check(accountRlKey, accountLimitCeiling, RATE_LIMITS.LOGIN.windowMs);
+    if (!accountRlCheck.allowed) {
+      const res = NextResponse.json(
+        {
+          error: `Too many sign-in attempts for this account. Please try again in ${accountRlCheck.retryAfterSec} seconds.`,
+        },
+        { status: 429 }
+      );
+      applyRateLimitHeaders(res.headers, accountLimitCeiling, accountRlCheck.remaining, accountRlCheck.resetAt, accountRlCheck.retryAfterSec);
+      return res;
+    }
+
+    // 2. Strict identifier + IP rate limit (5 attempts per 15 min)
     const rlKey = `login:${cleanId}:${ip}`;
     const rlCheck = await rateLimiter.check(rlKey, RATE_LIMITS.LOGIN.max, RATE_LIMITS.LOGIN.windowMs);
     if (!rlCheck.allowed) {
@@ -46,6 +75,20 @@ export async function POST(req: NextRequest) {
         { status: 429 }
       );
       applyRateLimitHeaders(res.headers, RATE_LIMITS.LOGIN.max, rlCheck.remaining, rlCheck.resetAt, rlCheck.retryAfterSec);
+      return res;
+    }
+
+    // 2. Looser per-IP rate limit across all accounts (30 attempts per 15 min)
+    const ipRlKey = `login:ip:${ip}`;
+    const ipRlCheck = await rateLimiter.check(ipRlKey, 30, RATE_LIMITS.LOGIN.windowMs);
+    if (!ipRlCheck.allowed) {
+      const res = NextResponse.json(
+        {
+          error: `Too many sign-in attempts from this network. Please try again in ${ipRlCheck.retryAfterSec} seconds.`,
+        },
+        { status: 429 }
+      );
+      applyRateLimitHeaders(res.headers, 30, ipRlCheck.remaining, ipRlCheck.resetAt, ipRlCheck.retryAfterSec);
       return res;
     }
 
@@ -62,13 +105,30 @@ export async function POST(req: NextRequest) {
     const client = getServerConvexClient();
     if (client) {
       try {
+        const serverSecret = getConvexServerSecret();
         const convexRes = await client.mutation(api.auth.login, {
           identifier: cleanId,
           password,
           rememberMe: Boolean(rememberMe),
           userAgent: req.headers.get('user-agent') || undefined,
           ipAddress: ip,
+          serverSecret,
         });
+
+        // Fail-safe: map gate rejections to HTTP 500
+        const gateErrResponse = checkGateError(convexRes);
+        if (gateErrResponse) {
+          return gateErrResponse;
+        }
+
+        if (convexRes?.ok === false) {
+          const res = NextResponse.json(
+            { error: convexRes.error || 'Invalid email, phone number, or password.' },
+            { status: convexRes.code === 'RATE_LIMIT_EXCEEDED' ? 429 : 401 }
+          );
+          applyRateLimitHeaders(res.headers, RATE_LIMITS.LOGIN.max, rlCheck.remaining, rlCheck.resetAt);
+          return res;
+        }
 
         if (convexRes?.sessionToken && convexRes?.user) {
           await rateLimiter.reset(rlKey);
@@ -81,7 +141,7 @@ export async function POST(req: NextRequest) {
           response.headers.set('Cache-Control', 'no-store, no-cache, must-revalidate, private');
           response.headers.set('Pragma', 'no-cache');
           applyRateLimitHeaders(response.headers, RATE_LIMITS.LOGIN.max, rlCheck.remaining, rlCheck.resetAt);
-          setSessionCookie(response, convexRes.sessionToken);
+          setSessionCookie(response, convexRes.sessionToken, Boolean(rememberMe));
           return response;
         }
       } catch (err: any) {
@@ -121,10 +181,14 @@ export async function POST(req: NextRequest) {
 
     rateLimiter.reset(rlKey);
 
-    const session = await authStore.createSession(user.id, {
-      userAgent: req.headers.get('user-agent') || undefined,
-      ipAddress: ip,
-    });
+    const session = await authStore.createSession(
+      user.id,
+      {
+        userAgent: req.headers.get('user-agent') || undefined,
+        ipAddress: ip,
+      },
+      Boolean(rememberMe)
+    );
 
     const response = NextResponse.json({
       success: true,
@@ -136,7 +200,7 @@ export async function POST(req: NextRequest) {
     response.headers.set('Pragma', 'no-cache');
     applyRateLimitHeaders(response.headers, RATE_LIMITS.LOGIN.max, rlCheck.remaining, rlCheck.resetAt);
 
-    setSessionCookie(response, session.token);
+    setSessionCookie(response, session.token, Boolean(rememberMe));
     return response;
   } catch (err) {
     console.error('[Login API Error]:', err);

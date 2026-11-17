@@ -8,6 +8,14 @@ import { MoneyDisplay } from '@/design-system/components/MoneyDisplay';
 import { Stepper } from '@/design-system/components/Stepper';
 import { EmptyState } from '@/design-system/components/EmptyState';
 import { Input } from '@/design-system/components/Input';
+import { ToggleSwitch } from '@/design-system/components/ToggleSwitch';
+import { CheckboxStrike } from '@/design-system/components/CheckboxStrike';
+import { CopyButton } from '@/design-system/components/CopyButton';
+import { NumberStepper } from '@/design-system/components/NumberStepper';
+import { ProgressRing } from '@/design-system/components/ProgressRing';
+import { Accordion } from '@/design-system/components/Accordion';
+import { SegmentedControl } from '@/design-system/components/SegmentedControl';
+import { SwipeRow } from '@/design-system/components/SwipeRow';
 
 async function expectNoViolations(container: HTMLElement) {
   const results = await axe.run(container, {
@@ -97,6 +105,73 @@ describe('Accessibility Audits (axe-core WCAG 2.2 AA)', () => {
         actionLabel="Start Case"
         onAction={() => {}}
       />
+    );
+    await expectNoViolations(container);
+  });
+
+  it('ToggleSwitch passes WCAG 2.2 AA rules', async () => {
+    const { container } = render(
+      <ToggleSwitch id="a11y-toggle" label="SMS Alerts" checked={true} onChange={() => {}} />
+    );
+    await expectNoViolations(container);
+  });
+
+  it('CheckboxStrike passes WCAG 2.2 AA rules', async () => {
+    const { container } = render(
+      <CheckboxStrike label="Check UPI refund status" checked={false} onChange={() => {}} />
+    );
+    await expectNoViolations(container);
+  });
+
+  it('CopyButton passes WCAG 2.2 AA rules', async () => {
+    const { container } = render(<CopyButton value="RESOLVE-100" label="case ID" />);
+    await expectNoViolations(container);
+  });
+
+  it('NumberStepper passes WCAG 2.2 AA rules', async () => {
+    const { container } = render(
+      <NumberStepper label="Return days" value={7} min={0} max={30} onChange={() => {}} />
+    );
+    await expectNoViolations(container);
+  });
+
+  it('ProgressRing passes WCAG 2.2 AA rules', async () => {
+    const { container } = render(
+      <ProgressRing progress={75} aria-label="Outcome progress" />
+    );
+    await expectNoViolations(container);
+  });
+
+  it('Accordion passes WCAG 2.2 AA rules', async () => {
+    const { container } = render(
+      <Accordion
+        items={[
+          { id: '1', title: 'How does NCH work?', content: 'Free helpline for Indian consumers.' },
+        ]}
+      />
+    );
+    await expectNoViolations(container);
+  });
+
+  it('SegmentedControl passes WCAG 2.2 AA rules', async () => {
+    const { container } = render(
+      <SegmentedControl
+        value="open"
+        options={[
+          { id: 'open', label: 'Open cases' },
+          { id: 'resolved', label: 'Resolved cases' },
+        ]}
+        onChange={() => {}}
+      />
+    );
+    await expectNoViolations(container);
+  });
+
+  it('SwipeRow passes WCAG 2.2 AA rules', async () => {
+    const { container } = render(
+      <SwipeRow onDelete={() => {}} actionLabel="Delete reminder">
+        <div>Follow-up reminder row</div>
+      </SwipeRow>
     );
     await expectNoViolations(container);
   });

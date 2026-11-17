@@ -57,8 +57,8 @@ describe('RESOLVE-ONE: Landing Page & Authentication Navigation Routing', () => 
     expect(location).toBe('http://localhost:3000/login?next=%2Fapp%2Fcases%3Fstatus%3Dopen');
   });
 
-  // Scenario 6: Authenticated visitor opens `/` → landing page (NO automatic redirect to dashboard)
-  it('Scenario 6: Authenticated visitor opens `/` → displays landing page without redirecting to `/app/overview`', async () => {
+  // Scenario 6: Authenticated visitor opens `/` → redirects straight to `/app/overview`
+  it('Scenario 6: Authenticated visitor opens `/` → redirects straight to `/app/overview`', async () => {
     const req = new NextRequest('http://localhost:3000/', {
       headers: {
         cookie: `resolve_session=${validCookie}`,
@@ -66,13 +66,14 @@ describe('RESOLVE-ONE: Landing Page & Authentication Navigation Routing', () => 
     });
     const res = await middleware(req);
 
-    // CRITICAL: Even if authenticated, visiting '/' MUST NOT redirect to /app/overview
-    expect(res.status).toBe(200);
-    expect(res.headers.get('location')).toBeNull();
+    // CRITICAL: Signed-in visitor MUST redirect straight to /app/overview
+    expect(res.status).toBe(307);
+    expect(res.headers.get('location')).toBe('http://localhost:3000/app/overview');
+    expect(res.headers.get('Cache-Control')).toContain('no-store');
   });
 
-  // Scenario 7: Visitor opens `/login` with existing session -> displays login page without redirect
-  it('Scenario 7: Visitor opens `/login` (even with existing session) → displays login page without redirect', async () => {
+  // Scenario 7: Visitor opens `/login` with existing session -> redirects straight to `/app/overview`
+  it('Scenario 7: Visitor opens `/login` (with existing session) → redirects to `/app/overview`', async () => {
     const req = new NextRequest('http://localhost:3000/login', {
       headers: {
         cookie: `resolve_session=${validCookie}`,
@@ -80,13 +81,14 @@ describe('RESOLVE-ONE: Landing Page & Authentication Navigation Routing', () => 
     });
     const res = await middleware(req);
 
-    // CRITICAL: Must show login page, NOT redirect to app
-    expect(res.status).toBe(200);
-    expect(res.headers.get('location')).toBeNull();
+    // CRITICAL: Signed-in visitor MUST redirect straight to /app/overview
+    expect(res.status).toBe(307);
+    expect(res.headers.get('location')).toBe('http://localhost:3000/app/overview');
+    expect(res.headers.get('Cache-Control')).toContain('no-store');
   });
 
-  // Scenario 7b: Visitor opens `/signup` with existing session -> displays signup page without redirect
-  it('Scenario 7b: Visitor opens `/signup` (even with existing session) → displays signup page without redirect', async () => {
+  // Scenario 7b: Visitor opens `/signup` with existing session -> redirects straight to `/app/overview`
+  it('Scenario 7b: Visitor opens `/signup` (with existing session) → redirects to `/app/overview`', async () => {
     const req = new NextRequest('http://localhost:3000/signup', {
       headers: {
         cookie: `resolve_session=${validCookie}`,
@@ -94,9 +96,10 @@ describe('RESOLVE-ONE: Landing Page & Authentication Navigation Routing', () => 
     });
     const res = await middleware(req);
 
-    // CRITICAL: Must show signup page, NOT redirect to app
-    expect(res.status).toBe(200);
-    expect(res.headers.get('location')).toBeNull();
+    // CRITICAL: Signed-in visitor MUST redirect straight to /app/overview
+    expect(res.status).toBe(307);
+    expect(res.headers.get('location')).toBe('http://localhost:3000/app/overview');
+    expect(res.headers.get('Cache-Control')).toContain('no-store');
   });
 
   // Scenario 8: Authenticated visitor refreshes `/app/overview` → remains authenticated
@@ -155,14 +158,15 @@ describe('RESOLVE-ONE: Landing Page & Authentication Navigation Routing', () => 
     const authHeaders = { headers: { cookie: `resolve_session=${validCookie}` } };
 
     const authRoot = await middleware(new NextRequest('http://localhost:3000/', authHeaders));
-    expect(authRoot.status).toBe(200); // Does NOT redirect to /app/overview
+    expect(authRoot.status).toBe(307); // Redirects to /app/overview
+    expect(authRoot.headers.get('location')).toBe('http://localhost:3000/app/overview');
 
     const authApp = await middleware(new NextRequest('http://localhost:3000/app/overview', authHeaders));
     expect(authApp.status).toBe(200); // Allowed through
 
     const authLogin = await middleware(new NextRequest('http://localhost:3000/login', authHeaders));
-    expect(authLogin.status).toBe(200); // Renders login page directly (no auto-redirect)
-    expect(authLogin.headers.get('location')).toBeNull();
+    expect(authLogin.status).toBe(307); // Redirects to /app/overview
+    expect(authLogin.headers.get('location')).toBe('http://localhost:3000/app/overview');
 
     // Neither state forms a loop A -> B -> A
   });

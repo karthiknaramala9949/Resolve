@@ -9,6 +9,7 @@ import { PasswordInput } from '@/features/auth/components/PasswordInput';
 import { Input, Button } from '@/design-system';
 import { useAuth } from '@/features/auth/context/AuthContext';
 import { sanitizeRedirectUrl } from '@/lib/server/auth/redirect';
+import { Turnstile } from '@/components/security/Turnstile';
 import { AlertCircle, CheckCircle2, WifiOff } from 'lucide-react';
 
 function SignInContent() {
@@ -28,6 +29,7 @@ function SignInContent() {
   const [identifier, setIdentifier] = useState('');
   const [password, setPassword] = useState('');
   const [rememberMe, setRememberMe] = useState(true);
+  const [turnstileToken, setTurnstileToken] = useState<string>('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
@@ -77,6 +79,7 @@ function SignInContent() {
         identifier: identifier.trim(),
         password,
         rememberMe,
+        turnstileToken: turnstileToken || undefined,
       });
 
       if (!res.success) {
@@ -183,6 +186,9 @@ function SignInContent() {
             <span className="text-xs text-steel-grey-600 font-medium">Keep me signed in</span>
           </label>
         </div>
+
+        {/* Security Challenge (Cloudflare Turnstile) */}
+        <Turnstile onSuccess={setTurnstileToken} />
 
         <Button
           type="submit"
